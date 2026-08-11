@@ -11,8 +11,10 @@ Free, unlimited, and fully local: **your document is never uploaded anywhere.**
 
 - Load a PDF and page through it
 - Create a signature by drawing with mouse, pen or finger — or upload a transparent PNG
-- Drag to position it, use the handle to scale proportionally
+- Drag to position it, use the corner handle to scale proportionally
+- Live dimensions in PDF points while you drag, so you can see exactly where it will land
 - Export a real PDF: the original file stays the base, the signature is embedded as an image
+- Available in 15 languages, picked up from your browser automatically
 
 Text stays selectable and the page count never changes. Pages are **not**
 flattened into images, which is what most "sign your PDF" tools do to your
@@ -53,11 +55,21 @@ Signature transparency is preserved: the PNG keeps its alpha channel and is
 embedded with an `/SMask`, so you get your actual signature and not a white box
 sitting on top of the text.
 
+## Languages
+
+English, 中文, हिन्दी, Español, العربية, Français, Português, Русский, 日本語,
+Deutsch, Indonesia, Türkçe, 한국어, Italiano and Tiếng Việt.
+
+The interface follows your browser's language and falls back to English.
+You can switch it any time in the top right, and the choice is remembered.
+Arabic switches the layout to right-to-left — the document preview itself is
+never mirrored.
+
+Adding a language means adding one block to the `T` object in the file.
+Pull requests welcome.
+
 ## Notes
 
-- **The interface is in German.** The code is a single readable file, so
-  translating it is mostly a matter of swapping the label strings — pull
-  requests are welcome.
 - Tested in Chrome. Any modern browser with Pointer Events support should work.
 - Password-protected PDFs are not supported.
 - One signature per document, placed on the page you put it on.
