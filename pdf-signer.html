@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PDF unterschreiben</title>
+<!-- Leeres Favicon, damit der Browser keine favicon.ico anfragt -->
+<link rel="icon" href="data:,">
+<style>
+  :root {
+    --rahmen: #d4d7dd;
+    --flaeche: #ffffff;
+    --grund: #eef0f4;
+    --text: #1d2129;
+    --gedaempft: #6b7280;
+    --akzent: #2563eb;
+    --warnung: #b91c1c;
+    --erfolg: #15803d;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    background: var(--grund);
+    display: flex;
+    flex-direction: column;
+  }
+  header {
+    padding: 10px 18px;
+    background: var(--flaeche);
+    border-bottom: 1px solid var(--rahmen);
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    flex: none;
+  }
+  header h1 { font-size: 16px; margin: 0; font-weight: 600; }
+  header .hinweis { color: var(--gedaempft); font-size: 12px; }
+
+  .layout { flex: 1; display: flex; min-height: 0; }
+
+  .steuerung {
+    width: 330px;
+    flex: none;
+    background: var(--flaeche);
+    border-right: 1px solid var(--rahmen);
+    overflow-y: auto;
+    padding: 4px 0 24px;
+  }
+  .schritt { padding: 14px 18px; border-bottom: 1px solid var(--rahmen); }
+  .schritt h2 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--gedaempft);
+    margin: 0 0 10px;
+    font-weight: 600;
+  }
+  .schritt p.erlaeuterung { margin: 8px 0 0; font-size: 12px; color: var(--gedaempft); line-height: 1.45; }
+
+  button {
+    font: inherit;
+    padding: 7px 12px;
+    border: 1px solid var(--rahmen);
+    border-radius: 6px;
+    background: #fff;
+    cursor: pointer;
+  }
+  button:hover:not(:disabled) { background: #f4f5f7; }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  button.haupt {
+    background: var(--akzent);
+    border-color: var(--akzent);
+    color: #fff;
+    font-weight: 600;
+  }
+  button.haupt:hover:not(:disabled) { background: #1d4fd8; }
+  input[type=file] { font: inherit; width: 100%; }
+  select { font: inherit; padding: 5px 8px; border: 1px solid var(--rahmen); border-radius: 6px; background: #fff; }
+
+  /* Reiter für die beiden Wege, eine Unterschrift zu erzeugen */
+  .reiter { display: flex; gap: 6px; margin-bottom: 10px; }
+  .reiter button { flex: 1; padding: 6px 4px; font-size: 13px; }
+  .reiter button[aria-selected=true] {
+    background: var(--akzent);
+    border-color: var(--akzent);
+    color: #fff;
+  }
+  .reiter button[aria-selected=true]:hover { background: #1d4fd8; }
+
+  /* Zeichenfläche: bewusst OHNE Hintergrundfüllung im Canvas selbst,
+     der Karo-Hintergrund liegt per CSS darunter. So bleibt das PNG transparent. */
+  #zeichenflaeche {
+    width: 100%;
+    height: 130px;
+    display: block;
+    border: 1px dashed var(--rahmen);
+    border-radius: 6px;
+    background-color: #fff;
+    background-image:
+      linear-gradient(45deg, #eceef1 25%, transparent 25%, transparent 75%, #eceef1 75%),
+      linear-gradient(45deg, #eceef1 25%, transparent 25%, transparent 75%, #eceef1 75%);
+    background-size: 14px 14px;
+    background-position: 0 0, 7px 7px;
+    touch-action: none;
+    cursor: crosshair;
+  }
+  .knopfreihe { display: flex; gap: 8px; margin-top: 8px; }
+  .knopfreihe button { flex: 1; }
+
+  #unterschriftVorschau {
+    margin-top: 10px;
+    max-width: 100%;
+    max-height: 70px;
+    display: none;
+    background-color: #fff;
+    background-image:
+      linear-gradient(45deg, #eceef1 25%, transparent 25%, transparent 75%, #eceef1 75%),
+      linear-gradient(45deg, #eceef1 25%, transparent 25%, transparent 75%, #eceef1 75%);
+    background-size: 14px 14px;
+    background-position: 0 0, 7px 7px;
+    border: 1px solid var(--rahmen);
+    border-radius: 6px;
+  }
+
+  .status { margin-top: 10px; font-size: 12px; line-height: 1.45; min-height: 1em; }
+  .status.fehler { color: var(--warnung); }
+  .status.gut { color: var(--erfolg); }
+
+  /* Anzeigebereich */
+  main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .navileiste {
+    flex: none;
+    padding: 8px 18px;
+    background: var(--flaeche);
+    border-bottom: 1px solid var(--rahmen);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+  }
+  .navileiste .rechts { margin-left: auto; color: var(--gedaempft); font-size: 12px; }
+  .buehnenbereich {
+    flex: 1;
+    overflow: auto;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
+  .platzhalter { color: var(--gedaempft); margin-top: 60px; text-align: center; line-height: 1.6; }
+
+  /* Die Bühne umschließt das Canvas passgenau, damit das Unterschrift-Overlay
+     absolut zum Canvas positioniert werden kann. */
+  .buehne { position: relative; display: none; line-height: 0; box-shadow: 0 2px 12px rgba(0,0,0,.18); background: #fff; }
+  .buehne.sichtbar { display: inline-block; }
+  #seitenCanvas { display: block; }
+
+  #overlay {
+    position: absolute;
+    display: none;
+    touch-action: none;
+    cursor: move;
+    outline: 1px dashed var(--akzent);
+    outline-offset: 1px;
+  }
+  #overlay.sichtbar { display: block; }
+  #overlay img { width: 100%; height: 100%; display: block; pointer-events: none; }
+  #griff {
+    position: absolute;
+    right: -8px;
+    bottom: -8px;
+    width: 16px;
+    height: 16px;
+    background: var(--akzent);
+    border: 2px solid #fff;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0,0,0,.4);
+    cursor: nwse-resize;
+    touch-action: none;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>PDF unterschreiben</h1>
+  <span class="hinweis">Läuft vollständig im Browser &ndash; die PDF-Datei verlässt diesen Rechner nicht.</span>
+</header>
+
+<div class="layout">
+  <aside class="steuerung">
+
+    <section class="schritt">
+      <h2>1 &middot; PDF laden</h2>
+      <input type="file" id="pdfAuswahl" accept="application/pdf,.pdf">
+      <div class="status" id="statusPdf"></div>
+    </section>
+
+    <section class="schritt">
+      <h2>2 &middot; Unterschrift erzeugen</h2>
+      <div class="reiter" role="tablist">
+        <button id="reiterZeichnen" role="tab" aria-selected="true">Zeichnen</button>
+        <button id="reiterHochladen" role="tab" aria-selected="false">PNG hochladen</button>
+      </div>
+
+      <div id="bereichZeichnen">
+        <canvas id="zeichenflaeche"></canvas>
+        <div class="knopfreihe">
+          <button id="btnLeeren">Leeren</button>
+          <button id="btnUebernehmen">Übernehmen</button>
+        </div>
+        <p class="erlaeuterung">Mit Maus, Stift oder Finger unterschreiben. Beim Übernehmen wird auf die
+          gezeichneten Striche zugeschnitten, der Hintergrund bleibt transparent.</p>
+      </div>
+
+      <div id="bereichHochladen" hidden>
+        <input type="file" id="pngAuswahl" accept="image/png,.png">
+        <p class="erlaeuterung">Nur PNG mit Alphakanal &ndash; nur so bleibt der Hintergrund im PDF transparent.</p>
+      </div>
+
+      <img id="unterschriftVorschau" alt="Vorschau der Unterschrift">
+      <div class="status" id="statusUnterschrift"></div>
+    </section>
+
+    <section class="schritt">
+      <h2>3 &middot; Platzieren</h2>
+      <div class="knopfreihe">
+        <button id="btnAufSeiteSetzen" disabled>Auf dieser Seite setzen</button>
+        <button id="btnEntfernen" disabled>Entfernen</button>
+      </div>
+      <p class="erlaeuterung">Ziehen zum Verschieben, blauer Punkt unten rechts zum Skalieren.
+        Die Unterschrift bleibt auf der Seite liegen, auf der du sie gesetzt hast.</p>
+      <div class="status" id="statusPlatzierung"></div>
+    </section>
+
+    <section class="schritt">
+      <h2>4 &middot; Speichern</h2>
+      <button class="haupt" id="btnExport" style="width:100%" disabled>Unterschriebenes PDF speichern</button>
+      <div class="status" id="statusExport"></div>
+    </section>
+
+  </aside>
+
+  <main>
+    <div class="navileiste">
+      <button id="btnZurueck" disabled>&#9664;</button>
+      <span>Seite</span>
+      <select id="seitenAuswahl" disabled></select>
+      <span id="seitenAnzahlAnzeige">von &ndash;</span>
+      <button id="btnVor" disabled>&#9654;</button>
+      <span class="rechts" id="platzierungsHinweis"></span>
+    </div>
+    <div class="buehnenbereich" id="buehnenbereich">
+      <div class="platzhalter" id="platzhalter">
+        Noch kein Dokument geladen.<br>Links oben eine PDF-Datei auswählen.
+      </div>
+      <div class="buehne" id="buehne">
+        <canvas id="seitenCanvas"></canvas>
+        <div id="overlay">
+          <img id="overlayBild" alt="Platzierte Unterschrift">
+          <div id="griff"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  var WORKER_URL = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
+
+  // ---------------------------------------------------------------------------
+  // Zustand
+  // ---------------------------------------------------------------------------
+  var pdfDokument = null;      // pdf.js-Dokument für die Vorschau
+  var originalBytes = null;    // unveränderte Bytes der Originaldatei für pdf-lib
+  var originalName = "dokument.pdf";
+  var seitenAnzahl = 0;
+  var aktuelleSeite = 1;
+  var seitenGeometrie = {};    // Seitennummer -> Maße, Rotation und CropBox aus pdf.js
+  var laufenderRender = null;
+
+  var unterschriftPng = null;          // Data-URL der Unterschrift
+  var unterschriftVerhaeltnis = 1;     // Breite geteilt durch Höhe
+
+  // Platzierung in PDF-Punkten des Anzeigeraums, y wird von OBEN gemessen.
+  // Punkte statt Bildschirmpixel, damit die Position bei jeder Fenstergröße gilt.
+  var platzierung = null;      // { seite, x, y, breite, hoehe }
+
+  var el = function (id) { return document.getElementById(id); };
+
+  var pdfAuswahl = el("pdfAuswahl");
+  var pngAuswahl = el("pngAuswahl");
+  var zeichenflaeche = el("zeichenflaeche");
+  var seitenCanvas = el("seitenCanvas");
+  var buehne = el("buehne");
+  var platzhalter = el("platzhalter");
+  var overlay = el("overlay");
+  var overlayBild = el("overlayBild");
+  var griff = el("griff");
+  var seitenAuswahl = el("seitenAuswahl");
+  var unterschriftVorschau = el("unterschriftVorschau");
+
+  function melde(id, text, art) {
+    var k = el(id);
+    k.textContent = text;
+    k.className = "status" + (art ? " " + art : "");
+  }
+
+  // ---------------------------------------------------------------------------
+  // pdf.js-Worker: Quelltext einmalig beim Seitenaufbau holen und als Blob binden.
+  // Ohne diesen Schritt lädt pdf.js den Worker erst beim Öffnen des PDFs nach –
+  // das wäre eine Netzwerkanfrage nach dem Seitenaufbau.
+  //
+  // Der fertige Worker wird per workerPort übergeben, nicht per workerSrc:
+  // Beim Öffnen über file:// ist der Ursprung "file://", die Blob-Adresse aber
+  // "blob:null/…". An dieser Prüfung scheitert pdf.js und würde alles im
+  // Hauptthread rechnen. Über workerPort entfällt die Prüfung.
+  // ---------------------------------------------------------------------------
+  var workerBereit = (function () {
+    if (typeof pdfjsLib === "undefined") return Promise.reject(new Error("pdf.js fehlt"));
+    return fetch(WORKER_URL)
+      .then(function (a) {
+        if (!a.ok) throw new Error("HTTP " + a.status);
+        return a.text();
+      })
+      .then(function (quelltext) {
+        var adresse = URL.createObjectURL(new Blob([quelltext], { type: "text/javascript" }));
+        try {
+          pdfjsLib.GlobalWorkerOptions.workerPort = new Worker(adresse);
+        } catch (f) {
+          // Einzelne Browser lassen unter file:// keine Worker zu. pdf.js rechnet
+          // dann im Hauptthread – langsamer, aber das Ergebnis bleibt gleich.
+          pdfjsLib.GlobalWorkerOptions.workerSrc = adresse;
+        }
+      })
+      .catch(function () {
+        // Notfallweg: Worker direkt vom CDN. Dann entsteht beim ersten PDF
+        // doch noch eine Anfrage, aber das Werkzeug bleibt benutzbar.
+        pdfjsLib.GlobalWorkerOptions.workerSrc = WORKER_URL;
+      });
+  })();
+
+  if (typeof pdfjsLib === "undefined" || typeof PDFLib === "undefined") {
+    melde("statusPdf", "pdf.js oder pdf-lib konnte nicht geladen werden. Beim ersten Öffnen der Datei wird eine Internetverbindung benötigt.", "fehler");
+    pdfAuswahl.disabled = true;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Schritt 1: PDF laden
+  // ---------------------------------------------------------------------------
+  pdfAuswahl.addEventListener("change", function () {
+    var datei = pdfAuswahl.files && pdfAuswahl.files[0];
+    if (!datei) return;
+    melde("statusPdf", "Wird geladen …");
+
+    datei.arrayBuffer().then(function (puffer) {
+      originalBytes = new Uint8Array(puffer);
+      originalName = datei.name || "dokument.pdf";
+      // pdf.js vereinnahmt den übergebenen Puffer, deshalb eine eigene Kopie.
+      var kopie = originalBytes.slice();
+      return workerBereit.then(function () {
+        return pdfjsLib.getDocument({ data: kopie }).promise;
+      });
+    }).then(function (dok) {
+      pdfDokument = dok;
+      seitenAnzahl = dok.numPages;
+      aktuelleSeite = 1;
+      seitenGeometrie = {};
+      platzierung = null;
+
+      seitenAuswahl.innerHTML = "";
+      for (var i = 1; i <= seitenAnzahl; i++) {
+        var o = document.createElement("option");
+        o.value = String(i);
+        o.textContent = String(i);
+        seitenAuswahl.appendChild(o);
+      }
+      seitenAuswahl.disabled = false;
+      el("seitenAnzahlAnzeige").textContent = "von " + seitenAnzahl;
+      platzhalter.style.display = "none";
+      buehne.classList.add("sichtbar");
+
+      melde("statusPdf", datei.name + " – " + seitenAnzahl + " Seite" + (seitenAnzahl === 1 ? "" : "n"), "gut");
+      return seiteZeichnen();
+    }).catch(function (fehler) {
+      pdfDokument = null;
+      originalBytes = null;
+      buehne.classList.remove("sichtbar");
+      platzhalter.style.display = "";
+      melde("statusPdf", "Die Datei konnte nicht geöffnet werden: " + (fehler && fehler.message ? fehler.message : fehler), "fehler");
+      knoepfeAktualisieren();
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Seite darstellen
+  // ---------------------------------------------------------------------------
+  function seiteZeichnen() {
+    if (!pdfDokument) return Promise.resolve();
+
+    if (laufenderRender) {
+      laufenderRender.cancel();
+      laufenderRender = null;
+    }
+
+    return pdfDokument.getPage(aktuelleSeite).then(function (seite) {
+      // Viewport mit Maßstab 1 entspricht exakt den PDF-Punkten der Anzeige
+      // (getViewport berücksichtigt bereits /Rotate).
+      var basis = seite.getViewport({ scale: 1 });
+
+      seitenGeometrie[aktuelleSeite] = {
+        anzeigeBreite: basis.width,
+        anzeigeHoehe: basis.height,
+        rotation: ((seite.rotate % 360) + 360) % 360,
+        view: seite.view.slice()   // [x1, y1, x2, y2] der CropBox, unrotiert
+      };
+
+      var verfuegbar = el("buehnenbereich").clientWidth - 40;
+      var massstab = Math.min(Math.max(verfuegbar / basis.width, 0.2), 2);
+      var viewport = seite.getViewport({ scale: massstab });
+      var dpr = window.devicePixelRatio || 1;
+
+      seitenCanvas.width = Math.round(viewport.width * dpr);
+      seitenCanvas.height = Math.round(viewport.height * dpr);
+      seitenCanvas.style.width = viewport.width + "px";
+      seitenCanvas.style.height = viewport.height + "px";
+
+      var ctx = seitenCanvas.getContext("2d");
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, seitenCanvas.width, seitenCanvas.height);
+
+      laufenderRender = seite.render({
+        canvasContext: ctx,
+        viewport: viewport,
+        transform: dpr !== 1 ? [dpr, 0, 0, dpr, 0, 0] : null
+      });
+
+      return laufenderRender.promise.then(function () {
+        laufenderRender = null;
+        overlayAktualisieren();
+        knoepfeAktualisieren();
+      });
+    }).catch(function (fehler) {
+      // Ein abgebrochener Render beim schnellen Blättern ist kein Fehler.
+      if (fehler && fehler.name === "RenderingCancelledException") return;
+      melde("statusPdf", "Seite konnte nicht dargestellt werden: " + (fehler && fehler.message ? fehler.message : fehler), "fehler");
+    });
+  }
+
+  function seiteWechseln(nr) {
+    if (!pdfDokument) return;
+    aktuelleSeite = Math.min(Math.max(nr, 1), seitenAnzahl);
+    seitenAuswahl.value = String(aktuelleSeite);
+    seiteZeichnen();
+  }
+
+  el("btnZurueck").addEventListener("click", function () { seiteWechseln(aktuelleSeite - 1); });
+  el("btnVor").addEventListener("click", function () { seiteWechseln(aktuelleSeite + 1); });
+  seitenAuswahl.addEventListener("change", function () { seiteWechseln(parseInt(seitenAuswahl.value, 10)); });
+
+  var resizeZeitgeber = null;
+  window.addEventListener("resize", function () {
+    if (!pdfDokument) return;
+    clearTimeout(resizeZeitgeber);
+    resizeZeitgeber = setTimeout(seiteZeichnen, 150);
+  });
+
+  // ---------------------------------------------------------------------------
+  // Schritt 2a: Unterschrift zeichnen
+  // ---------------------------------------------------------------------------
+  el("reiterZeichnen").addEventListener("click", function () { reiterUmschalten(true); });
+  el("reiterHochladen").addEventListener("click", function () { reiterUmschalten(false); });
+
+  function reiterUmschalten(zeichnen) {
+    el("reiterZeichnen").setAttribute("aria-selected", String(zeichnen));
+    el("reiterHochladen").setAttribute("aria-selected", String(!zeichnen));
+    el("bereichZeichnen").hidden = !zeichnen;
+    el("bereichHochladen").hidden = zeichnen;
+  }
+
+  // Feste Zeichenauflösung, unabhängig von der CSS-Breite
+  zeichenflaeche.width = 900;
+  zeichenflaeche.height = 300;
+  var zctx = zeichenflaeche.getContext("2d");
+  zctx.lineWidth = 4.5;
+  zctx.lineCap = "round";
+  zctx.lineJoin = "round";
+  zctx.strokeStyle = "#111111";
+
+  var zeichnetGerade = false;
+  var etwasGezeichnet = false;
+
+  function zeichenPunkt(ev) {
+    var r = zeichenflaeche.getBoundingClientRect();
+    return {
+      x: (ev.clientX - r.left) * (zeichenflaeche.width / r.width),
+      y: (ev.clientY - r.top) * (zeichenflaeche.height / r.height)
+    };
+  }
+
+  zeichenflaeche.addEventListener("pointerdown", function (ev) {
+    zeichnetGerade = true;
+    etwasGezeichnet = true;
+    var p = zeichenPunkt(ev);
+    zctx.beginPath();
+    zctx.moveTo(p.x, p.y);
+    // Einzelner Tipp soll einen sichtbaren Punkt hinterlassen
+    zctx.lineTo(p.x + 0.01, p.y);
+    zctx.stroke();
+    zeichenflaeche.setPointerCapture(ev.pointerId);
+    ev.preventDefault();
+  });
+
+  zeichenflaeche.addEventListener("pointermove", function (ev) {
+    if (!zeichnetGerade) return;
+    var p = zeichenPunkt(ev);
+    zctx.lineTo(p.x, p.y);
+    zctx.stroke();
+    ev.preventDefault();
+  });
+
+  function zeichnenBeenden(ev) {
+    if (!zeichnetGerade) return;
+    zeichnetGerade = false;
+    if (zeichenflaeche.hasPointerCapture(ev.pointerId)) {
+      zeichenflaeche.releasePointerCapture(ev.pointerId);
+    }
+  }
+  zeichenflaeche.addEventListener("pointerup", zeichnenBeenden);
+  zeichenflaeche.addEventListener("pointercancel", zeichnenBeenden);
+
+  el("btnLeeren").addEventListener("click", function () {
+    zctx.clearRect(0, 0, zeichenflaeche.width, zeichenflaeche.height);
+    etwasGezeichnet = false;
+    melde("statusUnterschrift", "");
+  });
+
+  el("btnUebernehmen").addEventListener("click", function () {
+    if (!etwasGezeichnet) {
+      melde("statusUnterschrift", "Die Zeichenfläche ist noch leer.", "fehler");
+      return;
+    }
+    var zugeschnitten = aufStricheZuschneiden();
+    if (!zugeschnitten) {
+      melde("statusUnterschrift", "Es sind keine Striche erkennbar.", "fehler");
+      return;
+    }
+    unterschriftSetzen(zugeschnitten, "Gezeichnete Unterschrift übernommen.");
+  });
+
+  // Schneidet auf die tatsächlich bemalten Pixel zu. Ohne diesen Schritt
+  // wäre der Positionsrahmen überwiegend leer und das Platzieren ungenau.
+  function aufStricheZuschneiden() {
+    var b = zeichenflaeche.width, h = zeichenflaeche.height;
+    var daten = zctx.getImageData(0, 0, b, h).data;
+    var minX = b, minY = h, maxX = -1, maxY = -1;
+
+    for (var y = 0; y < h; y++) {
+      for (var x = 0; x < b; x++) {
+        if (daten[(y * b + x) * 4 + 3] > 8) {
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+        }
+      }
+    }
+    if (maxX < 0) return null;
+
+    var rand = 8;
+    minX = Math.max(0, minX - rand);
+    minY = Math.max(0, minY - rand);
+    maxX = Math.min(b - 1, maxX + rand);
+    maxY = Math.min(h - 1, maxY + rand);
+
+    var ziel = document.createElement("canvas");
+    ziel.width = maxX - minX + 1;
+    ziel.height = maxY - minY + 1;
+    // Kein Füllen des Ziels: der Alphakanal bleibt erhalten.
+    ziel.getContext("2d").drawImage(zeichenflaeche, minX, minY, ziel.width, ziel.height, 0, 0, ziel.width, ziel.height);
+    return ziel.toDataURL("image/png");
+  }
+
+  // ---------------------------------------------------------------------------
+  // Schritt 2b: PNG hochladen
+  // ---------------------------------------------------------------------------
+  pngAuswahl.addEventListener("change", function () {
+    var datei = pngAuswahl.files && pngAuswahl.files[0];
+    if (!datei) return;
+    if (datei.type !== "image/png" && !/\.png$/i.test(datei.name)) {
+      melde("statusUnterschrift", "Bitte eine PNG-Datei wählen – nur PNG kann Transparenz ins PDF übertragen.", "fehler");
+      return;
+    }
+    var leser = new FileReader();
+    leser.onload = function () { unterschriftSetzen(leser.result, "PNG übernommen."); };
+    leser.onerror = function () { melde("statusUnterschrift", "Die Datei konnte nicht gelesen werden.", "fehler"); };
+    leser.readAsDataURL(datei);
+  });
+
+  // ---------------------------------------------------------------------------
+  // Unterschrift übernehmen und erstmalig platzieren
+  // ---------------------------------------------------------------------------
+  function unterschriftSetzen(dataUrl, meldung) {
+    var bild = new Image();
+    bild.onload = function () {
+      unterschriftPng = dataUrl;
+      unterschriftVerhaeltnis = bild.naturalWidth / bild.naturalHeight;
+      overlayBild.src = dataUrl;
+      unterschriftVorschau.src = dataUrl;
+      unterschriftVorschau.style.display = "block";
+      melde("statusUnterschrift", meldung, "gut");
+
+      if (pdfDokument) {
+        if (platzierung) {
+          // Bestehende Platzierung behalten, nur die Höhe ans neue Bild anpassen
+          platzierung.hoehe = platzierung.breite / unterschriftVerhaeltnis;
+        } else {
+          aufAktuellerSeitePlatzieren();
+        }
+      }
+      overlayAktualisieren();
+      knoepfeAktualisieren();
+    };
+    bild.onerror = function () { melde("statusUnterschrift", "Das Bild konnte nicht gelesen werden.", "fehler"); };
+    bild.src = dataUrl;
+  }
+
+  function aufAktuellerSeitePlatzieren() {
+    var g = seitenGeometrie[aktuelleSeite];
+    if (!g || !unterschriftPng) return;
+    var breite = g.anzeigeBreite * 0.3;
+    var hoehe = breite / unterschriftVerhaeltnis;
+    platzierung = {
+      seite: aktuelleSeite,
+      x: (g.anzeigeBreite - breite) / 2,
+      y: (g.anzeigeHoehe - hoehe) / 2,
+      breite: breite,
+      hoehe: hoehe
+    };
+  }
+
+  el("btnAufSeiteSetzen").addEventListener("click", function () {
+    if (!unterschriftPng || !pdfDokument) return;
+    aufAktuellerSeitePlatzieren();
+    overlayAktualisieren();
+    knoepfeAktualisieren();
+  });
+
+  el("btnEntfernen").addEventListener("click", function () {
+    platzierung = null;
+    overlayAktualisieren();
+    knoepfeAktualisieren();
+  });
+
+  // ---------------------------------------------------------------------------
+  // Overlay darstellen: Punkte -> Bildschirmpixel
+  // ---------------------------------------------------------------------------
+  // Gemessener Maßstab statt angenommener: deckt jede CSS-Skalierung des
+  // Canvas mit ab und ist damit die Größe, mit der auch gerechnet wird.
+  function pixelJePunkt() {
+    var g = seitenGeometrie[aktuelleSeite];
+    if (!g) return 1;
+    return seitenCanvas.getBoundingClientRect().width / g.anzeigeBreite;
+  }
+
+  function overlayAktualisieren() {
+    var sichtbar = !!(platzierung && unterschriftPng && platzierung.seite === aktuelleSeite);
+    overlay.classList.toggle("sichtbar", sichtbar);
+    if (sichtbar) {
+      var s = pixelJePunkt();
+      overlay.style.left = (platzierung.x * s) + "px";
+      overlay.style.top = (platzierung.y * s) + "px";
+      overlay.style.width = (platzierung.breite * s) + "px";
+      overlay.style.height = (platzierung.hoehe * s) + "px";
+    }
+
+    var hinweis = el("platzierungsHinweis");
+    if (!platzierung) {
+      hinweis.textContent = pdfDokument && unterschriftPng ? "Unterschrift noch nicht platziert" : "";
+    } else if (platzierung.seite === aktuelleSeite) {
+      hinweis.textContent = "Unterschrift auf dieser Seite";
+    } else {
+      hinweis.textContent = "Unterschrift liegt auf Seite " + platzierung.seite;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Verschieben und Skalieren
+  // ---------------------------------------------------------------------------
+  var ziehen = null;
+
+  function ziehenStart(ev) {
+    if (!platzierung || platzierung.seite !== aktuelleSeite) return;
+    ziehen = {
+      modus: ev.currentTarget === griff ? "skalieren" : "verschieben",
+      startX: ev.clientX,
+      startY: ev.clientY,
+      ausgang: { x: platzierung.x, y: platzierung.y, breite: platzierung.breite, hoehe: platzierung.hoehe },
+      s: pixelJePunkt()
+    };
+    ev.currentTarget.setPointerCapture(ev.pointerId);
+    ev.preventDefault();
+    ev.stopPropagation();
+  }
+
+  function ziehenBewegen(ev) {
+    if (!ziehen) return;
+    var g = seitenGeometrie[aktuelleSeite];
+    var dx = (ev.clientX - ziehen.startX) / ziehen.s;   // in PDF-Punkten
+    var dy = (ev.clientY - ziehen.startY) / ziehen.s;
+    var a = ziehen.ausgang;
+
+    if (ziehen.modus === "verschieben") {
+      platzierung.x = Math.min(Math.max(a.x + dx, 0), Math.max(0, g.anzeigeBreite - a.breite));
+      platzierung.y = Math.min(Math.max(a.y + dy, 0), Math.max(0, g.anzeigeHoehe - a.hoehe));
+    } else {
+      // Proportional, Ankerpunkt ist die obere linke Ecke
+      var breite = Math.max(15, a.breite + dx);
+      breite = Math.min(breite, g.anzeigeBreite - a.x);
+      var hoehe = breite / unterschriftVerhaeltnis;
+      if (a.y + hoehe > g.anzeigeHoehe) {
+        hoehe = g.anzeigeHoehe - a.y;
+        breite = hoehe * unterschriftVerhaeltnis;
+      }
+      platzierung.breite = breite;
+      platzierung.hoehe = hoehe;
+    }
+    overlayAktualisieren();
+    ev.preventDefault();
+  }
+
+  function ziehenEnde(ev) {
+    if (!ziehen) return;
+    ziehen = null;
+    if (ev.currentTarget.hasPointerCapture(ev.pointerId)) {
+      ev.currentTarget.releasePointerCapture(ev.pointerId);
+    }
+  }
+
+  [overlay, griff].forEach(function (knoten) {
+    knoten.addEventListener("pointerdown", ziehenStart);
+    knoten.addEventListener("pointermove", ziehenBewegen);
+    knoten.addEventListener("pointerup", ziehenEnde);
+    knoten.addEventListener("pointercancel", ziehenEnde);
+  });
+
+  // ---------------------------------------------------------------------------
+  // Schritt 4: Export
+  // ---------------------------------------------------------------------------
+  el("btnExport").addEventListener("click", function () {
+    if (!originalBytes || !unterschriftPng || !platzierung) return;
+    melde("statusExport", "PDF wird geschrieben …");
+
+    var PDFDocument = PDFLib.PDFDocument;
+    var degrees = PDFLib.degrees;
+
+    // ignoreEncryption deckt PDFs ab, die nur Berechtigungen setzen.
+    PDFDocument.load(originalBytes, { ignoreEncryption: true }).then(function (dok) {
+      return dok.embedPng(unterschriftPng).then(function (bild) {
+        var seite = dok.getPage(platzierung.seite - 1);
+        var g = seitenGeometrie[platzierung.seite];
+
+        // CropBox aus pdf.js – dieselbe Quelle, aus der die Vorschau entstand.
+        var bx1 = g.view[0], by1 = g.view[1], bx2 = g.view[2], by2 = g.view[3];
+        var boxBreite = bx2 - bx1;   // unrotiert
+        var boxHoehe = by2 - by1;
+        var r = g.rotation;
+
+        // Anzeigeraum: y von oben nach unten -> PDF zählt von unten.
+        var X = platzierung.x;
+        var Y = g.anzeigeHoehe - (platzierung.y + platzierung.hoehe);
+
+        // Anzeigeraum zurück in den unrotierten Seitenraum rechnen.
+        // Die Bildrotation gleicht die Anzeigedrehung wieder aus.
+        var bx, by;
+        if (r === 90) { bx = boxBreite - Y; by = X; }
+        else if (r === 180) { bx = boxBreite - X; by = boxHoehe - Y; }
+        else if (r === 270) { bx = Y; by = boxHoehe - X; }
+        else { bx = X; by = Y; }
+
+        seite.drawImage(bild, {
+          x: bx + bx1,          // Versatz der CropBox berücksichtigen
+          y: by + by1,
+          width: platzierung.breite,
+          height: platzierung.hoehe,
+          rotate: degrees(r)
+        });
+
+        return dok.save();
+      });
+    }).then(function (bytes) {
+      var blob = new Blob([bytes], { type: "application/pdf" });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url;
+      a.download = originalName.replace(/\.pdf$/i, "") + "-unterschrieben.pdf";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 10000);
+      melde("statusExport", "Gespeichert als " + a.download, "gut");
+    }).catch(function (fehler) {
+      melde("statusExport", "Export fehlgeschlagen: " + (fehler && fehler.message ? fehler.message : fehler), "fehler");
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Bedienbarkeit der Schaltflächen
+  // ---------------------------------------------------------------------------
+  function knoepfeAktualisieren() {
+    var hatPdf = !!pdfDokument;
+    el("btnZurueck").disabled = !hatPdf || aktuelleSeite <= 1;
+    el("btnVor").disabled = !hatPdf || aktuelleSeite >= seitenAnzahl;
+    el("btnAufSeiteSetzen").disabled = !hatPdf || !unterschriftPng;
+    el("btnEntfernen").disabled = !platzierung;
+    el("btnExport").disabled = !(hatPdf && unterschriftPng && platzierung);
+
+    if (!hatPdf) {
+      melde("statusPlatzierung", "");
+    } else if (!unterschriftPng) {
+      melde("statusPlatzierung", "Erst eine Unterschrift erzeugen.");
+    } else if (!platzierung) {
+      melde("statusPlatzierung", "Noch nicht platziert.");
+    } else {
+      melde("statusPlatzierung", "Liegt auf Seite " + platzierung.seite + ".", "gut");
+    }
+  }
+
+  knoepfeAktualisieren();
+})();
+</script>
+</body>
+</html>
