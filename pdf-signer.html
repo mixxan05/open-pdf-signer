@@ -434,6 +434,10 @@
   .sheet.on { display: inline-block; }
   #pageCanvas { display: block; border-radius: 3px; }
 
+  /* Drag-to-pan affordance — like the hand tool in a PDF reader */
+  .sheet { cursor: grab; }
+  .stage.panning, .stage.panning * { cursor: grabbing !important; }
+
   /* -------------------------------------------------- signature and dimensions */
   #sigBox {
     position: absolute;
@@ -1938,6 +1942,33 @@
     zoomTo(Math.pow(1.25, -sign * steps),
            ev.clientX - r.left, ev.clientY - r.top);
   }, { passive: false });
+
+  // Drag the sheet itself to pan — the signature box and text boxes keep
+  // their own drags, touch already pans natively so only mouse/pen count.
+  var panDrag = null;
+  el("stage").addEventListener("pointerdown", function (ev) {
+    if (!pdfDoc) return;
+    if (ev.pointerType !== "mouse" && ev.pointerType !== "pen") return;
+    if (ev.button !== 0 && ev.button !== 1) return;
+    if (ev.target.closest && ev.target.closest("#sigBox, .tbox")) return;
+    ev.preventDefault();
+    panDrag = { id: ev.pointerId, sx: ev.clientX, sy: ev.clientY,
+                l: el("stage").scrollLeft, t: el("stage").scrollTop };
+    el("stage").classList.add("panning");
+    el("stage").setPointerCapture(ev.pointerId);
+  });
+  el("stage").addEventListener("pointermove", function (ev) {
+    if (!panDrag || ev.pointerId !== panDrag.id) return;
+    el("stage").scrollLeft = panDrag.l - (ev.clientX - panDrag.sx);
+    el("stage").scrollTop = panDrag.t - (ev.clientY - panDrag.sy);
+  });
+  function panEnd(ev) {
+    if (!panDrag || (ev && ev.pointerId !== panDrag.id)) return;
+    panDrag = null;
+    el("stage").classList.remove("panning");
+  }
+  el("stage").addEventListener("pointerup", panEnd);
+  el("stage").addEventListener("pointercancel", panEnd);
 
   var resizeTimer = null;
   window.addEventListener("resize", function () {
