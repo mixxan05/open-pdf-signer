@@ -1582,6 +1582,7 @@
   var docFonts = {};         // -> { label, data, cssFam, faceBad, kf, kfBad, chars }
   var docFontNames = {};     // every font the text layer references -> { label, chars }
   var pageFontBest = {};     // page -> loadedName of the font carrying the most text
+  var fontAutoPicked = false; // true once the picker jumped to a document font
   var faceSeq = 0;           // counter for generated CSS font-family names
 
   // Status lines are stored as keys so they can be re-rendered on language change
@@ -1950,6 +1951,7 @@
     docFonts = {};
     docFontNames = {};
     pageFontBest = {};
+    fontAutoPicked = false;
     sigPng = null;
     sigRatio = 1;
     sigImage.removeAttribute("src");
@@ -2529,8 +2531,10 @@
       placement.x = Math.min(Math.max(a.x + dx, 0), Math.max(0, g.dispW - a.w));
       placement.y = Math.min(Math.max(a.y + dy, 0), Math.max(0, g.dispH - a.h));
     } else {
-      // Proportional, anchored at the top left corner
-      var w = Math.max(15, a.w + dx);
+      // Proportional, anchored at the top left corner. 30 pt keeps the
+      // box bigger than the resize knob itself — below that it is a dot
+      // the handle swallows whole.
+      var w = Math.max(30, a.w + dx);
       w = Math.min(w, g.dispW - a.x);
       var h = w / sigRatio;
       if (a.y + h > g.dispH) {
@@ -2664,10 +2668,18 @@
       gs.appendChild(o2);
     }
     fontSel.appendChild(gs);
-    fontSel.value = prev;
-    // prev is "" on the first build and whenever the old pick vanished —
-    // setting "" would leave the select blank, so fall back to the best font.
-    if (!fontSel.value) fontSel.value = preferredFontKey();
+    // The first time a document's own fonts show up, jump the picker onto
+    // the most-used one — new text should match the document by default.
+    // Afterwards the user's pick wins, even when more fonts arrive later.
+    if (!fontAutoPicked && names.length) {
+      fontSel.value = preferredFontKey();
+      fontAutoPicked = true;
+    } else {
+      fontSel.value = prev;
+      // prev is "" on the first build and whenever the old pick vanished —
+      // setting "" would leave the select blank, so fall back to the best font.
+      if (!fontSel.value) fontSel.value = preferredFontKey();
+    }
     paintDocFontNote();
   }
 
@@ -2789,6 +2801,9 @@
       var cp = text.codePointAt(i);
       if (cp > 0xFFFF) i++;             // surrogate pairs count once
       if (cp === 10 || cp === 13) continue;
+      // Whitespace needs no glyph — the export writes it as a position
+      // advance, so a subset font without a space glyph stays usable.
+      if (cp === 0x20 || cp === 0x09 || cp === 0xA0) continue;
       var ok = isDoc ? kf.hasGlyphForCodePoint(cp)
                      : (cp >= 0x20 && cp <= 0xFF) || WINANSI_EXTRA[cp] === true;
       if (!ok && !seen[cp]) { seen[cp] = true; out.push(String.fromCodePoint(cp)); }
@@ -2833,6 +2848,9 @@
     persist();
   });
   fontSel.addEventListener("change", function () {
+    // A deliberate pick ends the auto-pick phase for this document —
+    // otherwise a font discovered a moment later would steal it back.
+    fontAutoPicked = true;
     var it = selItem();
     if (!it) return;
     it.fontKey = fontSel.value;
@@ -3080,19 +3098,48 @@
           else { bx = X; by = Y; }
 
           var c = it.color;
-          page.drawText(it.text, {
-            x: bx + bx1,
-            y: by + by1,
-            size: it.size,
-            font: map[it.fontKey],
-            color: PDFLib.rgb(
-              parseInt(c.slice(1, 3), 16) / 255,
-              parseInt(c.slice(3, 5), 16) / 255,
-              parseInt(c.slice(5, 7), 16) / 255
-            ),
-            rotate: degrees(r),
-            lineHeight: it.size * 1.2
-          });
+          var col = PDFLib.rgb(
+            parseInt(c.slice(1, 3), 16) / 255,
+            parseInt(c.slice(3, 5), 16) / 255,
+            parseInt(c.slice(5, 7), 16) / 255
+          );
+          var fnt = map[it.fontKey];
+          // Subset fonts routinely carry no U+0020 — drawing a space would
+          // leave a notdef box. Space is only an advance anyway, so words
+          // are drawn separately with a fixed gap pushed along the rotated
+          // text direction.
+          var df = it.fontKey.indexOf("doc:") === 0 ? docFonts[it.fontKey.slice(4)] : null;
+          var noSpace = df && df.kf && !df.kf.hasGlyphForCodePoint(0x20);
+          if (!noSpace) {
+            page.drawText(it.text, {
+              x: bx + bx1, y: by + by1, size: it.size, font: fnt,
+              color: col, rotate: degrees(r), lineHeight: it.size * 1.2
+            });
+          } else {
+            var rad = r * Math.PI / 180;
+            var ux = Math.cos(rad), uy = Math.sin(rad);      // word advance
+            var vx = Math.sin(rad), vy = -Math.cos(rad);     // line advance
+            var lh = it.size * 1.2, gap = it.size * 0.25;
+            var lines = it.text.split(/\r\n|\r|\n/);
+            for (var li = 0; li < lines.length; li++) {
+              var segs = lines[li].split(/([ \t\u00A0]+)/);
+              var adv = 0;
+              var lx = bx + bx1 + vx * li * lh, ly = by + by1 + vy * li * lh;
+              for (var si = 0; si < segs.length; si++) {
+                var seg = segs[si];
+                if (!seg) continue;
+                if (/^[ \t\u00A0]+$/.test(seg)) {
+                  adv += seg.length * gap;
+                } else {
+                  page.drawText(seg, {
+                    x: lx + ux * adv, y: ly + uy * adv, size: it.size,
+                    font: fnt, color: col, rotate: degrees(r)
+                  });
+                  adv += fnt.widthOfTextAtSize(seg, it.size);
+                }
+              }
+            }
+          }
         });
       }));
 
