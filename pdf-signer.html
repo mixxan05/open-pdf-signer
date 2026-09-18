@@ -403,6 +403,10 @@
   .stage {
     flex: 1;
     overflow: auto;
+    position: relative;
+    /* Reserve the scrollbar space permanently — a gutter appearing mid-zoom
+       would shrink clientWidth and jitter the fit factor at every commit. */
+    scrollbar-gutter: stable;
     padding: 34px;
     display: flex;
     /* safe: when the zoomed sheet is wider than the stage, fall back to the
@@ -1434,6 +1438,7 @@
   var pageNow = 1;
   var zoom = 1;            // multiplier on top of the fit-to-stage scale
   var pendingCenter = null; // document point to keep on screen while zooming
+  var pendingSheet = null;  // sheet-fraction anchor for seamless blit commits
   var geometry = {};         // page number -> size, rotation and CropBox from pdf.js
   var renderTask = null;
 
@@ -1710,7 +1715,7 @@
       textSeq: textSeq,
       selectedText: selectedText,
       page: pageNow,
-      zoom: zoom
+      zoom: zoomLive
     });
   }
   // Debounced: drags and keystrokes fire this constantly.
@@ -1801,7 +1806,9 @@
   // ===========================================================================
   // Render the current page
   // ===========================================================================
-  function drawPage() {
+  var scratchCanvas = null;   // offscreen buffer for blit renders
+
+  function drawPage(blit) {
     if (!pdfDoc) return Promise.resolve();
 
     if (renderTask) {
@@ -1833,14 +1840,25 @@
       var viewport = page.getViewport({ scale: scale });
       var dpr = window.devicePixelRatio || 1;
 
-      pageCanvas.width = Math.round(viewport.width * dpr);
-      pageCanvas.height = Math.round(viewport.height * dpr);
-      pageCanvas.style.width = viewport.width + "px";
-      pageCanvas.style.height = viewport.height + "px";
+      // Blit renders paint offscreen first: the visible canvas keeps its old
+      // bitmap (with the zoom preview transform still applied) until the new
+      // frame can be swapped in atomically — no white flash at commit.
+      var renderCanvas = pageCanvas;
+      if (blit) {
+        if (!scratchCanvas) scratchCanvas = document.createElement("canvas");
+        renderCanvas = scratchCanvas;
+      }
+      renderCanvas.width = Math.round(viewport.width * dpr);
+      renderCanvas.height = Math.round(viewport.height * dpr);
+      if (!blit) {
+        pageCanvas.style.width = viewport.width + "px";
+        pageCanvas.style.height = viewport.height + "px";
+        renderedZoom = zoom;
+      }
 
-      var ctx = pageCanvas.getContext("2d");
+      var ctx = renderCanvas.getContext("2d");
       ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.clearRect(0, 0, pageCanvas.width, pageCanvas.height);
+      ctx.clearRect(0, 0, renderCanvas.width, renderCanvas.height);
 
       renderTask = page.render({
         canvasContext: ctx,
@@ -1850,10 +1868,32 @@
 
       return renderTask.promise.then(function () {
         renderTask = null;
+        if (blit) {
+          pageCanvas.width = renderCanvas.width;
+          pageCanvas.height = renderCanvas.height;
+          pageCanvas.style.width = viewport.width + "px";
+          pageCanvas.style.height = viewport.height + "px";
+          pageCanvas.getContext("2d").drawImage(renderCanvas, 0, 0);
+          renderedZoom = zoom;
+          // Preview served its purpose — drop it only now that the sharp
+          // frame is in place, then measure against the new layout.
+          var sh = el("sheet");
+          sh.style.transform = "";
+          sh.style.transformOrigin = "";
+          zoomAnchor = null;
+        }
         paintPlacement();
         paintTexts();
         paintZoom();
-        if (pendingCenter) {
+        if (pendingSheet) {
+          // Sheet-fraction anchor: lands the committed view exactly where the
+          // live preview showed the document point under the pointer.
+          var sh2 = el("sheet");
+          stage.scrollLeft = sh2.offsetLeft + pendingSheet.fx * sh2.offsetWidth - pendingSheet.ox;
+          stage.scrollTop = sh2.offsetTop + pendingSheet.fy * sh2.offsetHeight - pendingSheet.oy;
+          pendingSheet = null;
+          pendingCenter = null;
+        } else if (pendingCenter) {
           // Keep the document point that was under the view centre (or the
           // pointer) at the same spot after the re-render.
           stage.scrollLeft = pendingCenter.fx * stage.scrollWidth - pendingCenter.ox;
@@ -1899,9 +1939,9 @@
   // overlays and dimension labels move as one — until a short settle
   // timer commits a real re-render at the new scale.
   var zoomLive = 1;
+  var renderedZoom = 1;       // factor of the bitmap actually on the canvas
   var zoomSettle = null;
-  var zoomAnchor = null;      // sheet-local point the gesture is anchored at
-  var zoomStagePt = null;     // same point in stage-viewport coords
+  var zoomAnchor = null;      // sheet-local transform origin, while one is set
 
   function cancelPreview() {
     clearTimeout(zoomSettle);
@@ -1948,25 +1988,58 @@
     persist();
   });
 
-  // Commits the previewed factor: real re-render at zoomLive, keeping the
-  // anchored document point under the pointer via pendingCenter.
+  // Projects where the committed layout would have to scroll to hold the
+  // anchor — and how far that overshoots the reachable range. The residual
+  // (dx/dy) is added to the preview as a translate so the gesture already
+  // slides toward the reachable view instead of snapping back at commit.
+  function previewShift(ax, ay) {
+    var stage = el("stage");
+    var sheet = el("sheet");
+    var k = zoomLive / renderedZoom;
+    var Wp = sheet.offsetWidth * k, Hp = sheet.offsetHeight * k;
+    var offLp = Wp <= stage.clientWidth - 68 ? 34 + (stage.clientWidth - 68 - Wp) / 2 : 34;
+    var offTp = Hp <= stage.clientHeight - 68 ? 34 + (stage.clientHeight - 68 - Hp) / 2 : 34;
+    var ox0 = sheet.offsetLeft + ax - stage.scrollLeft;
+    var oy0 = sheet.offsetTop + ay - stage.scrollTop;
+    var desL = offLp + ax * k - ox0;
+    var desT = offTp + ay * k - oy0;
+    var dx = desL - clamp(desL, 0, Math.max(0, Wp + 68 - stage.clientWidth));
+    var dy = desT - clamp(desT, 0, Math.max(0, Hp + 68 - stage.clientHeight));
+    return { dx: dx, dy: dy, ox: ox0 + dx, oy: oy0 + dy };
+  }
+
+  // Commits the previewed factor: real re-render at zoomLive into an
+  // offscreen buffer that swaps in atomically, then lands the view on the
+  // same document point the transform kept under the pointer.
   function commitZoom() {
     zoomSettle = null;
-    zoomAnchor = null;
+    if (zoomLive === zoom) { cancelPreview(); return; }
     var sheet = el("sheet");
-    sheet.style.transform = "";
-    sheet.style.transformOrigin = "";
-    if (zoomLive === zoom) return;
-    zoom = zoomLive;
-    if (zoomStagePt) {
-      var stage = el("stage");
-      pendingCenter = {
-        fx: (stage.scrollLeft + zoomStagePt.x) / Math.max(1, stage.scrollWidth),
-        fy: (stage.scrollTop + zoomStagePt.y) / Math.max(1, stage.scrollHeight),
-        ox: zoomStagePt.x, oy: zoomStagePt.y
-      };
+    var stage = el("stage");
+    // The transform origin is the one point the preview holds stationary —
+    // it renders at its layout position, so keep it at that viewport spot.
+    // Wheel events can land while the previous commit render is still in
+    // flight; then zoomAnchor may be gone already, so fall back to the
+    // transform-origin still on the sheet, and finally to its centre.
+    var ax, ay;
+    if (zoomAnchor) {
+      ax = zoomAnchor.x; ay = zoomAnchor.y;
+    } else if (sheet.style.transformOrigin) {
+      var m = /([\d.]+)px ([\d.]+)px/.exec(sheet.style.transformOrigin) || [];
+      ax = parseFloat(m[1]) || sheet.offsetWidth / 2;
+      ay = parseFloat(m[2]) || sheet.offsetHeight / 2;
+    } else {
+      ax = sheet.offsetWidth / 2; ay = sheet.offsetHeight / 2;
     }
-    drawPage();
+    var sh = previewShift(ax, ay);
+    pendingSheet = {
+      fx: ax / sheet.offsetWidth,
+      fy: ay / sheet.offsetHeight,
+      ox: sh.ox,
+      oy: sh.oy
+    };
+    zoom = zoomLive;
+    drawPage(true);
     persist();
   }
 
@@ -1979,17 +2052,22 @@
     ev.preventDefault();
     var delta = ev.deltaY * (ev.deltaMode === 1 ? 33 : ev.deltaMode === 2 ? 400 : 1);
     var sheet = el("sheet");
-    if (!zoomSettle) {
-      // Gesture start: remember the sheet point under the pointer — the
-      // transform origin that keeps it stationary while scaling.
+    if (!sheet.style.transform) {
+      // No preview in flight: anchor the gesture at the pointer, measured on
+      // the untransformed sheet. If a commit render is still in flight the
+      // old origin stays — it is the point the preview is holding steady.
       var sr = sheet.getBoundingClientRect();
       zoomAnchor = { x: ev.clientX - sr.left, y: ev.clientY - sr.top };
       sheet.style.transformOrigin = zoomAnchor.x + "px " + zoomAnchor.y + "px";
     }
     zoomLive = clamp(zoomLive * Math.exp(-delta * 0.002), ZOOM_MIN, ZOOM_MAX);
-    var r = el("stage").getBoundingClientRect();
-    zoomStagePt = { x: ev.clientX - r.left, y: ev.clientY - r.top };
-    sheet.style.transform = "scale(" + (zoomLive / zoom) + ")";
+    // Scale relative to the bitmap currently on the canvas — during a commit
+    // render that is still the previous frame, so the preview stays seamless.
+    // The translate slides the view toward the reachable scroll position
+    // early when the pure anchor would clamp at a document edge.
+    var pv = zoomAnchor ? previewShift(zoomAnchor.x, zoomAnchor.y) : { dx: 0, dy: 0 };
+    sheet.style.transform = "translate(" + pv.dx + "px," + pv.dy + "px) scale(" +
+      (zoomLive / renderedZoom) + ")";
     // pixelsPerPoint() measures the canvas rect, which already includes the
     // preview transform — so it is the live scale, no correction needed.
     el("zoomLabel").textContent = Math.round(pixelsPerPoint() * 75) + "%";
