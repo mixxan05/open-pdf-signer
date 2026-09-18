@@ -4,12 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Open PDF Signer</title>
-<!-- Inline SVG favicon — the logo tile: blue gradient, document + signature glyph -->
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%231A8BF7'/%3E%3Cstop offset='1' stop-color='%230064D2'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='15' fill='url(%23g)'/%3E%3Cg transform='translate(10.4 10.4) scale(1.8)' fill='none' stroke='%23FFFFFF' stroke-width='2.1' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M13.5 3H7a1.8 1.8 0 0 0-1.8 1.8v14.4A1.8 1.8 0 0 0 7 21h10a1.8 1.8 0 0 0 1.8-1.8V7.7z'/%3E%3Cpath d='M13.5 3v4.7h5.3'/%3E%3Cpath d='M8.2 15.6c1.1-1.5 1.9-3.2 2.5-2 .6 1.1.9 2.5 1.8 1.3.9-1.1 1.6.3 2.4.8'/%3E%3C/g%3E%3C/svg%3E">
-<link rel="mask-icon" color="#0064D2" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M13.5 3H7a1.8 1.8 0 0 0-1.8 1.8v14.4A1.8 1.8 0 0 0 7 21h10a1.8 1.8 0 0 0 1.8-1.8V7.7z'/%3E%3Cpath d='M13.5 3v4.7h5.3'/%3E%3Cpath d='M8.2 15.6c1.1-1.5 1.9-3.2 2.5-2 .6 1.1.9 2.5 1.8 1.3.9-1.1 1.6.3 2.4.8'/%3E%3C/g%3E%3C/svg%3E">
+<!-- Inline SVG favicon — monochrome tile, inverts with the browser's color scheme -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='d' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%2348484A'/%3E%3Cstop offset='1' stop-color='%231D1D1F'/%3E%3C/linearGradient%3E%3ClinearGradient id='w' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23F0F0F2'/%3E%3Cstop offset='1' stop-color='%23D9D9DE'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cstyle%3E%23t%7Bfill:url(%23d)%7D%23g%7Bstroke:%23FFF%7D@media(prefers-color-scheme:dark)%7B%23t%7Bfill:url(%23w)%7D%23g%7Bstroke:%231D1D1F%7D%7D%3C/style%3E%3Crect id='t' width='64' height='64' rx='15'/%3E%3Cg id='g' transform='translate(10.4 10.4) scale(1.8)' fill='none' stroke='%23FFF' stroke-width='2.1' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M13.5 3H7a1.8 1.8 0 0 0-1.8 1.8v14.4A1.8 1.8 0 0 0 7 21h10a1.8 1.8 0 0 0 1.8-1.8V7.7z'/%3E%3Cpath d='M13.5 3v4.7h5.3'/%3E%3Cpath d='M8.2 15.6c1.1-1.5 1.9-3.2 2.5-2 .6 1.1.9 2.5 1.8 1.3.9-1.1 1.6.3 2.4.8'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="mask-icon" color="#1D1D1F" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M13.5 3H7a1.8 1.8 0 0 0-1.8 1.8v14.4A1.8 1.8 0 0 0 7 21h10a1.8 1.8 0 0 0 1.8-1.8V7.7z'/%3E%3Cpath d='M13.5 3v4.7h5.3'/%3E%3Cpath d='M8.2 15.6c1.1-1.5 1.9-3.2 2.5-2 .6 1.1.9 2.5 1.8 1.3.9-1.1 1.6.3 2.4.8'/%3E%3C/g%3E%3C/svg%3E">
 <style>
   :root {
-    /* Apple-like system palette */
+    color-scheme: light;
+    /* Monochrome Apple palette — ink on paper, white in dark mode */
     --bg:         #F5F5F7;
     --surface:    #FFFFFF;
     --fill:       rgba(120, 120, 128, .12);
@@ -19,14 +20,40 @@
     --text-2:     #6E6E73;
     --text-3:     #86868B;
 
-    --accent:      #0071E3;
-    --accent-soft: rgba(0, 113, 227, .11);
+    --accent:       #1D1D1F;
+    --accent-soft:  rgba(0, 0, 0, .07);
+    --accent-soft-2:rgba(0, 0, 0, .13);
+    --accent-contrast:#FFF;
+    --accent-hover: #3A3A3C;
+    --accent-active:#000;
+    --ring:         rgba(0, 0, 0, .3);
+    --tile:      linear-gradient(180deg, #48484A, #1D1D1F);
+    --tile-fg:   #FFF;
     --danger:      #D70015;
     --danger-soft: rgba(255, 59, 48, .1);
-    --ok:          #248A3D;
+
+    /* Overlays drawn onto the white page itself stay dark in every scheme —
+       a white signature outline on white paper would be invisible. */
+    --doc-ink:       #1D1D1F;
+    --doc-ink-line:  rgba(0, 0, 0, .55);
+    --doc-ink-soft:  rgba(0, 0, 0, .07);
+    --doc-ink-faint: rgba(0, 0, 0, .45);
 
     --stage-hi:   #E4E4E9;
     --stage-lo:   #C9C9D0;
+    --bar-bg:     rgba(251, 251, 253, .78);
+    --bar-bg-2:   rgba(250, 250, 252, .85);
+    --menu-bg:    rgba(255, 255, 255, .88);
+    --menu-border:rgba(0, 0, 0, .07);
+    --input-bg:   #FFF;
+    --input-border:rgba(0, 0, 0, .1);
+    --seg-sel:    #FFF;
+    --checker-bg: #FFF;
+    --checker-a:  #E8E8EC;
+    --scroll-thumb: rgba(0, 0, 0, .24);
+    --scroll-thumb-hi: rgba(0, 0, 0, .36);
+    --chev-sm: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M1 1l3 3 3-3' fill='none' stroke='%236e6e73' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E");
+    --chev-lg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='6'%3E%3Cpath d='M1 1l3.5 3.5L8 1' fill='none' stroke='%236e6e73' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
 
     --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
             Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -38,6 +65,50 @@
     --r-ctl: 9px;
     --ease: cubic-bezier(.25, .1, .25, 1);
     --shadow-card: 0 1px 2px rgba(0,0,0,.04), 0 6px 20px rgba(0,0,0,.06);
+  }
+
+  /* Same system, inverted for dark browsers — ink becomes paper white */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --bg:         #1C1C1E;
+      --surface:    #2C2C2E;
+      --fill:       rgba(120, 120, 128, .22);
+      --fill-2:     rgba(120, 120, 128, .34);
+      --sep:        rgba(255, 255, 255, .12);
+      --text:       #F5F5F7;
+      --text-2:     #A1A1A6;
+      --text-3:     #86868B;
+
+      --accent:       #F5F5F7;
+      --accent-soft:  rgba(255, 255, 255, .13);
+      --accent-soft-2:rgba(255, 255, 255, .22);
+      --accent-contrast:#1D1D1F;
+      --accent-hover: #FFF;
+      --accent-active:#D1D1D6;
+      --ring:         rgba(255, 255, 255, .35);
+      --tile:      linear-gradient(180deg, #F0F0F2, #D9D9DE);
+      --tile-fg:   #1D1D1F;
+      --danger:      #FF6961;
+      --danger-soft: rgba(255, 69, 58, .16);
+
+      --stage-hi:   #38383D;
+      --stage-lo:   #212123;
+      --bar-bg:     rgba(30, 30, 32, .78);
+      --bar-bg-2:   rgba(32, 32, 34, .85);
+      --menu-bg:    rgba(44, 44, 46, .92);
+      --menu-border:rgba(255, 255, 255, .14);
+      --input-bg:   #1C1C1E;
+      --input-border:rgba(255, 255, 255, .16);
+      --seg-sel:    #636366;
+      /* Checkerboard behind the ink pad + transparency preview stays light —
+         the drawn ink is dark #111 and must stay visible in every scheme. */
+      --scroll-thumb: rgba(255, 255, 255, .3);
+      --scroll-thumb-hi: rgba(255, 255, 255, .45);
+      --chev-sm: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M1 1l3 3 3-3' fill='none' stroke='%23a1a1a6' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E");
+      --chev-lg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='6'%3E%3Cpath d='M1 1l3.5 3.5L8 1' fill='none' stroke='%23a1a1a6' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+      --shadow-card: 0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.45);
+    }
   }
 
   * { box-sizing: border-box; }
@@ -58,12 +129,12 @@
   /* Thin overlay scrollbars, the way macOS draws them */
   ::-webkit-scrollbar { width: 9px; height: 9px; }
   ::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, .24);
+    background: var(--scroll-thumb);
     border: 2px solid transparent;
     border-radius: 5px;
     background-clip: content-box;
   }
-  ::-webkit-scrollbar-thumb:hover { background-color: rgba(0, 0, 0, .36); }
+  ::-webkit-scrollbar-thumb:hover { background-color: var(--scroll-thumb-hi); }
   ::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background: transparent; }
 
   /* Inline SVG icons inherit their stroke from context */
@@ -82,7 +153,7 @@
     gap: 14px;
     padding: 0 18px;
     height: 56px;
-    background: rgba(251, 251, 253, .78);
+    background: var(--bar-bg);
     -webkit-backdrop-filter: blur(22px) saturate(180%);
     backdrop-filter: blur(22px) saturate(180%);
     border-bottom: 1px solid var(--sep);
@@ -105,9 +176,9 @@
     border-radius: 8px;
     display: grid;
     place-items: center;
-    color: #FFF;
-    background: linear-gradient(180deg, #1A8BF7, #0064D2);
-    box-shadow: 0 1px 3px rgba(0, 100, 210, .4), inset 0 1px 0 rgba(255,255,255,.25);
+    color: var(--tile-fg);
+    background: var(--tile);
+    box-shadow: 0 1px 3px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.25);
   }
   .wordmark .logo .ic { width: 17px; height: 17px; stroke-width: 1.6; }
   .wordmark .mark { color: var(--accent); font-weight: 600; }
@@ -138,10 +209,10 @@
   .langmenu {
     position: absolute; inset-inline-end: 0; top: calc(100% + 8px); z-index: 70;
     min-width: 174px; max-height: 336px; overflow-y: auto; padding: 5px;
-    background: rgba(255,255,255,.88);
+    background: var(--menu-bg);
     -webkit-backdrop-filter: blur(20px) saturate(1.7);
     backdrop-filter: blur(20px) saturate(1.7);
-    border: 1px solid rgba(0,0,0,.07); border-radius: 14px;
+    border: 1px solid var(--menu-border); border-radius: 14px;
     box-shadow: 0 14px 44px rgba(0,0,0,.18), 0 2px 10px rgba(0,0,0,.08);
     opacity: 0; visibility: hidden;
     transform: scale(.95) translateY(-5px); transform-origin: top right;
@@ -197,16 +268,12 @@
     border-radius: 8px;
     display: grid;
     place-items: center;
-    color: #FFF;
+    color: var(--tile-fg);
+    background: var(--tile);
     flex: none;
     box-shadow: inset 0 1px 0 rgba(255,255,255,.22), 0 1px 2px rgba(0,0,0,.14);
   }
   .step-ic .ic { width: 15px; height: 15px; stroke-width: 1.8; }
-  .t-blue   { background: linear-gradient(180deg, #1A8BF7, #0064D2); }
-  .t-purple { background: linear-gradient(180deg, #BF5AF2, #933DC9); }
-  .t-teal   { background: linear-gradient(180deg, #3FC6B4, #1F9C8C); }
-  .t-orange { background: linear-gradient(180deg, #FF9F0A, #EA8500); }
-  .t-green  { background: linear-gradient(180deg, #35C759, #1FA847); }
   .step-name {
     font-size: 15px;
     font-weight: 600;
@@ -238,13 +305,13 @@
   button:disabled { opacity: .45; cursor: default; }
   :focus-visible {
     outline: none;
-    box-shadow: 0 0 0 3.5px rgba(0, 113, 227, .35);
+    box-shadow: 0 0 0 3.5px var(--ring);
     border-radius: var(--r-ctl);
   }
 
   /* iOS-style tinted actions */
   .btn-tint { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
-  .btn-tint:hover:not(:disabled) { background: rgba(0, 113, 227, .18); }
+  .btn-tint:hover:not(:disabled) { background: var(--accent-soft-2); }
   .btn-danger { background: var(--danger-soft); color: var(--danger); }
   .btn-danger:hover:not(:disabled) { background: rgba(255, 59, 48, .17); }
 
@@ -253,9 +320,9 @@
 
   .filepick {
     display: block;
-    border: 1.5px dashed rgba(0, 0, 0, .16);
+    border: 1.5px dashed var(--input-border);
     border-radius: 12px;
-    background: #FBFBFD;
+    background: var(--input-bg);
     padding: 17px 13px;
     text-align: center;
     cursor: pointer;
@@ -263,7 +330,7 @@
     color: var(--text-3);
     transition: border-color .15s var(--ease), background .15s var(--ease);
   }
-  .filepick:hover { border-color: var(--accent); background: rgba(0, 113, 227, .04); }
+  .filepick:hover { border-color: var(--accent); background: var(--accent-soft); }
   .filepick input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
   .filepick .ic {
     display: block;
@@ -291,9 +358,9 @@
     color: var(--text-2);
     border-radius: 8px;
   }
-  .switch button:hover:not([aria-selected=true]) { background: rgba(255,255,255,.55); }
+  .switch button:hover:not([aria-selected=true]) { background: var(--fill); }
   .switch button[aria-selected=true] {
-    background: #FFF;
+    background: var(--seg-sel);
     color: var(--text);
     font-weight: 600;
     box-shadow: 0 1px 4px rgba(0,0,0,.14), 0 1px 1px rgba(0,0,0,.06);
@@ -301,10 +368,10 @@
 
   /* Transparency is shown by a checkerboard behind the canvas, never inside it */
   .checker {
-    background-color: #FFF;
+    background-color: var(--checker-bg);
     background-image:
-      linear-gradient(45deg, #E8E8EC 25%, transparent 25%, transparent 75%, #E8E8EC 75%),
-      linear-gradient(45deg, #E8E8EC 25%, transparent 25%, transparent 75%, #E8E8EC 75%);
+      linear-gradient(45deg, var(--checker-a) 25%, transparent 25%, transparent 75%, var(--checker-a) 75%),
+      linear-gradient(45deg, var(--checker-a) 25%, transparent 25%, transparent 75%, var(--checker-a) 75%);
     background-size: 12px 12px;
     background-position: 0 0, 6px 6px;
   }
@@ -312,12 +379,12 @@
     width: 100%;
     height: 122px;
     display: block;
-    border: 1px solid rgba(0, 0, 0, .1);
+    border: 1px solid var(--input-border);
     border-radius: 10px;
     touch-action: none;
     cursor: crosshair;
   }
-  #padCanvas:hover { border-color: rgba(0, 0, 0, .2); }
+  #padCanvas:hover { border-color: var(--text-3); }
 
   #sigPreview {
     margin-top: 10px;
@@ -332,7 +399,7 @@
 
   .status { margin-top: 9px; font-size: 12px; min-height: 1em; color: var(--text-3); }
   .status.bad { color: var(--danger); }
-  .status.good { color: var(--ok); }
+  .status.good { color: var(--text-2); }
 
   /* Save stays reachable no matter how short the window is */
   .rail-foot {
@@ -345,14 +412,14 @@
     width: 100%;
     padding: 11px;
     background: var(--accent);
-    color: #FFF;
+    color: var(--accent-contrast);
     font-weight: 600;
     font-size: 14px;
     border-radius: 11px;
-    box-shadow: 0 1px 3px rgba(0, 100, 210, .35);
+    box-shadow: 0 1px 3px rgba(0,0,0,.3);
   }
-  #btnSave:hover:not(:disabled) { background: #0077ED; }
-  #btnSave:active:not(:disabled) { background: #0060C9; }
+  #btnSave:hover:not(:disabled) { background: var(--accent-hover); }
+  #btnSave:active:not(:disabled) { background: var(--accent-active); }
   #btnSave:disabled { background: var(--fill); color: var(--text-3); box-shadow: none; opacity: 1; }
 
   /* ---------------------------------------------------------------- stage */
@@ -366,7 +433,7 @@
     align-items: center;
     gap: 8px;
     padding: 0 14px;
-    background: rgba(250, 250, 252, .85);
+    background: var(--bar-bg-2);
     -webkit-backdrop-filter: blur(18px) saturate(160%);
     backdrop-filter: blur(18px) saturate(160%);
     color: var(--text-2);
@@ -392,7 +459,7 @@
     font-size: 12.5px;
     font-variant-numeric: tabular-nums;
     color: var(--text);
-    background: var(--fill) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M1 1l3 3 3-3' fill='none' stroke='%236e6e73' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 7px center;
+    background: var(--fill) var(--chev-sm) no-repeat right 7px center;
     border: 0;
     border-radius: 7px;
     padding: 4px 20px 4px 8px;
@@ -400,7 +467,7 @@
     -webkit-appearance: none;
     appearance: none;
   }
-  #pageSelect option { background: #FFF; color: var(--text); }
+  #pageSelect option { background: var(--surface); color: var(--text); }
   #pageCount { font-variant-numeric: tabular-nums; color: var(--text-3); }
   .zoombar {
     display: flex;
@@ -456,7 +523,7 @@
     font-size: 13px;
     max-width: 300px;
   }
-  .empty svg { width: 52px; height: 52px; stroke: #9A9AA0; fill: none; stroke-width: 1.1; margin-bottom: 14px; }
+  .empty svg { width: 52px; height: 52px; stroke: var(--text-3); fill: none; stroke-width: 1.1; margin-bottom: 14px; }
   .empty b { display: block; color: var(--text-2); font-weight: 600; font-size: 15px; margin-bottom: 5px; }
 
   .sheet {
@@ -484,9 +551,9 @@
     display: none;
     touch-action: none;
     cursor: grab;
-    outline: 1.5px solid var(--accent);
+    outline: 1.5px solid var(--doc-ink);
     outline-offset: -0.5px;
-    background: rgba(0, 113, 227, .07);
+    background: var(--doc-ink-soft);
     border-radius: 2px;
   }
   #sigBox.on { display: block; }
@@ -501,7 +568,7 @@
     width: 14px;
     height: 14px;
     border-radius: 50%;
-    border: 2px solid var(--accent);
+    border: 2px solid var(--doc-ink);
     background: #FFF;
     box-shadow: 0 1px 4px rgba(0,0,0,.3);
     cursor: nwse-resize;
@@ -514,7 +581,7 @@
     font-family: var(--mono);
     font-size: 10px;
     line-height: 1;
-    color: var(--accent);
+    color: var(--doc-ink);
     white-space: nowrap;
     pointer-events: none;
     user-select: none;
@@ -524,7 +591,7 @@
     left: 0;
     right: 0;
     text-align: center;
-    border-bottom: 1px solid rgba(0, 113, 227, .55);
+    border-bottom: 1px solid var(--doc-ink-line);
     padding-bottom: 3px;
   }
   .dim-w::before, .dim-w::after {
@@ -533,7 +600,7 @@
     bottom: -3px;
     width: 1px;
     height: 7px;
-    background: rgba(0, 113, 227, .55);
+    background: var(--doc-ink-line);
   }
   .dim-w::before { left: 0; }
   .dim-w::after { right: 0; }
@@ -543,7 +610,7 @@
     bottom: 0;
     display: flex;
     align-items: center;
-    border-left: 1px solid rgba(0, 113, 227, .55);
+    border-left: 1px solid var(--doc-ink-line);
     padding-left: 4px;
   }
   .dim-h::before, .dim-h::after {
@@ -552,14 +619,14 @@
     left: -3px;
     height: 1px;
     width: 7px;
-    background: rgba(0, 113, 227, .55);
+    background: var(--doc-ink-line);
   }
   .dim-h::before { top: 0; }
   .dim-h::after { bottom: 0; }
   .dim-xy {
     top: calc(100% + 5px);
     left: 0;
-    background: var(--accent);
+    background: var(--doc-ink);
     color: #FFF;
     padding: 3px 6px;
     border-radius: 5px;
@@ -580,21 +647,21 @@
     font: inherit;
     font-size: 13px;
     padding: 7px 10px;
-    border: 1px solid rgba(0, 0, 0, .1);
+    border: 1px solid var(--input-border);
     border-radius: 8px;
-    background: #FFF;
+    background: var(--input-bg);
     color: var(--text);
     transition: border-color .15s var(--ease), box-shadow .15s var(--ease);
   }
   .fld input:focus, .fld select:focus, .fld textarea:focus {
     outline: none;
     border-color: var(--accent);
-    box-shadow: 0 0 0 3.5px rgba(0, 113, 227, .22);
+    box-shadow: 0 0 0 3.5px var(--ring);
   }
   .fld select {
     -webkit-appearance: none;
     appearance: none;
-    background: #FFF url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='6'%3E%3Cpath d='M1 1l3.5 3.5L8 1' fill='none' stroke='%236e6e73' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 10px center;
+    background: var(--input-bg) var(--chev-lg) no-repeat right 10px center;
     padding-right: 27px;
   }
   [dir="rtl"] .fld select { background-position: left 10px center; padding-right: 10px; padding-left: 27px; }
@@ -616,8 +683,8 @@
     user-select: none;
     border-radius: 2px;
   }
-  .tbox:hover { outline-color: rgba(0, 113, 227, .45); }
-  .tbox.sel { outline-color: var(--accent); outline-style: solid; }
+  .tbox:hover { outline-color: var(--doc-ink-faint); }
+  .tbox.sel { outline-color: var(--doc-ink); outline-style: solid; }
   .tbox:active { cursor: grabbing; }
 
   /* ------------------------------------------------------------ responsive */
@@ -740,7 +807,7 @@
 
       <section class="step">
         <div class="step-head">
-          <span class="step-ic t-blue"><svg class="ic" aria-hidden="true"><use href="#i-doc-up"/></svg></span>
+          <span class="step-ic"><svg class="ic" aria-hidden="true"><use href="#i-doc-up"/></svg></span>
           <h2 class="step-name" data-i18n="stepDocument"></h2>
         </div>
         <label class="filepick">
@@ -757,7 +824,7 @@
 
       <section class="step">
         <div class="step-head">
-          <span class="step-ic t-purple"><svg class="ic" aria-hidden="true"><use href="#i-sig"/></svg></span>
+          <span class="step-ic"><svg class="ic" aria-hidden="true"><use href="#i-sig"/></svg></span>
           <h2 class="step-name" data-i18n="stepSignature"></h2>
         </div>
         <div class="switch" role="tablist">
@@ -790,7 +857,7 @@
 
       <section class="step">
         <div class="step-head">
-          <span class="step-ic t-teal"><svg class="ic" aria-hidden="true"><use href="#i-text"/></svg></span>
+          <span class="step-ic"><svg class="ic" aria-hidden="true"><use href="#i-text"/></svg></span>
           <h2 class="step-name" data-i18n="stepText"></h2>
         </div>
         <label class="fld">
@@ -822,7 +889,7 @@
 
       <section class="step">
         <div class="step-head">
-          <span class="step-ic t-orange"><svg class="ic" aria-hidden="true"><use href="#i-place"/></svg></span>
+          <span class="step-ic"><svg class="ic" aria-hidden="true"><use href="#i-place"/></svg></span>
           <h2 class="step-name" data-i18n="stepPlace"></h2>
         </div>
         <div class="row">
@@ -835,7 +902,7 @@
 
       <section class="step">
         <div class="step-head">
-          <span class="step-ic t-green"><svg class="ic" aria-hidden="true"><use href="#i-save"/></svg></span>
+          <span class="step-ic"><svg class="ic" aria-hidden="true"><use href="#i-save"/></svg></span>
           <h2 class="step-name" data-i18n="stepSave"></h2>
         </div>
         <p class="note" style="margin-top:0" data-i18n="saveNote"></p>
