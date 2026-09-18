@@ -1602,6 +1602,7 @@
       geometry = {};
       placement = null;
       zoom = 1;
+      zoomLive = 1;
       pendingCenter = null;
       texts = [];
       selectedText = null;
@@ -1736,6 +1737,7 @@
     texts = Array.isArray(s.texts) ? s.texts : [];
     textSeq = s.textSeq || texts.length;
     zoom = typeof s.zoom === "number" ? clamp(s.zoom, ZOOM_MIN, ZOOM_MAX) : 1;
+    zoomLive = zoom;
     pendingCenter = null;
 
     pageNow = Math.min(Math.max(s.page || pageNow, 1), pageTotal);
@@ -1775,6 +1777,7 @@
     sigPreview.removeAttribute("src");
     sigPreview.style.display = "";
     zoom = 1;
+    zoomLive = 1;
     pendingCenter = null;
     pad.clearRect(0, 0, padCanvas.width, padCanvas.height);
     hasStrokes = false;
@@ -1891,10 +1894,29 @@
       : "—";
   }
 
+  // `zoom` is the committed factor. The wheel adjusts `zoomLive`
+  // continuously and previews it by scaling the whole sheet — canvas,
+  // overlays and dimension labels move as one — until a short settle
+  // timer commits a real re-render at the new scale.
+  var zoomLive = 1;
+  var zoomSettle = null;
+  var zoomAnchor = null;      // sheet-local point the gesture is anchored at
+  var zoomStagePt = null;     // same point in stage-viewport coords
+
+  function cancelPreview() {
+    clearTimeout(zoomSettle);
+    zoomSettle = null;
+    zoomAnchor = null;
+    var sheet = el("sheet");
+    sheet.style.transform = "";
+    sheet.style.transformOrigin = "";
+  }
+
   // ox/oy is the spot inside the stage viewport the zoom should hold steady:
   // the centre for the buttons, the pointer for the wheel.
   function zoomTo(factor, ox, oy) {
     if (!pdfDoc) return;
+    cancelPreview();
     var stage = el("stage");
     pendingCenter = {
       fx: (stage.scrollLeft + ox) / Math.max(1, stage.scrollWidth),
@@ -1902,10 +1924,11 @@
       ox: ox, oy: oy
     };
     zoom = clamp(zoom * factor, ZOOM_MIN, ZOOM_MAX);
+    zoomLive = zoom;
     drawPage();
     persist();
   }
-  function zoomStep(dir, ox, oy) { zoomTo(dir > 0 ? 1.25 : 0.8, ox, oy); }
+  function zoomStep(dir, ox, oy) { zoomTo(dir > 0 ? 1.15 : 1 / 1.15, ox, oy); }
 
   el("btnZoomIn").addEventListener("click", function () {
     var stage = el("stage");
@@ -1917,30 +1940,61 @@
   });
   el("zoomLabel").addEventListener("click", function () {
     if (zoom === 1) return;
+    cancelPreview();
     zoom = 1;
+    zoomLive = 1;
     pendingCenter = null;
     drawPage();
     persist();
   });
 
+  // Commits the previewed factor: real re-render at zoomLive, keeping the
+  // anchored document point under the pointer via pendingCenter.
+  function commitZoom() {
+    zoomSettle = null;
+    zoomAnchor = null;
+    var sheet = el("sheet");
+    sheet.style.transform = "";
+    sheet.style.transformOrigin = "";
+    if (zoomLive === zoom) return;
+    zoom = zoomLive;
+    if (zoomStagePt) {
+      var stage = el("stage");
+      pendingCenter = {
+        fx: (stage.scrollLeft + zoomStagePt.x) / Math.max(1, stage.scrollWidth),
+        fy: (stage.scrollTop + zoomStagePt.y) / Math.max(1, stage.scrollHeight),
+        ox: zoomStagePt.x, oy: zoomStagePt.y
+      };
+    }
+    drawPage();
+    persist();
+  }
+
   // Plain wheel zooms around the pointer — like a map, the document under
-  // the cursor stays put. A trackpad pinch reports as Ctrl+wheel and lands
-  // here too. Small trackpad deltas accumulate into whole steps so mouse
-  // notches and smooth scrolling zoom at the same pace.
-  var wheelAcc = 0;
+  // the cursor stays put. Continuous, fine-grained: every pixel of wheel
+  // delta bends the scale a little instead of jumping in fixed steps.
+  // A trackpad pinch reports as Ctrl+wheel and lands here too.
   el("stage").addEventListener("wheel", function (ev) {
     if (!pdfDoc) return;
     ev.preventDefault();
     var delta = ev.deltaY * (ev.deltaMode === 1 ? 33 : ev.deltaMode === 2 ? 400 : 1);
-    wheelAcc += delta;
-    var steps = Math.floor(Math.abs(wheelAcc) / 55);
-    if (!steps) return;
-    var sign = Math.sign(wheelAcc);          // > 0 scrolls down = zooms out
-    wheelAcc -= sign * steps * 55;
-    if (steps > 3) steps = 3;
+    var sheet = el("sheet");
+    if (!zoomSettle) {
+      // Gesture start: remember the sheet point under the pointer — the
+      // transform origin that keeps it stationary while scaling.
+      var sr = sheet.getBoundingClientRect();
+      zoomAnchor = { x: ev.clientX - sr.left, y: ev.clientY - sr.top };
+      sheet.style.transformOrigin = zoomAnchor.x + "px " + zoomAnchor.y + "px";
+    }
+    zoomLive = clamp(zoomLive * Math.exp(-delta * 0.002), ZOOM_MIN, ZOOM_MAX);
     var r = el("stage").getBoundingClientRect();
-    zoomTo(Math.pow(1.25, -sign * steps),
-           ev.clientX - r.left, ev.clientY - r.top);
+    zoomStagePt = { x: ev.clientX - r.left, y: ev.clientY - r.top };
+    sheet.style.transform = "scale(" + (zoomLive / zoom) + ")";
+    // pixelsPerPoint() measures the canvas rect, which already includes the
+    // preview transform — so it is the live scale, no correction needed.
+    el("zoomLabel").textContent = Math.round(pixelsPerPoint() * 75) + "%";
+    clearTimeout(zoomSettle);
+    zoomSettle = setTimeout(commitZoom, 150);
   }, { passive: false });
 
   // Drag the sheet itself to pan — the signature box and text boxes keep
