@@ -118,23 +118,54 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .langpick { margin-inline-start: auto; display: flex; align-items: center; gap: 7px; flex: none; }
-  .langpick svg { width: 16px; height: 16px; stroke: var(--text-3); fill: none; stroke-width: 1.4; }
-  #language {
-    font: inherit;
-    font-size: 13px;
-    color: var(--text);
-    background: var(--fill) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='6'%3E%3Cpath d='M1 1l3.5 3.5L8 1' fill='none' stroke='%236e6e73' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 9px center;
-    border: 0;
-    border-radius: 8px;
-    padding: 6px 26px 6px 10px;
-    cursor: pointer;
-    -webkit-appearance: none;
-    appearance: none;
+  .langpick { position: relative; margin-inline-start: auto; flex: none; }
+  .langbtn {
+    display: inline-flex; align-items: center; gap: 6px;
+    font: inherit; font-size: 13px; font-weight: 500; color: var(--text);
+    background: var(--fill); border: 0; border-radius: 999px;
+    padding: 5px 10px 5px 9px; cursor: pointer;
+    transition: background-color .15s ease, box-shadow .15s ease;
   }
-  #language:hover { background-color: var(--fill-2); }
-  [dir="rtl"] #language { background-position: left 9px center; padding: 6px 10px 6px 26px; }
-  #language option { background: #FFF; color: var(--text); }
+  .langbtn:hover { background: var(--fill-2); }
+  .langbtn:focus-visible { outline: none; box-shadow: 0 0 0 3.5px var(--ring); }
+  .langbtn .gl { width: 14px; height: 14px; color: var(--text-3); stroke-width: 1.5; }
+  .langbtn .chev { width: 10px; height: 10px; color: var(--text-3); stroke-width: 2.2;
+                   transition: transform .18s ease; }
+  .langbtn[aria-expanded="true"] .chev { transform: rotate(180deg); }
+
+  /* macOS-style popover list — frosted card with checkmark on the active item */
+  .langmenu {
+    position: absolute; inset-inline-end: 0; top: calc(100% + 8px); z-index: 70;
+    min-width: 174px; max-height: 336px; overflow-y: auto; padding: 5px;
+    background: rgba(255,255,255,.88);
+    -webkit-backdrop-filter: blur(20px) saturate(1.7);
+    backdrop-filter: blur(20px) saturate(1.7);
+    border: 1px solid rgba(0,0,0,.07); border-radius: 14px;
+    box-shadow: 0 14px 44px rgba(0,0,0,.18), 0 2px 10px rgba(0,0,0,.08);
+    opacity: 0; visibility: hidden;
+    transform: scale(.95) translateY(-5px); transform-origin: top right;
+    /* visible instantly on open (items must be focusable), hidden only after
+       the fade-out finishes on close */
+    transition: opacity .16s ease, transform .16s ease, visibility 0s .16s;
+  }
+  [dir="rtl"] .langmenu { transform-origin: top left; }
+  .langmenu.open { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
+  .langopt {
+    display: flex; align-items: center; justify-content: flex-start;
+    gap: 8px; width: 100%;
+    font: inherit; font-size: 13px; color: var(--text); text-align: start;
+    background: none; border: 0; border-radius: 9px; padding: 6px 9px;
+    cursor: pointer;
+  }
+  .langopt:hover, .langopt:focus-visible { outline: none; background: var(--fill-2); }
+  .langopt .tick {
+    width: 13px; height: 13px; flex: none;
+    fill: none; stroke: var(--accent); stroke-width: 2.3;
+    stroke-linecap: round; stroke-linejoin: round;
+    visibility: hidden;
+  }
+  .langopt[aria-selected="true"] { font-weight: 600; }
+  .langopt[aria-selected="true"] .tick { visibility: visible; }
 
   /* ------------------------------------------------------------ two panes */
   .workspace { flex: 1; display: flex; min-height: 0; }
@@ -672,6 +703,14 @@
     <symbol id="i-chev-r" viewBox="0 0 24 24">
       <path d="M9.5 5.5 16 12l-6.5 6.5"/>
     </symbol>
+    <symbol id="i-chev-d" viewBox="0 0 24 24">
+      <path d="M5.5 9.5 12 16l6.5-6.5"/>
+    </symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="8.6"/>
+      <path d="M3.4 12h17.2"/>
+      <ellipse cx="12" cy="12" rx="4.3" ry="8.6"/>
+    </symbol>
     <symbol id="i-image" viewBox="0 0 24 24">
       <rect x="4" y="5" width="16" height="14" rx="2"/>
       <circle cx="9" cy="10" r="1.4"/>
@@ -684,8 +723,13 @@
   <h1 class="wordmark"><span class="logo"><svg class="ic" aria-hidden="true"><use href="#i-logo"/></svg></span>Open PDF <span class="mark">Signer</span></h1>
   <span class="claim" data-i18n="claim"></span>
   <span class="langpick">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg>
-    <select id="language" aria-label="Language"></select>
+    <button id="langBtn" class="langbtn" type="button" aria-haspopup="listbox"
+            aria-expanded="false" aria-label="Language">
+      <svg class="ic gl" aria-hidden="true"><use href="#i-globe"/></svg>
+      <span id="langName">English</span>
+      <svg class="ic chev" aria-hidden="true"><use href="#i-chev-d"/></svg>
+    </button>
+    <span class="langmenu" id="langMenu" role="listbox" aria-label="Language"></span>
   </span>
 </header>
 
@@ -1530,19 +1574,67 @@
   }
 
   (function setupLanguage() {
-    var select = el("language");
-    for (var i = 0; i < LANGUAGES.length; i++) {
-      var o = document.createElement("option");
-      o.value = LANGUAGES[i][0];
-      o.textContent = LANGUAGES[i][1];
-      select.appendChild(o);
-    }
+    var btn = el("langBtn"), menu = el("langMenu"), name = el("langName");
+    var opts = [];
+    LANGUAGES.forEach(function (pair) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "langopt";
+      b.setAttribute("role", "option");
+      b.innerHTML = '<svg class="tick" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"/></svg><span></span>';
+      b.lastChild.textContent = pair[1];
+      b.addEventListener("click", function () { pickLang(pair[0]); });
+      menu.appendChild(b);
+      opts.push({ code: pair[0], btn: b });
+    });
+
     var stored = null;
     try { stored = localStorage.getItem("ops-lang"); } catch (e) {}
     var wanted = stored || (navigator.language || "en").slice(0, 2).toLowerCase();
     lang = T[wanted] ? wanted : "en";
-    select.value = lang;
-    select.addEventListener("change", function () { lang = select.value; applyLanguage(); });
+
+    var open = false;
+    function syncMenu() {
+      opts.forEach(function (o) {
+        var sel = o.code === lang;
+        o.btn.setAttribute("aria-selected", String(sel));
+        if (sel) name.textContent = o.btn.lastChild.textContent;
+      });
+    }
+    function show(v) {
+      open = v;
+      btn.setAttribute("aria-expanded", String(v));
+      menu.classList.toggle("open", v);
+      if (v) {
+        var sel = menu.querySelector('[aria-selected="true"]');
+        (sel || menu.firstChild).focus();
+      }
+    }
+    function pickLang(code) {
+      lang = code;
+      applyLanguage();
+      syncMenu();
+      show(false);
+      btn.focus();
+    }
+    btn.addEventListener("click", function () { show(!open); });
+    document.addEventListener("pointerdown", function (ev) {
+      if (open && !(ev.target.closest && ev.target.closest(".langpick"))) show(false);
+    });
+    document.addEventListener("keydown", function (ev) {
+      if (!open) return;
+      if (ev.key === "Escape") { show(false); btn.focus(); }
+      else if (ev.key === "ArrowDown" || ev.key === "ArrowUp") {
+        ev.preventDefault();
+        var items = menu.querySelectorAll(".langopt");
+        var i = Array.prototype.indexOf.call(items, document.activeElement);
+        var n = ev.key === "ArrowDown"
+          ? (i + 1) % items.length
+          : (i - 1 + items.length) % items.length;
+        items[n].focus();
+      } else if (ev.key === "Tab") { show(false); }
+    });
+    syncMenu();
   })();
 
   // ===========================================================================
