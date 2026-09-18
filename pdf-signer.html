@@ -1249,6 +1249,7 @@
 
   // Fonts lifted out of the document itself, keyed by pdf.js loadedName.
   var docFonts = {};         // -> { label, data, cssFam, faceBad, kf, kfBad, chars }
+  var docFontNames = {};     // every font the text layer references -> { label, chars }
   var pageFontBest = {};     // page -> loadedName of the font carrying the most text
   var faceSeq = 0;           // counter for generated CSS font-family names
 
@@ -1398,6 +1399,7 @@
       selectedText = null;
       textSeq = 0;
       docFonts = {};
+      docFontNames = {};
       pageFontBest = {};
       rebuildFontSelect();
 
@@ -1876,6 +1878,14 @@
         if (docFonts[name]) { docFonts[name].chars += usage[name]; continue; }
         var face = null;
         try { face = page.commonObjs.get(name); } catch (e) {}
+        // Track the name for the note either way — a font we cannot lift
+        // still tells the user what the document is set in.
+        var ref = face && face.name ? String(face.name) : name;
+        if (!docFontNames[name]) {
+          docFontNames[name] = { label: ref.replace(/^[A-Z]{6}\+/, ""), chars: 0 };
+          changed = true;
+        }
+        docFontNames[name].chars += usage[name];
         // No font data means a non-embedded standard font: nothing to lift
         // out, the Standard section of the picker covers those.
         if (!face || !face.data) continue;
@@ -1930,21 +1940,23 @@
     }
     fontSel.appendChild(gs);
     fontSel.value = prev;
-    if (fontSel.value !== prev) fontSel.value = preferredFontKey();
+    // prev is "" on the first build and whenever the old pick vanished —
+    // setting "" would leave the select blank, so fall back to the best font.
+    if (!fontSel.value) fontSel.value = preferredFontKey();
     paintDocFontNote();
   }
 
   // Small note under the picker naming the fonts the document actually
-  // uses — the same list the picker groups under "document fonts", most
+  // typesets — every font the text layer references, embedded or not, most
   // used first, so it stays readable even on font-heavy files.
   function paintDocFontNote() {
     var node = el("docFontNote");
-    var names = Object.keys(docFonts);
+    var names = Object.keys(docFontNames);
     if (!names.length) { node.hidden = true; node.textContent = ""; return; }
-    names.sort(function (a, b) { return docFonts[b].chars - docFonts[a].chars; });
+    names.sort(function (a, b) { return docFontNames[b].chars - docFontNames[a].chars; });
     var labels = [];
     for (var i = 0; i < names.length && labels.length < 3; i++) {
-      var lb = docFonts[names[i]].label;
+      var lb = docFontNames[names[i]].label;
       if (labels.indexOf(lb) < 0) labels.push(lb);
     }
     node.textContent = t("fontUses", { fonts: labels.join(", ") });
