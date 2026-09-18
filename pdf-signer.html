@@ -669,6 +669,9 @@
   .fld input[type="color"] { height: 32px; padding: 3px 4px; cursor: pointer; }
   .fld-2 { display: flex; gap: 8px; }
   .fld-2 .fld { flex: 1; min-width: 0; }
+  .fld-check { display: flex; align-items: center; gap: 8px; margin: 2px 0 10px;
+               font-size: 13px; color: var(--text); cursor: pointer; }
+  .fld-check input { width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; }
 
   /* Placed texts live above the page canvas but below the signature box */
   #textLayer { position: absolute; inset: 0; pointer-events: none; }
@@ -783,6 +786,14 @@
       <rect x="4" y="5" width="16" height="14" rx="2"/>
       <circle cx="9" cy="10" r="1.4"/>
       <path d="M4.5 17.5 9 13l3 3 4-4.5 3.5 3.5"/>
+    </symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24">
+      <path d="M12 3l7 2.6v5.3c0 4.6-3 8.1-7 9.6-4-1.5-7-5-7-9.6V5.6z"/>
+      <path d="M8.8 11.7l2.2 2.2 4.2-4.4"/>
+    </symbol>
+    <symbol id="i-key" viewBox="0 0 24 24">
+      <circle cx="8" cy="14.5" r="4"/>
+      <path d="M11 11.5 19.5 3M15.5 7l3 3M13 9.5l3 3"/>
     </symbol>
   </defs>
 </svg>
@@ -902,6 +913,69 @@
 
       <section class="step">
         <div class="step-head">
+          <span class="step-ic"><svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg></span>
+          <h2 class="step-name" data-i18n="stepCrypto"></h2>
+        </div>
+
+        <div id="cryptoSetup">
+          <div class="row">
+            <button id="btnCryptoCreate" class="btn-tint"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg><span data-i18n="cryptoCreate"></span></button>
+            <button id="btnCryptoImport" class="btn-tint"><svg class="ic" aria-hidden="true"><use href="#i-upload"/></svg><span data-i18n="cryptoImport"></span></button>
+          </div>
+          <div id="cryptoFormGen" hidden>
+            <label class="fld">
+              <span data-i18n="cryptoName"></span>
+              <input id="cryptoName" type="text" autocomplete="name" data-i18n-ph="cryptoNamePh">
+            </label>
+            <label class="fld">
+              <span data-i18n="cryptoPass"></span>
+              <input id="cryptoPass" type="password" autocomplete="new-password" data-i18n-ph="cryptoPassPh">
+            </label>
+            <div class="row">
+              <button id="btnCryptoGen" class="btn-tint"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span data-i18n="cryptoGenerate"></span></button>
+            </div>
+          </div>
+          <div id="cryptoFormImp" hidden>
+            <label class="fld">
+              <span data-i18n="cryptoFile"></span>
+              <input id="cryptoFile" type="file" accept=".p12,.pfx">
+            </label>
+            <label class="fld">
+              <span data-i18n="cryptoP12Pass"></span>
+              <input id="cryptoP12Pass" type="password" autocomplete="off" data-i18n-ph="cryptoPassPh">
+            </label>
+            <div class="row">
+              <button id="btnCryptoImpGo" class="btn-tint"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span data-i18n="cryptoImportGo"></span></button>
+            </div>
+          </div>
+          <p class="note" data-i18n="cryptoNote"></p>
+        </div>
+
+        <div id="cryptoReady" hidden>
+          <p class="note" id="cryptoCertName" style="margin-top:0"></p>
+          <label class="fld-check">
+            <input type="checkbox" id="cryptoSign">
+            <span data-i18n="cryptoSign"></span>
+          </label>
+          <div id="cryptoLockRow" hidden>
+            <label class="fld">
+              <span data-i18n="cryptoUnlockLbl"></span>
+              <input id="cryptoUnlockPass" type="password" autocomplete="off" data-i18n-ph="cryptoPassPh">
+            </label>
+            <div class="row">
+              <button id="btnCryptoUnlock" class="btn-tint"><svg class="ic" aria-hidden="true"><use href="#i-key"/></svg><span data-i18n="cryptoUnlock"></span></button>
+            </div>
+          </div>
+          <div class="row">
+            <button id="btnCryptoRemove" class="btn-danger"><svg class="ic" aria-hidden="true"><use href="#i-trash"/></svg><span data-i18n="remove"></span></button>
+          </div>
+        </div>
+
+        <div class="status" id="statusCrypto"></div>
+      </section>
+
+      <section class="step">
+        <div class="step-head">
           <span class="step-ic"><svg class="ic" aria-hidden="true"><use href="#i-save"/></svg></span>
           <h2 class="step-name" data-i18n="stepSave"></h2>
         </div>
@@ -962,6 +1036,9 @@
 <script src="https://cdn.jsdelivr.net/npm/@pdf-lib/fontkit@1.1.1/dist/fontkit.umd.min.js"
         integrity="sha384-2p6U+1mmqF10USehFeRiyG2ESG9FwIqN+jxULn5w9jjQIihSn9Pt13dVCn/Hawjn"
         crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/node-forge@1.4.0/dist/forge.min.js"
+        integrity="sha384-wX64sW+w67fcBkYc40eYEvKyZMtpFujAPnxJPPMvE6fT3WDOJDZOAAny4rWgoBYq"
+        crossorigin="anonymous"></script>
 <script>
 (function () {
   "use strict";
@@ -1016,7 +1093,30 @@
       textRemoved: "Text removed.", fontBroken: "cannot be embedded",
       fontNoGlyphs: "This font has no glyphs for: {chars}",
       fontEmbedFail: "Document font could not be embedded: {msg}",
-      fontkitMissing: "The font engine could not be loaded, so document fonts cannot be embedded."
+      fontkitMissing: "The font engine could not be loaded, so document fonts cannot be embedded.",
+      stepCrypto: "Digital signature",
+      cryptoCreate: "Create certificate", cryptoImport: "Import .p12/.pfx",
+      cryptoName: "Name on the certificate", cryptoNamePh: "e.g. Jane Doe",
+      cryptoPass: "Passphrase protects the key", cryptoPassPh: "Passphrase",
+      cryptoGenerate: "Generate", cryptoWorking: "Generating the key…",
+      cryptoFile: "Certificate file", cryptoP12Pass: "File password",
+      cryptoImportGo: "Import",
+      cryptoNote: "Adds a real cryptographic signature on save — the file becomes tamper-evident. Fully local: generate a free self-signed certificate or import your own.",
+      cryptoSign: "Sign digitally on save",
+      cryptoUnlockLbl: "Key locked — enter the passphrase",
+      cryptoUnlock: "Unlock",
+      cryptoNeedBoth: "Name and passphrase required.",
+      cryptoNeedFile: "Choose a certificate file first.",
+      cryptoNeedUnlock: "Unlock the certificate first (field in the signature card).",
+      cryptoWrongPass: "Wrong passphrase.",
+      cryptoImportFail: "Could not read that certificate file — wrong password or format.",
+      cryptoSignFail: "Digital signing failed: {msg}",
+      cryptoCertOk: "Certificate: {name}",
+      cryptoSelf: "self-signed",
+      cryptoUnlocked: "Key unlocked.",
+      cryptoRemoved: "Certificate removed.",
+      cryptoGenFail: "Certificate could not be created.",
+      cryptoUnavailable: "The crypto engine could not be loaded."
     },
     de: {
       claim: "Läuft vollständig im Browser. Deine Datei verlässt diesen Rechner nicht.",
@@ -1053,7 +1153,30 @@
       textRemoved: "Text entfernt.", fontBroken: "nicht einbettbar",
       fontNoGlyphs: "Dieser Schrift fehlen Glyphen für: {chars}",
       fontEmbedFail: "Dokumentschrift konnte nicht eingebettet werden: {msg}",
-      fontkitMissing: "Die Font-Engine konnte nicht geladen werden, Dokumentschriften lassen sich nicht einbetten."
+      fontkitMissing: "Die Font-Engine konnte nicht geladen werden, Dokumentschriften lassen sich nicht einbetten.",
+      stepCrypto: "Digitale Signatur",
+      cryptoCreate: "Zertifikat erstellen", cryptoImport: ".p12/.pfx importieren",
+      cryptoName: "Name im Zertifikat", cryptoNamePh: "z. B. Jane Doe",
+      cryptoPass: "Passphrase schützt den Schlüssel", cryptoPassPh: "Passphrase",
+      cryptoGenerate: "Generieren", cryptoWorking: "Schlüssel wird erzeugt…",
+      cryptoFile: "Zertifikatsdatei", cryptoP12Pass: "Datei-Passwort",
+      cryptoImportGo: "Importieren",
+      cryptoNote: "Fügt beim Speichern eine echte kryptografische Signatur hinzu — die Datei wird manipulationssicher. Komplett lokal: kostenlos selbstsigniert erzeugen oder eigenes Zertifikat importieren.",
+      cryptoSign: "Beim Speichern digital signieren",
+      cryptoUnlockLbl: "Schlüssel gesperrt — Passphrase eingeben",
+      cryptoUnlock: "Entsperren",
+      cryptoNeedBoth: "Name und Passphrase nötig.",
+      cryptoNeedFile: "Erst eine Zertifikatsdatei wählen.",
+      cryptoNeedUnlock: "Zertifikat zuerst entsperren (Feld in der Signatur-Karte).",
+      cryptoWrongPass: "Falsche Passphrase.",
+      cryptoImportFail: "Zertifikatsdatei nicht lesbar — falsches Passwort oder Format.",
+      cryptoSignFail: "Digitale Signatur fehlgeschlagen: {msg}",
+      cryptoCertOk: "Zertifikat: {name}",
+      cryptoSelf: "selbstsigniert",
+      cryptoUnlocked: "Schlüssel entsperrt.",
+      cryptoRemoved: "Zertifikat entfernt.",
+      cryptoGenFail: "Zertifikat konnte nicht erzeugt werden.",
+      cryptoUnavailable: "Die Krypto-Engine konnte nicht geladen werden."
     },
     es: {
       claim: "Funciona por completo en tu navegador. Tu archivo nunca sale de este ordenador.",
@@ -1090,7 +1213,30 @@
       textRemoved: "Texto eliminado.", fontBroken: "no se puede incrustar",
       fontNoGlyphs: "A esta fuente le faltan glifos para: {chars}",
       fontEmbedFail: "No se pudo incrustar la fuente del documento: {msg}",
-      fontkitMissing: "No se pudo cargar el motor de fuentes; las del documento no se pueden incrustar."
+      fontkitMissing: "No se pudo cargar el motor de fuentes; las del documento no se pueden incrustar.",
+      stepCrypto: "Firma digital",
+      cryptoCreate: "Crear certificado", cryptoImport: "Importar .p12/.pfx",
+      cryptoName: "Nombre en el certificado", cryptoNamePh: "p. ej. Jane Doe",
+      cryptoPass: "La frase protege la clave", cryptoPassPh: "Frase de contraseña",
+      cryptoGenerate: "Generar", cryptoWorking: "Generando la clave…",
+      cryptoFile: "Archivo de certificado", cryptoP12Pass: "Contraseña del archivo",
+      cryptoImportGo: "Importar",
+      cryptoNote: "Añade una firma criptográfica real al guardar — el archivo queda a prueba de manipulaciones. Todo local: genera gratis un certificado autofirmado o importa el tuyo.",
+      cryptoSign: "Firmar digitalmente al guardar",
+      cryptoUnlockLbl: "Clave bloqueada — introduce la frase",
+      cryptoUnlock: "Desbloquear",
+      cryptoNeedBoth: "Se requieren nombre y frase.",
+      cryptoNeedFile: "Elige primero un archivo de certificado.",
+      cryptoNeedUnlock: "Desbloquea primero el certificado.",
+      cryptoWrongPass: "Frase incorrecta.",
+      cryptoImportFail: "No se pudo leer el certificado — contraseña o formato incorrecto.",
+      cryptoSignFail: "La firma digital falló: {msg}",
+      cryptoCertOk: "Certificado: {name}",
+      cryptoSelf: "autofirmado",
+      cryptoUnlocked: "Clave desbloqueada.",
+      cryptoRemoved: "Certificado eliminado.",
+      cryptoGenFail: "No se pudo crear el certificado.",
+      cryptoUnavailable: "No se pudo cargar el motor criptográfico."
     },
     fr: {
       claim: "Fonctionne entièrement dans votre navigateur. Votre fichier ne quitte jamais cet ordinateur.",
@@ -1127,7 +1273,30 @@
       textRemoved: "Texte retiré.", fontBroken: "non incorporable",
       fontNoGlyphs: "Cette police n’a pas de glyphes pour : {chars}",
       fontEmbedFail: "Impossible d’incorporer la police du document : {msg}",
-      fontkitMissing: "Le moteur de polices n’a pas pu être chargé ; les polices du document ne peuvent pas être incorporées."
+      fontkitMissing: "Le moteur de polices n’a pas pu être chargé ; les polices du document ne peuvent pas être incorporées.",
+      stepCrypto: "Signature numérique",
+      cryptoCreate: "Créer un certificat", cryptoImport: "Importer .p12/.pfx",
+      cryptoName: "Nom sur le certificat", cryptoNamePh: "p. ex. Jane Doe",
+      cryptoPass: "La phrase protège la clé", cryptoPassPh: "Phrase secrète",
+      cryptoGenerate: "Générer", cryptoWorking: "Génération de la clé…",
+      cryptoFile: "Fichier de certificat", cryptoP12Pass: "Mot de passe du fichier",
+      cryptoImportGo: "Importer",
+      cryptoNote: "Ajoute une vraie signature cryptographique à l'enregistrement — le fichier devient inviolable. Tout local : crée gratuitement un certificat auto-signé ou importe le tien.",
+      cryptoSign: "Signer numériquement à l'enregistrement",
+      cryptoUnlockLbl: "Clé verrouillée — saisir la phrase",
+      cryptoUnlock: "Déverrouiller",
+      cryptoNeedBoth: "Nom et phrase requis.",
+      cryptoNeedFile: "Choisis d'abord un fichier de certificat.",
+      cryptoNeedUnlock: "Déverrouille d'abord le certificat.",
+      cryptoWrongPass: "Phrase incorrecte.",
+      cryptoImportFail: "Certificat illisible — mot de passe ou format incorrect.",
+      cryptoSignFail: "Échec de la signature numérique : {msg}",
+      cryptoCertOk: "Certificat : {name}",
+      cryptoSelf: "auto-signé",
+      cryptoUnlocked: "Clé déverrouillée.",
+      cryptoRemoved: "Certificat supprimé.",
+      cryptoGenFail: "Impossible de créer le certificat.",
+      cryptoUnavailable: "Le moteur cryptographique n'a pas pu être chargé."
     },
     it: {
       claim: "Funziona interamente nel browser. Il tuo file non lascia mai questo computer.",
@@ -1164,7 +1333,30 @@
       textRemoved: "Testo rimosso.", fontBroken: "non incorporabile",
       fontNoGlyphs: "A questo carattere mancano i glifi per: {chars}",
       fontEmbedFail: "Impossibile incorporare il carattere del documento: {msg}",
-      fontkitMissing: "Il motore dei caratteri non è stato caricato; i caratteri del documento non possono essere incorporati."
+      fontkitMissing: "Il motore dei caratteri non è stato caricato; i caratteri del documento non possono essere incorporati.",
+      stepCrypto: "Firma digitale",
+      cryptoCreate: "Crea certificato", cryptoImport: "Importa .p12/.pfx",
+      cryptoName: "Nome sul certificato", cryptoNamePh: "es. Jane Doe",
+      cryptoPass: "La passphrase protegge la chiave", cryptoPassPh: "Passphrase",
+      cryptoGenerate: "Genera", cryptoWorking: "Generazione della chiave…",
+      cryptoFile: "File certificato", cryptoP12Pass: "Password del file",
+      cryptoImportGo: "Importa",
+      cryptoNote: "Aggiunge una vera firma crittografica al salvataggio — il file diventa a prova di manomissione. Tutto in locale: crea gratis un certificato autofirmato o importa il tuo.",
+      cryptoSign: "Firma digitalmente al salvataggio",
+      cryptoUnlockLbl: "Chiave bloccata — inserisci la passphrase",
+      cryptoUnlock: "Sblocca",
+      cryptoNeedBoth: "Servono nome e passphrase.",
+      cryptoNeedFile: "Scegli prima un file certificato.",
+      cryptoNeedUnlock: "Sblocca prima il certificato.",
+      cryptoWrongPass: "Passphrase errata.",
+      cryptoImportFail: "Certificato illeggibile — password o formato errato.",
+      cryptoSignFail: "Firma digitale non riuscita: {msg}",
+      cryptoCertOk: "Certificato: {name}",
+      cryptoSelf: "autofirmato",
+      cryptoUnlocked: "Chiave sbloccata.",
+      cryptoRemoved: "Certificato rimosso.",
+      cryptoGenFail: "Impossibile creare il certificato.",
+      cryptoUnavailable: "Impossibile caricare il motore crittografico."
     },
     pt: {
       claim: "Funciona inteiramente no navegador. O seu ficheiro nunca sai deste computador.",
@@ -1201,7 +1393,30 @@
       textRemoved: "Texto removido.", fontBroken: "não incorporável",
       fontNoGlyphs: "Este tipo de letra não tem glifos para: {chars}",
       fontEmbedFail: "Não foi possível incorporar o tipo do documento: {msg}",
-      fontkitMissing: "O motor de tipos não pôde ser carregado; os tipos do documento não podem ser incorporados."
+      fontkitMissing: "O motor de tipos não pôde ser carregado; os tipos do documento não podem ser incorporados.",
+      stepCrypto: "Assinatura digital",
+      cryptoCreate: "Criar certificado", cryptoImport: "Importar .p12/.pfx",
+      cryptoName: "Nome no certificado", cryptoNamePh: "ex.: Jane Doe",
+      cryptoPass: "A frase protege a chave", cryptoPassPh: "Frase-senha",
+      cryptoGenerate: "Gerar", cryptoWorking: "Gerando a chave…",
+      cryptoFile: "Arquivo de certificado", cryptoP12Pass: "Senha do arquivo",
+      cryptoImportGo: "Importar",
+      cryptoNote: "Adiciona uma assinatura criptográfica real ao salvar — o arquivo fica à prova de adulteração. Tudo local: cria grátis um certificado autoassinado ou importa o teu.",
+      cryptoSign: "Assinar digitalmente ao salvar",
+      cryptoUnlockLbl: "Chave bloqueada — insere a frase",
+      cryptoUnlock: "Desbloquear",
+      cryptoNeedBoth: "Nome e frase necessários.",
+      cryptoNeedFile: "Escolhe primeiro um arquivo de certificado.",
+      cryptoNeedUnlock: "Desbloqueia primeiro o certificado.",
+      cryptoWrongPass: "Frase incorreta.",
+      cryptoImportFail: "Não foi possível ler o certificado — senha ou formato errado.",
+      cryptoSignFail: "A assinatura digital falhou: {msg}",
+      cryptoCertOk: "Certificado: {name}",
+      cryptoSelf: "autoassinado",
+      cryptoUnlocked: "Chave desbloqueada.",
+      cryptoRemoved: "Certificado removido.",
+      cryptoGenFail: "Não foi possível criar o certificado.",
+      cryptoUnavailable: "Não foi possível carregar o motor criptográfico."
     },
     ru: {
       claim: "Работает полностью в браузере. Файл никогда не покидает этот компьютер.",
@@ -1238,7 +1453,30 @@
       textRemoved: "Текст удалён.", fontBroken: "не встраивается",
       fontNoGlyphs: "В этом шрифте нет глифов для: {chars}",
       fontEmbedFail: "Не удалось встроить шрифт документа: {msg}",
-      fontkitMissing: "Не удалось загрузить шрифтовой движок, шрифты документа встроить нельзя."
+      fontkitMissing: "Не удалось загрузить шрифтовой движок, шрифты документа встроить нельзя.",
+      stepCrypto: "Цифровая подпись",
+      cryptoCreate: "Создать сертификат", cryptoImport: "Импорт .p12/.pfx",
+      cryptoName: "Имя в сертификате", cryptoNamePh: "напр., Jane Doe",
+      cryptoPass: "Парольная фраза защищает ключ", cryptoPassPh: "Парольная фраза",
+      cryptoGenerate: "Сгенерировать", cryptoWorking: "Генерация ключа…",
+      cryptoFile: "Файл сертификата", cryptoP12Pass: "Пароль файла",
+      cryptoImportGo: "Импортировать",
+      cryptoNote: "Добавляет настоящую криптографическую подпись при сохранении — файл защищён от подделки. Всё локально: бесплатно создайте самоподписанный сертификат или импортируйте свой.",
+      cryptoSign: "Подписывать при сохранении",
+      cryptoUnlockLbl: "Ключ заблокирован — введите фразу",
+      cryptoUnlock: "Разблокировать",
+      cryptoNeedBoth: "Нужны имя и парольная фраза.",
+      cryptoNeedFile: "Сначала выберите файл сертификата.",
+      cryptoNeedUnlock: "Сначала разблокируйте сертификат.",
+      cryptoWrongPass: "Неверная парольная фраза.",
+      cryptoImportFail: "Не удалось прочитать сертификат — неверный пароль или формат.",
+      cryptoSignFail: "Цифровая подпись не удалась: {msg}",
+      cryptoCertOk: "Сертификат: {name}",
+      cryptoSelf: "самоподписанный",
+      cryptoUnlocked: "Ключ разблокирован.",
+      cryptoRemoved: "Сертификат удалён.",
+      cryptoGenFail: "Не удалось создать сертификат.",
+      cryptoUnavailable: "Не удалось загрузить криптодвижок."
     },
     tr: {
       claim: "Tamamen tarayıcınızda çalışır. Dosyanız bu bilgisayardan hiç çıkmaz.",
@@ -1275,7 +1513,30 @@
       textRemoved: "Metin kaldırıldı.", fontBroken: "gömülemez",
       fontNoGlyphs: "Bu yazı tipinde şu karakterlerin glifi yok: {chars}",
       fontEmbedFail: "Belge yazı tipi gömülemedi: {msg}",
-      fontkitMissing: "Yazı tipi motoru yüklenemedi; belge yazı tipleri gömülemez."
+      fontkitMissing: "Yazı tipi motoru yüklenemedi; belge yazı tipleri gömülemez.",
+      stepCrypto: "Dijital imza",
+      cryptoCreate: "Sertifika oluştur", cryptoImport: ".p12/.pfx içe aktar",
+      cryptoName: "Sertifikadaki ad", cryptoNamePh: "örn. Jane Doe",
+      cryptoPass: "Parola anahtarı korur", cryptoPassPh: "Parola",
+      cryptoGenerate: "Oluştur", cryptoWorking: "Anahtar oluşturuluyor…",
+      cryptoFile: "Sertifika dosyası", cryptoP12Pass: "Dosya parolası",
+      cryptoImportGo: "İçe aktar",
+      cryptoNote: "Kaydederken gerçek bir kriptografik imza ekler — dosya kurcalanmaya karşı korunur. Tamamen yerel: ücretsiz kendinden imzalı sertifika oluştur veya kendi sertifikanı içe aktar.",
+      cryptoSign: "Kaydederken dijital imzala",
+      cryptoUnlockLbl: "Anahtar kilitli — parolayı gir",
+      cryptoUnlock: "Kilidi aç",
+      cryptoNeedBoth: "Ad ve parola gerekli.",
+      cryptoNeedFile: "Önce bir sertifika dosyası seç.",
+      cryptoNeedUnlock: "Önce sertifikayı aç.",
+      cryptoWrongPass: "Yanlış parola.",
+      cryptoImportFail: "Sertifika okunamadı — yanlış parola veya biçim.",
+      cryptoSignFail: "Dijital imza başarısız: {msg}",
+      cryptoCertOk: "Sertifika: {name}",
+      cryptoSelf: "kendinden imzalı",
+      cryptoUnlocked: "Anahtar açıldı.",
+      cryptoRemoved: "Sertifika kaldırıldı.",
+      cryptoGenFail: "Sertifika oluşturulamadı.",
+      cryptoUnavailable: "Kripto motoru yüklenemedi."
     },
     id: {
       claim: "Berjalan sepenuhnya di peramban Anda. Berkas Anda tidak pernah meninggalkan komputer ini.",
@@ -1312,7 +1573,30 @@
       textRemoved: "Teks dihapus.", fontBroken: "tidak bisa disematkan",
       fontNoGlyphs: "Fonta ini tidak memiliki glif untuk: {chars}",
       fontEmbedFail: "Fonta dokumen tidak bisa disematkan: {msg}",
-      fontkitMissing: "Mesin fonta gagal dimuat; fonta dokumen tidak bisa disematkan."
+      fontkitMissing: "Mesin fonta gagal dimuat; fonta dokumen tidak bisa disematkan.",
+      stepCrypto: "Tanda tangan digital",
+      cryptoCreate: "Buat sertifikat", cryptoImport: "Impor .p12/.pfx",
+      cryptoName: "Nama di sertifikat", cryptoNamePh: "mis. Jane Doe",
+      cryptoPass: "Frasa sandi melindungi kunci", cryptoPassPh: "Frasa sandi",
+      cryptoGenerate: "Buat", cryptoWorking: "Membuat kunci…",
+      cryptoFile: "Berkas sertifikat", cryptoP12Pass: "Kata sandi berkas",
+      cryptoImportGo: "Impor",
+      cryptoNote: "Menambahkan tanda tangan kriptografis asli saat menyimpan — berkas menjadi tahan perubahan. Sepenuhnya lokal: buat sertifikat self-signed gratis atau impor milikmu.",
+      cryptoSign: "Tandatangani digital saat menyimpan",
+      cryptoUnlockLbl: "Kunci terkunci — masukkan frasa sandi",
+      cryptoUnlock: "Buka kunci",
+      cryptoNeedBoth: "Nama dan frasa sandi wajib.",
+      cryptoNeedFile: "Pilih berkas sertifikat dulu.",
+      cryptoNeedUnlock: "Buka kunci sertifikat dulu.",
+      cryptoWrongPass: "Frasa sandi salah.",
+      cryptoImportFail: "Sertifikat tidak terbaca — kata sandi atau format salah.",
+      cryptoSignFail: "Tanda tangan digital gagal: {msg}",
+      cryptoCertOk: "Sertifikat: {name}",
+      cryptoSelf: "self-signed",
+      cryptoUnlocked: "Kunci terbuka.",
+      cryptoRemoved: "Sertifikat dihapus.",
+      cryptoGenFail: "Sertifikat tidak dapat dibuat.",
+      cryptoUnavailable: "Mesin kripto gagal dimuat."
     },
     vi: {
       claim: "Chạy hoàn toàn trong trình duyệt. Tệp của bạn không bao giờ rời máy này.",
@@ -1349,7 +1633,30 @@
       textRemoved: "Đã gỡ văn bản.", fontBroken: "không nhúng được",
       fontNoGlyphs: "Phông này thiếu glyph cho: {chars}",
       fontEmbedFail: "Không nhúng được phông của tài liệu: {msg}",
-      fontkitMissing: "Không tải được bộ xử lý phông chữ; không thể nhúng phông của tài liệu."
+      fontkitMissing: "Không tải được bộ xử lý phông chữ; không thể nhúng phông của tài liệu.",
+      stepCrypto: "Chữ ký số",
+      cryptoCreate: "Tạo chứng chỉ", cryptoImport: "Nhập .p12/.pfx",
+      cryptoName: "Tên trên chứng chỉ", cryptoNamePh: "vd. Jane Doe",
+      cryptoPass: "Cụm mật khẩu bảo vệ khóa", cryptoPassPh: "Cụm mật khẩu",
+      cryptoGenerate: "Tạo", cryptoWorking: "Đang tạo khóa…",
+      cryptoFile: "Tệp chứng chỉ", cryptoP12Pass: "Mật khẩu tệp",
+      cryptoImportGo: "Nhập",
+      cryptoNote: "Thêm chữ ký mã hóa thật khi lưu — tệp chống giả mạo. Hoàn toàn cục bộ: tạo chứng chỉ tự ký miễn phí hoặc nhập chứng chỉ của bạn.",
+      cryptoSign: "Ký số khi lưu",
+      cryptoUnlockLbl: "Khóa đang bị khóa — nhập cụm mật khẩu",
+      cryptoUnlock: "Mở khóa",
+      cryptoNeedBoth: "Cần tên và cụm mật khẩu.",
+      cryptoNeedFile: "Chọn tệp chứng chỉ trước.",
+      cryptoNeedUnlock: "Mở khóa chứng chỉ trước.",
+      cryptoWrongPass: "Sai cụm mật khẩu.",
+      cryptoImportFail: "Không đọc được chứng chỉ — sai mật khẩu hoặc định dạng.",
+      cryptoSignFail: "Ký số thất bại: {msg}",
+      cryptoCertOk: "Chứng chỉ: {name}",
+      cryptoSelf: "tự ký",
+      cryptoUnlocked: "Đã mở khóa.",
+      cryptoRemoved: "Đã xóa chứng chỉ.",
+      cryptoGenFail: "Không tạo được chứng chỉ.",
+      cryptoUnavailable: "Không tải được bộ máy mã hóa."
     },
     zh: {
       claim: "完全在你的浏览器中运行，文件不会离开这台电脑。",
@@ -1386,7 +1693,30 @@
       textRemoved: "文字已移除。", fontBroken: "无法嵌入",
       fontNoGlyphs: "该字体缺少以下字符的字形：{chars}",
       fontEmbedFail: "无法嵌入文档字体：{msg}",
-      fontkitMissing: "字体引擎加载失败，无法嵌入文档字体。"
+      fontkitMissing: "字体引擎加载失败，无法嵌入文档字体。",
+      stepCrypto: "数字签名",
+      cryptoCreate: "创建证书", cryptoImport: "导入 .p12/.pfx",
+      cryptoName: "证书上的姓名", cryptoNamePh: "例如 Jane Doe",
+      cryptoPass: "口令保护密钥", cryptoPassPh: "口令",
+      cryptoGenerate: "生成", cryptoWorking: "正在生成密钥…",
+      cryptoFile: "证书文件", cryptoP12Pass: "文件密码",
+      cryptoImportGo: "导入",
+      cryptoNote: "保存时添加真正的加密签名——文件将具有防篡改性。完全本地运行：免费生成自签名证书，或导入你自己的证书。",
+      cryptoSign: "保存时添加数字签名",
+      cryptoUnlockLbl: "密钥已锁定——请输入口令",
+      cryptoUnlock: "解锁",
+      cryptoNeedBoth: "需要姓名和口令。",
+      cryptoNeedFile: "请先选择证书文件。",
+      cryptoNeedUnlock: "请先解锁证书。",
+      cryptoWrongPass: "口令错误。",
+      cryptoImportFail: "无法读取证书——密码或格式错误。",
+      cryptoSignFail: "数字签名失败：{msg}",
+      cryptoCertOk: "证书：{name}",
+      cryptoSelf: "自签名",
+      cryptoUnlocked: "密钥已解锁。",
+      cryptoRemoved: "证书已移除。",
+      cryptoGenFail: "无法创建证书。",
+      cryptoUnavailable: "加密引擎加载失败。"
     },
     ja: {
       claim: "すべてブラウザ内で処理します。ファイルがこのパソコンから出ることはありません。",
@@ -1423,7 +1753,30 @@
       textRemoved: "テキストを削除しました。", fontBroken: "埋め込み不可",
       fontNoGlyphs: "このフォントには次の文字のグリフがありません: {chars}",
       fontEmbedFail: "文書フォントを埋め込めませんでした: {msg}",
-      fontkitMissing: "フォントエンジンを読み込めなかったため、文書フォントは埋め込めません。"
+      fontkitMissing: "フォントエンジンを読み込めなかったため、文書フォントは埋め込めません。",
+      stepCrypto: "デジタル署名",
+      cryptoCreate: "証明書を作成", cryptoImport: ".p12/.pfx を読み込む",
+      cryptoName: "証明書の名前", cryptoNamePh: "例: Jane Doe",
+      cryptoPass: "パスフレーズで鍵を保護", cryptoPassPh: "パスフレーズ",
+      cryptoGenerate: "生成", cryptoWorking: "鍵を生成中…",
+      cryptoFile: "証明書ファイル", cryptoP12Pass: "ファイルのパスワード",
+      cryptoImportGo: "読み込む",
+      cryptoNote: "保存時に本物の暗号署名を追加——ファイルは改ざん検知可能になります。完全にローカル動作：無料の自己署名証明書を生成するか、自分の証明書を読み込みます。",
+      cryptoSign: "保存時にデジタル署名する",
+      cryptoUnlockLbl: "鍵はロック中——パスフレーズを入力",
+      cryptoUnlock: "ロック解除",
+      cryptoNeedBoth: "名前とパスフレーズが必要です。",
+      cryptoNeedFile: "先に証明書ファイルを選択してください。",
+      cryptoNeedUnlock: "先に証明書のロックを解除してください。",
+      cryptoWrongPass: "パスフレーズが違います。",
+      cryptoImportFail: "証明書を読み込めません——パスワードか形式が違います。",
+      cryptoSignFail: "デジタル署名に失敗:{msg}",
+      cryptoCertOk: "証明書:{name}",
+      cryptoSelf: "自己署名",
+      cryptoUnlocked: "ロックを解除しました。",
+      cryptoRemoved: "証明書を削除しました。",
+      cryptoGenFail: "証明書を作成できませんでした。",
+      cryptoUnavailable: "暗号エンジンを読み込めませんでした。"
     },
     ko: {
       claim: "모든 처리가 브라우저 안에서 이루어집니다. 파일은 이 컴퓨터를 벗어나지 않습니다.",
@@ -1460,7 +1813,30 @@
       textRemoved: "텍스트를 지웠습니다.", fontBroken: "포함 불가",
       fontNoGlyphs: "이 글꼴에는 다음 글리프가 없습니다: {chars}",
       fontEmbedFail: "문서 글꼴을 포함할 수 없습니다: {msg}",
-      fontkitMissing: "글꼴 엔진을 불러오지 못해 문서 글꼴을 포함할 수 없습니다."
+      fontkitMissing: "글꼴 엔진을 불러오지 못해 문서 글꼴을 포함할 수 없습니다.",
+      stepCrypto: "디지털 서명",
+      cryptoCreate: "인증서 만들기", cryptoImport: ".p12/.pfx 가져오기",
+      cryptoName: "인증서 이름", cryptoNamePh: "예: Jane Doe",
+      cryptoPass: "암호 문구가 키를 보호합니다", cryptoPassPh: "암호 문구",
+      cryptoGenerate: "생성", cryptoWorking: "키 생성 중…",
+      cryptoFile: "인증서 파일", cryptoP12Pass: "파일 비밀번호",
+      cryptoImportGo: "가져오기",
+      cryptoNote: "저장 시 실제 암호화 서명을 추가합니다 — 파일이 변조 방지됩니다. 완전히 로컬: 무료 자체 서명 인증서를 만들거나 내 인증서를 가져오세요.",
+      cryptoSign: "저장 시 디지털 서명",
+      cryptoUnlockLbl: "키가 잠김 — 암호 문구 입력",
+      cryptoUnlock: "잠금 해제",
+      cryptoNeedBoth: "이름과 암호 문구가 필요합니다.",
+      cryptoNeedFile: "먼저 인증서 파일을 선택하세요.",
+      cryptoNeedUnlock: "먼저 인증서 잠금을 해제하세요.",
+      cryptoWrongPass: "암호 문구가 틀립니다.",
+      cryptoImportFail: "인증서를 읽을 수 없습니다 — 비밀번호 또는 형식 오류.",
+      cryptoSignFail: "디지털 서명 실패: {msg}",
+      cryptoCertOk: "인증서: {name}",
+      cryptoSelf: "자체 서명",
+      cryptoUnlocked: "잠금 해제됨.",
+      cryptoRemoved: "인증서가 삭제되었습니다.",
+      cryptoGenFail: "인증서를 만들 수 없습니다.",
+      cryptoUnavailable: "암호화 엔진을 불러오지 못했습니다."
     },
     hi: {
       claim: "पूरी तरह आपके ब्राउज़र में चलता है। आपकी फ़ाइल इस कंप्यूटर से कभी बाहर नहीं जाती।",
@@ -1497,7 +1873,30 @@
       textRemoved: "टेक्स्ट हटाया गया।", fontBroken: "एम्बेड नहीं हो सकता",
       fontNoGlyphs: "इस फ़ॉन्ट में इन अक्षरों के ग्लिफ़ नहीं हैं: {chars}",
       fontEmbedFail: "दस्तावेज़ फ़ॉन्ट एम्बेड नहीं हो सका: {msg}",
-      fontkitMissing: "फ़ॉन्ट इंजन लोड नहीं हुआ, दस्तावेज़ फ़ॉन्ट एम्बेड नहीं हो सकते।"
+      fontkitMissing: "फ़ॉन्ट इंजन लोड नहीं हुआ, दस्तावेज़ फ़ॉन्ट एम्बेड नहीं हो सकते।",
+      stepCrypto: "डिजिटल हस्ताक्षर",
+      cryptoCreate: "प्रमाणपत्र बनाएँ", cryptoImport: ".p12/.pfx आयात करें",
+      cryptoName: "प्रमाणपत्र पर नाम", cryptoNamePh: "जैसे Jane Doe",
+      cryptoPass: "पासफ़्रेज़ कुंजी की रक्षा करता है", cryptoPassPh: "पासफ़्रेज़",
+      cryptoGenerate: "बनाएँ", cryptoWorking: "कुंजी बन रही है…",
+      cryptoFile: "प्रमाणपत्र फ़ाइल", cryptoP12Pass: "फ़ाइल पासवर्ड",
+      cryptoImportGo: "आयात करें",
+      cryptoNote: "सहेजते समय एक वास्तविक क्रिप्टोग्राफ़िक हस्ताक्षर जोड़ता है — फ़ाइल छेड़छाड़-रोधी हो जाती है। पूरी तरह स्थानीय: मुफ़्त स्व-हस्ताक्षरित प्रमाणपत्र बनाएँ या अपना आयात करें।",
+      cryptoSign: "सहेजते समय डिजिटल हस्ताक्षर करें",
+      cryptoUnlockLbl: "कुंजी लॉक है — पासफ़्रेज़ डालें",
+      cryptoUnlock: "अनलॉक",
+      cryptoNeedBoth: "नाम और पासफ़्रेज़ ज़रूरी।",
+      cryptoNeedFile: "पहले प्रमाणपत्र फ़ाइल चुनें।",
+      cryptoNeedUnlock: "पहले प्रमाणपत्र अनलॉक करें।",
+      cryptoWrongPass: "गलत पासफ़्रेज़।",
+      cryptoImportFail: "प्रमाणपत्र नहीं पढ़ा गया — गलत पासवर्ड या प्रारूप।",
+      cryptoSignFail: "डिजिटल हस्ताक्षर विफल: {msg}",
+      cryptoCertOk: "प्रमाणपत्र: {name}",
+      cryptoSelf: "स्व-हस्ताक्षरित",
+      cryptoUnlocked: "कुंजी अनलॉक हुई।",
+      cryptoRemoved: "प्रमाणपत्र हटाया गया।",
+      cryptoGenFail: "प्रमाणपत्र नहीं बन सका।",
+      cryptoUnavailable: "क्रिप्टो इंजन लोड नहीं हुआ।"
     },
     ar: {
       claim: "يعمل بالكامل داخل متصفحك. ملفك لا يغادر هذا الحاسوب أبداً.",
@@ -1534,7 +1933,30 @@
       textRemoved: "أُزيل النص.", fontBroken: "لا يمكن تضمينه",
       fontNoGlyphs: "هذا الخط ينقصه محارف: {chars}",
       fontEmbedFail: "تعذّر تضمين خط المستند: {msg}",
-      fontkitMissing: "تعذّر تحميل محرك الخطوط، لذا لا يمكن تضمين خطوط المستند."
+      fontkitMissing: "تعذّر تحميل محرك الخطوط، لذا لا يمكن تضمين خطوط المستند.",
+      stepCrypto: "التوقيع الرقمي",
+      cryptoCreate: "إنشاء شهادة", cryptoImport: "استيراد .p12/.pfx",
+      cryptoName: "الاسم في الشهادة", cryptoNamePh: "مثل Jane Doe",
+      cryptoPass: "عبارة المرور تحمي المفتاح", cryptoPassPh: "عبارة المرور",
+      cryptoGenerate: "إنشاء", cryptoWorking: "جارٍ إنشاء المفتاح…",
+      cryptoFile: "ملف الشهادة", cryptoP12Pass: "كلمة مرور الملف",
+      cryptoImportGo: "استيراد",
+      cryptoNote: "يضيف توقيعًا تشفيريًا حقيقيًا عند الحفظ — يصبح الملف مقاومًا للعبث. محلي بالكامل: أنشئ شهادة ذاتية التوقيع مجانًا أو استورد شهادتك.",
+      cryptoSign: "وقّع رقميًا عند الحفظ",
+      cryptoUnlockLbl: "المفتاح مقفل — أدخل عبارة المرور",
+      cryptoUnlock: "فتح",
+      cryptoNeedBoth: "الاسم وعبارة المرور مطلوبان.",
+      cryptoNeedFile: "اختر ملف الشهادة أولاً.",
+      cryptoNeedUnlock: "افتح الشهادة أولاً.",
+      cryptoWrongPass: "عبارة مرور خاطئة.",
+      cryptoImportFail: "تعذّر قراءة الشهادة — كلمة مرور أو تنسيق خاطئ.",
+      cryptoSignFail: "فشل التوقيع الرقمي: {msg}",
+      cryptoCertOk: "الشهادة: {name}",
+      cryptoSelf: "ذاتية التوقيع",
+      cryptoUnlocked: "تم فتح المفتاح.",
+      cryptoRemoved: "تمت إزالة الشهادة.",
+      cryptoGenFail: "تعذّر إنشاء الشهادة.",
+      cryptoUnavailable: "تعذّر تحميل محرك التشفير."
     }
   };
 
@@ -2970,11 +3392,337 @@
   });
 
   // ===========================================================================
+  // Digital signature — a real PKCS#7/CMS signature embedded into the file.
+  // The certificate lives in its own IndexedDB so "New" wipes the document
+  // session but keeps the user's identity. The private key stays encrypted
+  // at rest and only exists in memory after unlocking.
+  // ===========================================================================
+  var cryptoStore = (function () {
+    var ready = new Promise(function (resolve) {
+      var req;
+      try { req = indexedDB.open("ops-identity", 1); }
+      catch (e) { resolve(null); return; }
+      req.onupgradeneeded = function () { req.result.createObjectStore("kv"); };
+      req.onsuccess = function () { resolve(req.result); };
+      req.onerror = function () { resolve(null); };
+    });
+    return {
+      get: function () {
+        return ready.then(function (db) {
+          if (!db) return null;
+          return new Promise(function (resolve) {
+            var g = db.transaction("kv", "readonly").objectStore("kv").get("cert");
+            g.onsuccess = function () { resolve(g.result || null); };
+            g.onerror = function () { resolve(null); };
+          });
+        });
+      },
+      put: function (v) {
+        return ready.then(function (db) {
+          if (db) db.transaction("kv", "readwrite").objectStore("kv").put(v, "cert");
+        });
+      },
+      del: function () {
+        return ready.then(function (db) {
+          if (db) db.transaction("kv", "readwrite").objectStore("kv").delete("cert");
+        });
+      }
+    };
+  })();
+
+  var cryptoCert = null;   // {type:"gen"|"p12", label, certPem, chain:[pem], keyData}
+  var cryptoKey = null;    // forge private key — present only while unlocked
+  var forgeOk = typeof forge !== "undefined";
+
+  function cryptoBusy(on, key) {
+    ["btnCryptoCreate", "btnCryptoImport", "btnCryptoGen", "btnCryptoImpGo",
+     "btnCryptoUnlock", "btnCryptoRemove"].forEach(function (id) {
+      el(id).disabled = on;
+    });
+    if (key) say("statusCrypto", key);
+  }
+
+  function cryptoPaint() {
+    var has = !!cryptoCert;
+    el("cryptoSetup").hidden = has;
+    el("cryptoReady").hidden = !has;
+    if (!forgeOk) {
+      el("btnCryptoCreate").disabled = true;
+      el("btnCryptoImport").disabled = true;
+      say("statusCrypto", "cryptoUnavailable", null, "bad");
+      return;
+    }
+    el("cryptoFormGen").hidden = true;
+    el("cryptoFormImp").hidden = true;
+    if (has) {
+      var suffix = cryptoCert.type === "gen" ? " (" + t("cryptoSelf") + ")" : "";
+      el("cryptoCertName").textContent = t("cryptoCertOk", { name: cryptoCert.label }) + suffix;
+      el("cryptoLockRow").hidden = !!cryptoKey;
+    }
+    refreshControls();
+  }
+
+  function cryptoAdopt(cert, chainPems, label, type, keyData, key) {
+    cryptoCert = {
+      type: type, label: label,
+      certPem: forge.pki.certificateToPem(cert),
+      chain: chainPems, keyData: keyData
+    };
+    cryptoKey = key;
+    cryptoStore.put(cryptoCert);
+    cryptoPaint();
+    say("statusCrypto", "cryptoCertOk", { name: label }, "good");
+  }
+
+  el("btnCryptoCreate").addEventListener("click", function () {
+    el("cryptoFormImp").hidden = true;
+    var g = el("cryptoFormGen");
+    g.hidden = !g.hidden;
+    if (!g.hidden) el("cryptoName").focus();
+  });
+  el("btnCryptoImport").addEventListener("click", function () {
+    el("cryptoFormGen").hidden = true;
+    var g = el("cryptoFormImp");
+    g.hidden = !g.hidden;
+    if (!g.hidden) el("cryptoFile").focus();
+  });
+
+  el("btnCryptoGen").addEventListener("click", function () {
+    var name = el("cryptoName").value.trim();
+    var pass = el("cryptoPass").value;
+    if (!name || !pass) { say("statusCrypto", "cryptoNeedBoth", null, "bad"); return; }
+    cryptoBusy(true, "cryptoWorking");
+    // RSA-2048 keygen in pure JS blocks the thread for a moment — defer so
+    // the busy status can paint first.
+    setTimeout(function () {
+      try {
+        var keys = forge.pki.rsa.generateKeyPair(2048);
+        var cert = forge.pki.createCertificate();
+        cert.publicKey = keys.publicKey;
+        cert.serialNumber = forge.util.bytesToHex(forge.random.getBytesSync(16));
+        cert.validity.notBefore = new Date(Date.now() - 60000);
+        cert.validity.notAfter = new Date(Date.now() + 10 * 365.25 * 864e5);
+        var attrs = [{ name: "commonName", value: name }];
+        cert.setSubject(attrs);
+        cert.setIssuer(attrs);
+        cert.setExtensions([
+          { name: "basicConstraints", cA: false },
+          { name: "keyUsage", digitalSignature: true, nonRepudiation: true },
+          { name: "subjectKeyIdentifier" }
+        ]);
+        cert.sign(keys.privateKey, forge.md.sha256.create());
+        cryptoAdopt(cert, [], name, "gen",
+          forge.pki.encryptRsaPrivateKey(keys.privateKey, pass), keys.privateKey);
+      } catch (e) {
+        say("statusCrypto", "cryptoGenFail", null, "bad");
+      }
+      cryptoBusy(false);
+    }, 50);
+  });
+
+  // Reads a PKCS#12 blob, pairs the private key with its certificate and
+  // returns the rest of the bagged certificates as the chain.
+  function p12Unpack(bin, pass) {
+    var p12 = forge.pkcs12.pkcs12FromAsn1(forge.asn1.fromDer(bin), pass);
+    var oids = forge.pki.oids;
+    var keys = p12.getBags({ bagType: oids.pkcs8ShroudedKeyBag })[oids.pkcs8ShroudedKeyBag] || [];
+    if (!keys.length) keys = p12.getBags({ bagType: oids.keyBag })[oids.keyBag] || [];
+    var certs = p12.getBags({ bagType: oids.certBag })[oids.certBag] || [];
+    if (!keys.length || !certs.length) return null;
+    var key = keys[0].key;
+    var ci = 0;
+    for (var i = 0; i < certs.length; i++) {
+      var pk = certs[i].cert.publicKey;
+      if (pk && pk.n && key.n && pk.n.compareTo(key.n) === 0) { ci = i; break; }
+    }
+    return {
+      key: key,
+      cert: certs[ci].cert,
+      chain: certs.map(function (c, j) { return j === ci ? null : forge.pki.certificateToPem(c.cert); })
+                  .filter(Boolean)
+    };
+  }
+
+  el("btnCryptoImpGo").addEventListener("click", function () {
+    var f = el("cryptoFile").files[0];
+    var pass = el("cryptoP12Pass").value;
+    if (!f) { say("statusCrypto", "cryptoNeedFile", null, "bad"); return; }
+    cryptoBusy(true);
+    f.arrayBuffer().then(function (buf) {
+      try {
+        var b = new Uint8Array(buf), s = "";
+        for (var i = 0; i < b.length; i += 65536)
+          s += String.fromCharCode.apply(null, b.subarray(i, i + 65536));
+        var r = p12Unpack(s, pass);
+        if (!r) throw new Error("empty");
+        var cn = (r.cert.subject.getField("CN") || {}).value || f.name;
+        cryptoAdopt(r.cert, r.chain, cn, "p12", forge.util.encode64(s), r.key);
+      } catch (e) {
+        say("statusCrypto", "cryptoImportFail", null, "bad");
+      }
+      cryptoBusy(false);
+    });
+  });
+
+  function cryptoTryUnlock(pass) {
+    if (cryptoCert.type === "gen")
+      return forge.pki.decryptRsaPrivateKey(cryptoCert.keyData, pass);
+    var r = p12Unpack(forge.util.decode64(cryptoCert.keyData), pass);
+    return r && r.key;
+  }
+
+  el("btnCryptoUnlock").addEventListener("click", function () {
+    try {
+      var key = cryptoTryUnlock(el("cryptoUnlockPass").value);
+      if (!key) throw new Error("bad");
+      cryptoKey = key;
+      el("cryptoUnlockPass").value = "";
+      cryptoPaint();
+      say("statusCrypto", "cryptoUnlocked", null, "good");
+    } catch (e) {
+      say("statusCrypto", "cryptoWrongPass", null, "bad");
+    }
+  });
+
+  el("btnCryptoRemove").addEventListener("click", function () {
+    cryptoCert = null;
+    cryptoKey = null;
+    cryptoStore.del();
+    cryptoPaint();
+    say("statusCrypto", "cryptoRemoved");
+  });
+
+  el("cryptoSign").addEventListener("change", refreshControls);
+
+  function cryptoWantsSign() {
+    return !!(forgeOk && cryptoCert && el("cryptoSign").checked);
+  }
+
+  function pdfDateString(d) {
+    function p(n, l) { var s = String(n); while (s.length < l) s = "0" + s; return s; }
+    return "D:" + p(d.getUTCFullYear(), 4) + p(d.getUTCMonth() + 1) + p(d.getUTCDate()) +
+           p(d.getUTCHours()) + p(d.getUTCMinutes()) + p(d.getUTCSeconds()) + "Z";
+  }
+
+  // The CMS blob is nearly content-independent in size for a detached
+  // signature, so a dummy build measures the exact space /Contents reserves.
+  function buildCms(content, cert, chainPems) {
+    var p7 = forge.pkcs7.createSignedData();
+    p7.content = forge.util.createBuffer(content);
+    p7.addCertificate(cert);
+    chainPems.forEach(function (pem) { p7.addCertificate(forge.pki.certificateFromPem(pem)); });
+    p7.addSigner({
+      key: cryptoKey,
+      certificate: cert,
+      digestAlgorithm: forge.pki.oids.sha256,
+      authenticatedAttributes: [
+        { type: forge.pki.oids.contentType, value: forge.pki.oids.data },
+        { type: forge.pki.oids.messageDigest },
+        { type: forge.pki.oids.signingTime }
+      ]
+    });
+    p7.sign({ detached: true });
+    return forge.asn1.toDer(p7.toAsn1()).getBytes();
+  }
+
+  // Signature dictionary plus a merged, invisible widget field. ByteRange and
+  // Contents hold fixed-width placeholders so real values patch in later
+  // without shifting a single byte.
+  function addSignaturePlaceholder(doc, hexLen, signerName) {
+    var ctx = doc.context, N = PDFLib.PDFName;
+    var sigRef = ctx.register(ctx.obj({
+      Type: N.of("Sig"),
+      Filter: N.of("Adobe.PPKLite"),
+      SubFilter: N.of("adbe.pkcs7.detached"),
+      ByteRange: [999999999, 999999999, 999999999, 999999999],
+      Contents: PDFLib.PDFHexString.of(new Array(hexLen + 1).join("0")),
+      Reason: PDFLib.PDFString.of("Signed with Open PDF Signer"),
+      M: PDFLib.PDFString.of(pdfDateString(new Date())),
+      Name: PDFLib.PDFHexString.fromText(signerName)
+    }));
+    var page = doc.getPage(0);
+    var widgetRef = ctx.register(ctx.obj({
+      Type: N.of("Annot"), Subtype: N.of("Widget"),
+      FT: N.of("Sig"), T: PDFLib.PDFString.of("Signature1"),
+      Rect: [0, 0, 0, 0], F: 132, P: page.ref, V: sigRef
+    }));
+    var leaf = page.node;
+    var annots = leaf.lookupMaybe(N.of("Annots"), PDFLib.PDFArray);
+    if (!annots) { annots = ctx.obj([]); leaf.set(N.of("Annots"), annots); }
+    annots.push(widgetRef);
+    var acro = doc.catalog.lookupMaybe(N.of("AcroForm"), PDFLib.PDFDict);
+    if (!acro) { acro = ctx.obj({}); doc.catalog.set(N.of("AcroForm"), acro); }
+    var fields = acro.lookupMaybe(N.of("Fields"), PDFLib.PDFArray);
+    if (!fields) { fields = ctx.obj([]); acro.set(N.of("Fields"), fields); }
+    fields.push(widgetRef);
+    acro.set(N.of("SigFlags"), PDFLib.PDFNumber.of(3));
+  }
+
+  // Replaces the placeholders with the real byte ranges and the CMS blob.
+  // ByteRange covers everything except the /Contents value itself.
+  function injectSignature(pdfBytes) {
+    var CH = 65536, bin = "";
+    for (var i = 0; i < pdfBytes.length; i += CH)
+      bin += String.fromCharCode.apply(null, pdfBytes.subarray(i, Math.min(i + CH, pdfBytes.length)));
+
+    var sigPos = bin.indexOf("adbe.pkcs7.detached");
+    var brPos = bin.indexOf("/ByteRange", sigPos);
+    var lb = bin.indexOf("[", brPos);
+    var cPos = bin.indexOf("/Contents", lb);
+    var lt = bin.indexOf("<", cPos);
+    var gt = bin.indexOf(">", lt);
+    if (sigPos < 0 || brPos < 0 || lt < 0 || gt < 0)
+      throw new Error(t("cryptoSignFail", { msg: "layout" }));
+
+    var ranges = [0, lt, gt + 1, bin.length - (gt + 1)];
+    // ByteRange zuerst patchen: die echten Werte liegen INNERHALB des signierten
+    // Bereichs, also muss der Hash ueber die finalen Bytes laufen. Breite bleibt
+    // identisch (fuehrende Spaces), sonst verschieben sich alle Positionen.
+    var pos = lb;
+    ranges.forEach(function (n) {
+      var run = bin.indexOf("999999999", pos);
+      if (run < 0) throw new Error(t("cryptoSignFail", { msg: "bytrange" }));
+      var s = String(n);
+      if (s.length > 9) throw new Error(t("cryptoSignFail", { msg: "bytrange" }));
+      while (s.length < 9) s = " " + s;
+      bin = bin.slice(0, run) + s + bin.slice(run + 9);
+      pos = run + 9;
+    });
+    var content = bin.slice(0, lt) + bin.slice(gt + 1);
+    var cert = forge.pki.certificateFromPem(cryptoCert.certPem);
+    var hex = forge.util.bytesToHex(buildCms(content, cert, cryptoCert.chain)).toUpperCase();
+    var space = gt - lt - 1;
+    if (hex.length > space) throw new Error(t("cryptoSignFail", { msg: "overflow" }));
+    hex += new Array(space - hex.length + 1).join("0");
+
+    var out = pdfBytes.slice();
+    for (var h = 0; h < bin.length; h++) out[h] = bin.charCodeAt(h);
+    for (var h = 0; h < space; h++) out[lt + 1 + h] = hex.charCodeAt(h);
+    return out;
+  }
+
+  cryptoStore.get().then(function (c) {
+    cryptoCert = c;
+    cryptoPaint();
+  });
+  cryptoPaint();
+
+  // ===========================================================================
   // Step 5: export
   // ===========================================================================
   el("btnSave").addEventListener("click", function () {
     var hasSig = !!(sigPng && placement);
-    if (!originalBytes || (!hasSig && !texts.length)) return;
+    var wantCrypto = cryptoWantsSign();
+    if (!originalBytes || (!hasSig && !texts.length && !wantCrypto)) return;
+    if (wantCrypto && !cryptoKey) {
+      try { cryptoKey = cryptoTryUnlock(el("cryptoUnlockPass").value); }
+      catch (e) { cryptoKey = null; }
+      if (!cryptoKey) {
+        say("statusSave", "cryptoNeedUnlock", null, "bad");
+        return;
+      }
+      cryptoPaint();
+    }
 
     // Missing glyphs would end up as silent blank spots — check before
     // anything is written.
@@ -3147,7 +3895,19 @@
       // wrong generation info for revived objects (e.g. catalog 15 1 R),
       // leaving a corrupt xref that strict viewers reject. The classic
       // xref table is a few bytes larger but valid for every document.
-      return Promise.all(jobs).then(function () { return doc.save({ useObjectStreams: false }); });
+      return Promise.all(jobs).then(function () {
+        // The digital signature wraps everything else — it has to be the
+        // last dictionary written, so the placeholder goes in right before
+        // save and the CMS blob patches the bytes afterwards.
+        if (wantCrypto) {
+          var cert = forge.pki.certificateFromPem(cryptoCert.certPem);
+          var hexLen = buildCms("x", cert, cryptoCert.chain).length * 2 + 64;
+          addSignaturePlaceholder(doc, hexLen, cryptoCert.label);
+        }
+        return doc.save({ useObjectStreams: false });
+      }).then(function (bytes) {
+        return wantCrypto ? injectSignature(bytes) : bytes;
+      });
     }).then(function (bytes) {
       var blob = new Blob([bytes], { type: "application/pdf" });
       var url = URL.createObjectURL(blob);
@@ -3179,7 +3939,7 @@
     el("btnRemove").disabled = !placement;
     el("btnAddText").disabled = !hasPdf;
     el("btnRemoveText").disabled = selectedText == null;
-    el("btnSave").disabled = !(hasPdf && ((sigPng && placement) || texts.length));
+    el("btnSave").disabled = !(hasPdf && ((sigPng && placement) || texts.length || cryptoWantsSign()));
 
     if (!hasPdf) say("statusPlace", null);
     else if (!sigPng) say("statusPlace", "needSignature");

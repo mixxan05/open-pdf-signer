@@ -14,6 +14,10 @@ Free, unlimited, and fully local: **your document is never uploaded anywhere.**
 - Load a PDF and page through it
 - Create a signature by drawing with mouse, pen or finger — or upload a transparent PNG
 - Add text anywhere — in the **fonts already embedded in the document** where possible, plus the standard PDF fonts
+- Optionally add a **real cryptographic signature** (CMS/PKCS#7) on save — the
+  document becomes tamper-evident. Generate a free self-signed certificate
+  locally or import your own `.p12`/`.pfx`; the private key stays encrypted
+  under your passphrase and is only decrypted in memory when you unlock it
 - Zoom in and out smoothly with +/− buttons or just the scroll wheel —
   it zooms around the pointer like a map, with a live preview that swaps to a
   sharp re-render the moment you stop scrolling — no jumps, and placements
@@ -50,17 +54,20 @@ There is no upload, no analytics, no tracking, no telemetry.
 So your work survives a reload, the current session — the document itself,
 signature, texts, positions — is kept in the browser's local IndexedDB on
 your device. It never leaves the machine, and the **New** button deletes it.
+A signing certificate lives in its own small store so **New** clears your
+document but not your identity; the private key inside stays encrypted under
+your passphrase and is only decrypted in memory after you unlock it.
 
-One honest caveat: pdf.js, pdf-lib and fontkit are pulled from a CDN the
-first time you open the page, so that initial load needs an internet
+One honest caveat: pdf.js, pdf-lib, fontkit and node-forge are pulled from a
+CDN the first time you open the page, so that initial load needs an internet
 connection. The library versions are pinned and verified with Subresource
 Integrity, so a tampered CDN response would be refused rather than run.
 **After the page has loaded, no further network requests are made** — you
 can watch this yourself in the Network tab of your browser's developer
 tools while loading a PDF, signing it and exporting.
 
-Want it fully offline? Download the three library files, put them next to the
-HTML file, and point the three `<script>` tags at your local copies.
+Want it fully offline? Download the four library files, put them next to the
+HTML file, and point the four `<script>` tags at your local copies.
 
 ## Accuracy
 
@@ -90,14 +97,24 @@ than silently producing blank spots — pick a standard font in that case.
 
 ## Legal scope
 
-The signature this tool applies is a *simple electronic signature*: an image
-of your handwritten signature placed into the PDF, not a cryptographic
-certificate signature. Under eIDAS (EU) and ESIGN/UETA (US) that is legally
-binding for most everyday contracts, since consent matters more than the
-technology used. It offers no signer authentication or tamper evidence, and
-it cannot replace wet ink or qualified signatures where the law demands them
-(notarized documents, certain employment contracts). For those cases a
-certificate-based signing service is the right tool.
+The tool offers two ways to sign:
+
+- **Image signature** — a *simple electronic signature*: an image of your
+  handwritten signature placed into the PDF. Under eIDAS (EU) and
+  ESIGN/UETA (US) that is legally binding for most everyday contracts,
+  since consent matters more than the technology used.
+- **Digital signature** — a real cryptographic CMS/PKCS#7 signature embedded
+  in the document, which makes the file tamper-evident: any later
+  modification invalidates the signature. With an imported CA-issued
+  certificate (`.p12`/`.pfx`) it also chains to that CA's trust.
+
+Honest limits: a self-signed certificate proves integrity and key control,
+but viewers show "identity unknown" rather than a green checkmark — a
+certificate authority has to vouch for your identity for that. And neither
+mode is a *qualified* electronic signature (QES), which requires a qualified
+trust service provider — where the law demands QES or wet ink (notarized
+documents, certain employment contracts), a dedicated signing service is
+the right tool.
 
 ## Languages
 
@@ -122,8 +139,9 @@ Pull requests welcome.
 ## Built with
 
 - [pdf.js](https://mozilla.github.io/pdf.js/) — renders the pages, exposes the embedded fonts
-- [pdf-lib](https://pdf-lib.js.org/) — writes the output PDF
+- [pdf-lib](https://pdf-lib.js.org/) — writes the output PDF and the signature field
 - [fontkit](https://github.com/foliojs/fontkit) — glyph coverage checks and font embedding
+- [node-forge](https://github.com/digitalbazaar/forge) — builds the CMS/PKCS#7 signature and handles certificates
 
 ## License
 
