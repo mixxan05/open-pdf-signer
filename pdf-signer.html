@@ -411,6 +411,50 @@
     border-radius: 2px;
   }
 
+  /* ------------------------------------------------------------ text step */
+  .fld { display: block; margin: 0 0 9px; }
+  .fld > span {
+    display: block;
+    font-family: var(--face-din);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 4px;
+  }
+  .fld input, .fld select, .fld textarea {
+    width: 100%;
+    font: inherit;
+    font-size: 13px;
+    padding: 5px 7px;
+    border: 1px solid #C9CEC8;
+    border-radius: 3px;
+    background: #FFF;
+    color: var(--ink);
+  }
+  .fld input:focus, .fld select:focus, .fld textarea:focus { border-color: #A9B1AB; }
+  .fld textarea { resize: vertical; min-height: 2.4em; line-height: 1.35; }
+  .fld input[type="color"] { height: 30px; padding: 2px 3px; cursor: pointer; }
+  .fld-2 { display: flex; gap: 7px; }
+  .fld-2 .fld { flex: 1; min-width: 0; }
+
+  /* Placed texts live above the page canvas but below the signature box */
+  #textLayer { position: absolute; inset: 0; pointer-events: none; }
+  .tbox {
+    position: absolute;
+    pointer-events: auto;
+    cursor: grab;
+    line-height: 1.2;
+    white-space: pre;
+    outline: 1px dashed transparent;
+    outline-offset: 1px;
+    user-select: none;
+  }
+  .tbox:hover { outline-color: rgba(192, 71, 43, .45); }
+  .tbox.sel { outline-color: var(--dim); }
+  .tbox:active { cursor: grabbing; }
+
   /* ------------------------------------------------------------ responsive */
   @media (max-width: 820px) {
     .workspace { flex-direction: column; }
@@ -486,6 +530,37 @@
       <section class="step">
         <div class="step-head">
           <span class="step-num">03</span>
+          <h2 class="step-name" data-i18n="stepText"></h2>
+        </div>
+        <label class="fld">
+          <span data-i18n="textField"></span>
+          <textarea id="textInput" rows="2" data-i18n-ph="textPlaceholder"></textarea>
+        </label>
+        <label class="fld">
+          <span data-i18n="textFont"></span>
+          <select id="textFont"></select>
+        </label>
+        <div class="fld-2">
+          <label class="fld">
+            <span data-i18n="textSize"></span>
+            <input type="number" id="textSize" min="4" max="200" step="0.5" value="12">
+          </label>
+          <label class="fld">
+            <span data-i18n="textColor"></span>
+            <input type="color" id="textColor" value="#111111">
+          </label>
+        </div>
+        <div class="row">
+          <button id="btnAddText" disabled data-i18n="textAdd"></button>
+          <button id="btnRemoveText" disabled data-i18n="remove"></button>
+        </div>
+        <p class="note" data-i18n="textNote"></p>
+        <div class="status" id="statusText"></div>
+      </section>
+
+      <section class="step">
+        <div class="step-head">
+          <span class="step-num">04</span>
           <h2 class="step-name" data-i18n="stepPlace"></h2>
         </div>
         <div class="row">
@@ -498,7 +573,7 @@
 
       <section class="step" style="border-bottom:0">
         <div class="step-head">
-          <span class="step-num">04</span>
+          <span class="step-num">05</span>
           <h2 class="step-name" data-i18n="stepSave"></h2>
         </div>
         <p class="note" style="margin-top:0" data-i18n="saveNote"></p>
@@ -531,6 +606,7 @@
 
       <div class="sheet" id="sheet">
         <canvas id="pageCanvas"></canvas>
+        <div id="textLayer"></div>
         <div id="sigBox">
           <img id="sigImage" alt="">
           <span class="dim dim-w" id="dimW"></span>
@@ -545,6 +621,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@pdf-lib/fontkit@1.1.1/dist/fontkit.umd.min.js"></script>
 <script>
 (function () {
   "use strict";
@@ -573,21 +650,30 @@
       choosePng: "Choose a PNG", choosePngHint: "with a transparent background",
       uploadNote: "PNG only. It is the one format that carries transparency into the PDF.",
       stepPlace: "Place", placeHere: "Place here", remove: "Remove",
-      placeNote: "Drag to move, pull the corner to resize. The signature stays on the page you put it on.",
-      stepSave: "Save", saveNote: "Writes a new PDF. The original text and page count stay untouched.",
-      saveButton: "Save signed PDF",
+      placeNote: "Drag to move, pull the corner to resize the signature. Everything stays on the page you put it on.",
+      stepSave: "Save", saveNote: "Writes a new PDF. Text, pages and metadata stay untouched.",
+      saveButton: "Save PDF",
       page: "Page", pageOf: "of {n}",
       emptyTitle: "No document yet", emptyBody: "Choose a PDF on the left to get started.",
       loading: "Loading…", pagesLoaded: "{name} — {n} pages", pageLoaded: "{name} — 1 page",
       openFailed: "Could not open this file: {msg}", renderFailed: "Could not display this page: {msg}",
-      libsMissing: "pdf.js or pdf-lib could not be loaded. Opening this file the first time needs an internet connection.",
+      libsMissing: "pdf.js, pdf-lib or the font engine could not be loaded. Opening this file the first time needs an internet connection.",
       padEmpty: "Nothing drawn yet.", noStrokes: "No strokes found.",
       drawApplied: "Signature applied.", pngApplied: "PNG applied.",
       pngOnly: "Choose a PNG file. Only PNG carries transparency into the PDF.",
       readFailed: "That file could not be read.", imageFailed: "That image could not be read.",
       needSignature: "Create a signature first.", notPlaced: "Not placed yet.", placedOn: "On page {n}.",
       stateHere: "Signature on this page", stateOther: "Signature on page {n}", stateNone: "Not placed",
-      writing: "Writing PDF…", saved: "Saved as {name}", saveFailed: "Export failed: {msg}"
+      writing: "Writing PDF…", saved: "Saved as {name}", saveFailed: "Export failed: {msg}",
+      stepText: "Text", textField: "Text", textPlaceholder: "Text to insert",
+      textFont: "Font", fontsDoc: "From the document", fontsStd: "Standard fonts",
+      textSize: "Size (pt)", textColor: "Colour", textAdd: "Add to page",
+      textNote: "New text lands on the current page — drag it into place. Click a placed text to edit it again.",
+      textEmpty: "Type some text first.", textEditing: "Editing text on page {n}.",
+      textRemoved: "Text removed.", fontBroken: "cannot be embedded",
+      fontNoGlyphs: "This font has no glyphs for: {chars}",
+      fontEmbedFail: "Document font could not be embedded: {msg}",
+      fontkitMissing: "The font engine could not be loaded, so document fonts cannot be embedded."
     },
     de: {
       claim: "Läuft vollständig im Browser. Deine Datei verlässt diesen Rechner nicht.",
@@ -598,21 +684,30 @@
       choosePng: "PNG auswählen", choosePngHint: "mit transparentem Hintergrund",
       uploadNote: "Nur PNG. Es ist das einzige Format, das Transparenz ins PDF überträgt.",
       stepPlace: "Platzieren", placeHere: "Hier platzieren", remove: "Entfernen",
-      placeNote: "Ziehen zum Verschieben, Ecke ziehen zum Skalieren. Die Unterschrift bleibt auf der Seite, auf die du sie gesetzt hast.",
-      stepSave: "Speichern", saveNote: "Schreibt ein neues PDF. Text und Seitenzahl bleiben unverändert.",
-      saveButton: "Unterschriebenes PDF speichern",
+      placeNote: "Ziehen zum Verschieben, Ecke ziehen skaliert die Unterschrift. Alles bleibt auf der Seite, auf die du es setzt.",
+      stepSave: "Speichern", saveNote: "Schreibt ein neues PDF. Text, Seiten und Metadaten bleiben unverändert.",
+      saveButton: "PDF speichern",
       page: "Seite", pageOf: "von {n}",
       emptyTitle: "Noch kein Dokument", emptyBody: "Links eine PDF-Datei auswählen, dann geht es los.",
       loading: "Wird geladen…", pagesLoaded: "{name} — {n} Seiten", pageLoaded: "{name} — 1 Seite",
       openFailed: "Datei konnte nicht geöffnet werden: {msg}", renderFailed: "Seite konnte nicht dargestellt werden: {msg}",
-      libsMissing: "pdf.js oder pdf-lib konnte nicht geladen werden. Beim ersten Öffnen wird eine Internetverbindung benötigt.",
+      libsMissing: "pdf.js, pdf-lib oder die Font-Engine konnte nicht geladen werden. Beim ersten Öffnen wird eine Internetverbindung benötigt.",
       padEmpty: "Noch nichts gezeichnet.", noStrokes: "Keine Striche gefunden.",
       drawApplied: "Unterschrift übernommen.", pngApplied: "PNG übernommen.",
       pngOnly: "Bitte eine PNG-Datei wählen. Nur PNG überträgt Transparenz ins PDF.",
       readFailed: "Die Datei konnte nicht gelesen werden.", imageFailed: "Das Bild konnte nicht gelesen werden.",
       needSignature: "Erst eine Unterschrift erzeugen.", notPlaced: "Noch nicht platziert.", placedOn: "Auf Seite {n}.",
       stateHere: "Unterschrift auf dieser Seite", stateOther: "Unterschrift auf Seite {n}", stateNone: "Nicht platziert",
-      writing: "PDF wird geschrieben…", saved: "Gespeichert als {name}", saveFailed: "Export fehlgeschlagen: {msg}"
+      writing: "PDF wird geschrieben…", saved: "Gespeichert als {name}", saveFailed: "Export fehlgeschlagen: {msg}",
+      stepText: "Text", textField: "Text", textPlaceholder: "Einzufügender Text",
+      textFont: "Schriftart", fontsDoc: "Aus dem Dokument", fontsStd: "Standardschriften",
+      textSize: "Größe (pt)", textColor: "Farbe", textAdd: "Auf Seite setzen",
+      textNote: "Neuer Text landet auf der aktuellen Seite — ziehe ihn an die richtige Stelle. Klick auf einen gesetzten Text, um ihn zu bearbeiten.",
+      textEmpty: "Erst Text eingeben.", textEditing: "Text auf Seite {n} wird bearbeitet.",
+      textRemoved: "Text entfernt.", fontBroken: "nicht einbettbar",
+      fontNoGlyphs: "Dieser Schrift fehlen Glyphen für: {chars}",
+      fontEmbedFail: "Dokumentschrift konnte nicht eingebettet werden: {msg}",
+      fontkitMissing: "Die Font-Engine konnte nicht geladen werden, Dokumentschriften lassen sich nicht einbetten."
     },
     es: {
       claim: "Funciona por completo en tu navegador. Tu archivo nunca sale de este ordenador.",
@@ -623,21 +718,30 @@
       choosePng: "Elegir un PNG", choosePngHint: "con fondo transparente",
       uploadNote: "Solo PNG. Es el único formato que lleva la transparencia al PDF.",
       stepPlace: "Colocar", placeHere: "Colocar aquí", remove: "Quitar",
-      placeNote: "Arrastra para mover, tira de la esquina para escalar. La firma se queda en la página donde la pongas.",
-      stepSave: "Guardar", saveNote: "Escribe un PDF nuevo. El texto y el número de páginas no cambian.",
-      saveButton: "Guardar PDF firmado",
+      placeNote: "Arrastra para mover, tira de la esquina para escalar la firma. Todo se queda en la página donde lo pongas.",
+      stepSave: "Guardar", saveNote: "Escribe un PDF nuevo. Texto, páginas y metadatos no cambian.",
+      saveButton: "Guardar PDF",
       page: "Página", pageOf: "de {n}",
       emptyTitle: "Aún no hay documento", emptyBody: "Elige un PDF a la izquierda para empezar.",
       loading: "Cargando…", pagesLoaded: "{name} — {n} páginas", pageLoaded: "{name} — 1 página",
       openFailed: "No se pudo abrir el archivo: {msg}", renderFailed: "No se pudo mostrar la página: {msg}",
-      libsMissing: "No se pudieron cargar pdf.js o pdf-lib. La primera vez que abres el archivo hace falta conexión a internet.",
+      libsMissing: "No se pudieron cargar pdf.js, pdf-lib o el motor de fuentes. La primera vez que abres el archivo hace falta conexión a internet.",
       padEmpty: "Todavía no has dibujado nada.", noStrokes: "No se encontraron trazos.",
       drawApplied: "Firma aplicada.", pngApplied: "PNG aplicado.",
       pngOnly: "Elige un archivo PNG. Solo PNG lleva la transparencia al PDF.",
       readFailed: "No se pudo leer el archivo.", imageFailed: "No se pudo leer la imagen.",
       needSignature: "Crea primero una firma.", notPlaced: "Sin colocar.", placedOn: "En la página {n}.",
       stateHere: "Firma en esta página", stateOther: "Firma en la página {n}", stateNone: "Sin colocar",
-      writing: "Escribiendo el PDF…", saved: "Guardado como {name}", saveFailed: "Fallo al exportar: {msg}"
+      writing: "Escribiendo el PDF…", saved: "Guardado como {name}", saveFailed: "Fallo al exportar: {msg}",
+      stepText: "Texto", textField: "Texto", textPlaceholder: "Texto a insertar",
+      textFont: "Fuente", fontsDoc: "Del documento", fontsStd: "Fuentes estándar",
+      textSize: "Tamaño (pt)", textColor: "Color", textAdd: "Añadir a la página",
+      textNote: "El texto nuevo cae en la página actual — arrástralo a su sitio. Haz clic en un texto colocado para editarlo.",
+      textEmpty: "Escribe primero algún texto.", textEditing: "Editando el texto de la página {n}.",
+      textRemoved: "Texto eliminado.", fontBroken: "no se puede incrustar",
+      fontNoGlyphs: "A esta fuente le faltan glifos para: {chars}",
+      fontEmbedFail: "No se pudo incrustar la fuente del documento: {msg}",
+      fontkitMissing: "No se pudo cargar el motor de fuentes; las del documento no se pueden incrustar."
     },
     fr: {
       claim: "Fonctionne entièrement dans votre navigateur. Votre fichier ne quitte jamais cet ordinateur.",
@@ -648,21 +752,30 @@
       choosePng: "Choisir un PNG", choosePngHint: "à fond transparent",
       uploadNote: "PNG uniquement. C’est le seul format qui transmet la transparence au PDF.",
       stepPlace: "Placer", placeHere: "Placer ici", remove: "Retirer",
-      placeNote: "Glissez pour déplacer, tirez le coin pour redimensionner. La signature reste sur la page où vous l’avez posée.",
-      stepSave: "Enregistrer", saveNote: "Écrit un nouveau PDF. Le texte et le nombre de pages restent intacts.",
-      saveButton: "Enregistrer le PDF signé",
+      placeNote: "Glissez pour déplacer, tirez le coin pour redimensionner la signature. Tout reste sur la page où vous l’avez posé.",
+      stepSave: "Enregistrer", saveNote: "Écrit un nouveau PDF. Texte, pages et métadonnées restent intacts.",
+      saveButton: "Enregistrer le PDF",
       page: "Page", pageOf: "sur {n}",
       emptyTitle: "Aucun document", emptyBody: "Choisissez un PDF à gauche pour commencer.",
       loading: "Chargement…", pagesLoaded: "{name} — {n} pages", pageLoaded: "{name} — 1 page",
       openFailed: "Impossible d’ouvrir ce fichier : {msg}", renderFailed: "Impossible d’afficher cette page : {msg}",
-      libsMissing: "pdf.js ou pdf-lib n’a pas pu être chargé. La première ouverture nécessite une connexion internet.",
+      libsMissing: "pdf.js, pdf-lib ou le moteur de polices n’a pas pu être chargé. La première ouverture nécessite une connexion internet.",
       padEmpty: "Rien n’a encore été dessiné.", noStrokes: "Aucun tracé trouvé.",
       drawApplied: "Signature appliquée.", pngApplied: "PNG appliqué.",
       pngOnly: "Choisissez un fichier PNG. Seul le PNG transmet la transparence au PDF.",
       readFailed: "Ce fichier n’a pas pu être lu.", imageFailed: "Cette image n’a pas pu être lue.",
       needSignature: "Créez d’abord une signature.", notPlaced: "Pas encore placée.", placedOn: "Sur la page {n}.",
       stateHere: "Signature sur cette page", stateOther: "Signature sur la page {n}", stateNone: "Non placée",
-      writing: "Écriture du PDF…", saved: "Enregistré sous {name}", saveFailed: "Échec de l’export : {msg}"
+      writing: "Écriture du PDF…", saved: "Enregistré sous {name}", saveFailed: "Échec de l’export : {msg}",
+      stepText: "Texte", textField: "Texte", textPlaceholder: "Texte à insérer",
+      textFont: "Police", fontsDoc: "Du document", fontsStd: "Polices standard",
+      textSize: "Taille (pt)", textColor: "Couleur", textAdd: "Ajouter à la page",
+      textNote: "Le nouveau texte arrive sur la page courante — glissez-le à sa place. Cliquez sur un texte placé pour le modifier.",
+      textEmpty: "Saisissez d’abord un texte.", textEditing: "Modification du texte de la page {n}.",
+      textRemoved: "Texte retiré.", fontBroken: "non incorporable",
+      fontNoGlyphs: "Cette police n’a pas de glyphes pour : {chars}",
+      fontEmbedFail: "Impossible d’incorporer la police du document : {msg}",
+      fontkitMissing: "Le moteur de polices n’a pas pu être chargé ; les polices du document ne peuvent pas être incorporées."
     },
     it: {
       claim: "Funziona interamente nel browser. Il tuo file non lascia mai questo computer.",
@@ -673,21 +786,30 @@
       choosePng: "Scegli un PNG", choosePngHint: "con sfondo trasparente",
       uploadNote: "Solo PNG. È l’unico formato che porta la trasparenza nel PDF.",
       stepPlace: "Posiziona", placeHere: "Posiziona qui", remove: "Rimuovi",
-      placeNote: "Trascina per spostare, tira l’angolo per ridimensionare. La firma resta sulla pagina in cui l’hai messa.",
-      stepSave: "Salva", saveNote: "Scrive un nuovo PDF. Testo e numero di pagine restano invariati.",
-      saveButton: "Salva il PDF firmato",
+      placeNote: "Trascina per spostare, tira l’angolo per ridimensionare la firma. Tutto resta sulla pagina in cui l’hai messo.",
+      stepSave: "Salva", saveNote: "Scrive un nuovo PDF. Testo, pagine e metadati restano invariati.",
+      saveButton: "Salva il PDF",
       page: "Pagina", pageOf: "di {n}",
       emptyTitle: "Nessun documento", emptyBody: "Scegli un PDF a sinistra per iniziare.",
       loading: "Caricamento…", pagesLoaded: "{name} — {n} pagine", pageLoaded: "{name} — 1 pagina",
       openFailed: "Impossibile aprire il file: {msg}", renderFailed: "Impossibile mostrare la pagina: {msg}",
-      libsMissing: "Non è stato possibile caricare pdf.js o pdf-lib. La prima apertura richiede una connessione a internet.",
+      libsMissing: "Non è stato possibile caricare pdf.js, pdf-lib o il motore dei caratteri. La prima apertura richiede una connessione a internet.",
       padEmpty: "Non hai ancora disegnato nulla.", noStrokes: "Nessun tratto trovato.",
       drawApplied: "Firma applicata.", pngApplied: "PNG applicato.",
       pngOnly: "Scegli un file PNG. Solo il PNG porta la trasparenza nel PDF.",
       readFailed: "Impossibile leggere il file.", imageFailed: "Impossibile leggere l’immagine.",
       needSignature: "Crea prima una firma.", notPlaced: "Non posizionata.", placedOn: "A pagina {n}.",
       stateHere: "Firma su questa pagina", stateOther: "Firma a pagina {n}", stateNone: "Non posizionata",
-      writing: "Scrittura del PDF…", saved: "Salvato come {name}", saveFailed: "Esportazione fallita: {msg}"
+      writing: "Scrittura del PDF…", saved: "Salvato come {name}", saveFailed: "Esportazione fallita: {msg}",
+      stepText: "Testo", textField: "Testo", textPlaceholder: "Testo da inserire",
+      textFont: "Carattere", fontsDoc: "Dal documento", fontsStd: "Caratteri standard",
+      textSize: "Dimensione (pt)", textColor: "Colore", textAdd: "Aggiungi alla pagina",
+      textNote: "Il nuovo testo arriva sulla pagina corrente — trascinalo al suo posto. Clicca su un testo posizionato per modificarlo.",
+      textEmpty: "Scrivi prima un testo.", textEditing: "Modifica del testo a pagina {n}.",
+      textRemoved: "Testo rimosso.", fontBroken: "non incorporabile",
+      fontNoGlyphs: "A questo carattere mancano i glifi per: {chars}",
+      fontEmbedFail: "Impossibile incorporare il carattere del documento: {msg}",
+      fontkitMissing: "Il motore dei caratteri non è stato caricato; i caratteri del documento non possono essere incorporati."
     },
     pt: {
       claim: "Funciona inteiramente no navegador. O seu ficheiro nunca sai deste computador.",
@@ -698,21 +820,30 @@
       choosePng: "Escolher um PNG", choosePngHint: "com fundo transparente",
       uploadNote: "Apenas PNG. É o único formato que leva a transparência para o PDF.",
       stepPlace: "Posicionar", placeHere: "Posicionar aqui", remove: "Remover",
-      placeNote: "Arraste para mover, puxe o canto para redimensionar. A assinatura fica na página onde a colocou.",
-      stepSave: "Guardar", saveNote: "Escreve um PDF novo. O texto e o número de páginas ficam intactos.",
-      saveButton: "Guardar PDF assinado",
+      placeNote: "Arraste para mover, puxe o canto para redimensionar a assinatura. Tudo fica na página onde o colocou.",
+      stepSave: "Guardar", saveNote: "Escreve um PDF novo. Texto, páginas e metadados ficam intactos.",
+      saveButton: "Guardar PDF",
       page: "Página", pageOf: "de {n}",
       emptyTitle: "Ainda sem documento", emptyBody: "Escolha um PDF à esquerda para começar.",
       loading: "A carregar…", pagesLoaded: "{name} — {n} páginas", pageLoaded: "{name} — 1 página",
       openFailed: "Não foi possível abrir o ficheiro: {msg}", renderFailed: "Não foi possível mostrar a página: {msg}",
-      libsMissing: "Não foi possível carregar o pdf.js ou o pdf-lib. A primeira abertura precisa de ligação à internet.",
+      libsMissing: "Não foi possível carregar o pdf.js, o pdf-lib ou o motor de tipos. A primeira abertura precisa de ligação à internet.",
       padEmpty: "Ainda não desenhou nada.", noStrokes: "Nenhum traço encontrado.",
       drawApplied: "Assinatura aplicada.", pngApplied: "PNG aplicado.",
       pngOnly: "Escolha um ficheiro PNG. Só o PNG leva a transparência para o PDF.",
       readFailed: "Não foi possível ler o ficheiro.", imageFailed: "Não foi possível ler a imagem.",
       needSignature: "Crie primeiro uma assinatura.", notPlaced: "Por posicionar.", placedOn: "Na página {n}.",
       stateHere: "Assinatura nesta página", stateOther: "Assinatura na página {n}", stateNone: "Por posicionar",
-      writing: "A escrever o PDF…", saved: "Guardado como {name}", saveFailed: "Falha na exportação: {msg}"
+      writing: "A escrever o PDF…", saved: "Guardado como {name}", saveFailed: "Falha na exportação: {msg}",
+      stepText: "Texto", textField: "Texto", textPlaceholder: "Texto a inserir",
+      textFont: "Tipo de letra", fontsDoc: "Do documento", fontsStd: "Tipos padrão",
+      textSize: "Tamanho (pt)", textColor: "Cor", textAdd: "Adicionar à página",
+      textNote: "O texto novo cai na página atual — arraste-o para o lugar certo. Clique num texto colocado para o editar.",
+      textEmpty: "Escreva primeiro um texto.", textEditing: "A editar o texto da página {n}.",
+      textRemoved: "Texto removido.", fontBroken: "não incorporável",
+      fontNoGlyphs: "Este tipo de letra não tem glifos para: {chars}",
+      fontEmbedFail: "Não foi possível incorporar o tipo do documento: {msg}",
+      fontkitMissing: "O motor de tipos não pôde ser carregado; os tipos do documento não podem ser incorporados."
     },
     ru: {
       claim: "Работает полностью в браузере. Файл никогда не покидает этот компьютер.",
@@ -723,21 +854,30 @@
       choosePng: "Выбрать PNG", choosePngHint: "с прозрачным фоном",
       uploadNote: "Только PNG. Это единственный формат, переносящий прозрачность в PDF.",
       stepPlace: "Разместить", placeHere: "Разместить здесь", remove: "Убрать",
-      placeNote: "Перетащите, чтобы переместить, потяните за угол, чтобы изменить размер. Подпись остаётся на той странице, куда вы её поставили.",
-      stepSave: "Сохранить", saveNote: "Создаёт новый PDF. Текст и число страниц остаются прежними.",
-      saveButton: "Сохранить подписанный PDF",
+      placeNote: "Перетащите, чтобы переместить, потяните за угол, чтобы изменить размер подписи. Всё остаётся на той странице, куда вы это поставили.",
+      stepSave: "Сохранить", saveNote: "Создаёт новый PDF. Текст, страницы и метаданные остаются прежними.",
+      saveButton: "Сохранить PDF",
       page: "Страница", pageOf: "из {n}",
       emptyTitle: "Документ не выбран", emptyBody: "Выберите PDF слева, чтобы начать.",
       loading: "Загрузка…", pagesLoaded: "{name} — страниц: {n}", pageLoaded: "{name} — 1 страница",
       openFailed: "Не удалось открыть файл: {msg}", renderFailed: "Не удалось показать страницу: {msg}",
-      libsMissing: "Не удалось загрузить pdf.js или pdf-lib. При первом открытии нужно интернет-соединение.",
+      libsMissing: "Не удалось загрузить pdf.js, pdf-lib или шрифтовой движок. При первом открытии нужно интернет-соединение.",
       padEmpty: "Пока ничего не нарисовано.", noStrokes: "Штрихи не найдены.",
       drawApplied: "Подпись применена.", pngApplied: "PNG применён.",
       pngOnly: "Выберите файл PNG. Только PNG переносит прозрачность в PDF.",
       readFailed: "Не удалось прочитать файл.", imageFailed: "Не удалось прочитать изображение.",
       needSignature: "Сначала создайте подпись.", notPlaced: "Не размещена.", placedOn: "На странице {n}.",
       stateHere: "Подпись на этой странице", stateOther: "Подпись на странице {n}", stateNone: "Не размещена",
-      writing: "Запись PDF…", saved: "Сохранено как {name}", saveFailed: "Ошибка экспорта: {msg}"
+      writing: "Запись PDF…", saved: "Сохранено как {name}", saveFailed: "Ошибка экспорта: {msg}",
+      stepText: "Текст", textField: "Текст", textPlaceholder: "Текст для вставки",
+      textFont: "Шрифт", fontsDoc: "Из документа", fontsStd: "Стандартные шрифты",
+      textSize: "Размер (пт)", textColor: "Цвет", textAdd: "Добавить на страницу",
+      textNote: "Новый текст появится на текущей странице — перетащите его на место. Нажмите на размещённый текст, чтобы править его.",
+      textEmpty: "Сначала введите текст.", textEditing: "Редактируется текст на странице {n}.",
+      textRemoved: "Текст удалён.", fontBroken: "не встраивается",
+      fontNoGlyphs: "В этом шрифте нет глифов для: {chars}",
+      fontEmbedFail: "Не удалось встроить шрифт документа: {msg}",
+      fontkitMissing: "Не удалось загрузить шрифтовой движок, шрифты документа встроить нельзя."
     },
     tr: {
       claim: "Tamamen tarayıcınızda çalışır. Dosyanız bu bilgisayardan hiç çıkmaz.",
@@ -748,21 +888,30 @@
       choosePng: "PNG seçin", choosePngHint: "saydam arka planlı",
       uploadNote: "Yalnızca PNG. Saydamlığı PDF’e taşıyan tek biçim budur.",
       stepPlace: "Yerleştir", placeHere: "Buraya yerleştir", remove: "Kaldır",
-      placeNote: "Taşımak için sürükleyin, boyutlandırmak için köşeden çekin. İmza, koyduğunuz sayfada kalır.",
-      stepSave: "Kaydet", saveNote: "Yeni bir PDF yazar. Metin ve sayfa sayısı değişmez.",
-      saveButton: "İmzalı PDF’i kaydet",
+      placeNote: "Taşımak için sürükleyin, imzayı boyutlandırmak için köşeden çekin. Her şey koyduğunuz sayfada kalır.",
+      stepSave: "Kaydet", saveNote: "Yeni bir PDF yazar. Metin, sayfalar ve üst veriler değişmez.",
+      saveButton: "PDF’yi kaydet",
       page: "Sayfa", pageOf: "/ {n}",
       emptyTitle: "Henüz belge yok", emptyBody: "Başlamak için soldan bir PDF seçin.",
       loading: "Yükleniyor…", pagesLoaded: "{name} — {n} sayfa", pageLoaded: "{name} — 1 sayfa",
       openFailed: "Dosya açılamadı: {msg}", renderFailed: "Sayfa gösterilemedi: {msg}",
-      libsMissing: "pdf.js veya pdf-lib yüklenemedi. Dosyayı ilk kez açarken internet bağlantısı gerekir.",
+      libsMissing: "pdf.js, pdf-lib veya yazı tipi motoru yüklenemedi. Dosyayı ilk kez açarken internet bağlantısı gerekir.",
       padEmpty: "Henüz bir şey çizilmedi.", noStrokes: "Çizgi bulunamadı.",
       drawApplied: "İmza uygulandı.", pngApplied: "PNG uygulandı.",
       pngOnly: "Bir PNG dosyası seçin. Saydamlığı PDF’e yalnızca PNG taşır.",
       readFailed: "Dosya okunamadı.", imageFailed: "Görsel okunamadı.",
       needSignature: "Önce bir imza oluşturun.", notPlaced: "Yerleştirilmedi.", placedOn: "{n}. sayfada.",
       stateHere: "İmza bu sayfada", stateOther: "İmza {n}. sayfada", stateNone: "Yerleştirilmedi",
-      writing: "PDF yazılıyor…", saved: "{name} olarak kaydedildi", saveFailed: "Dışa aktarma başarısız: {msg}"
+      writing: "PDF yazılıyor…", saved: "{name} olarak kaydedildi", saveFailed: "Dışa aktarma başarısız: {msg}",
+      stepText: "Metin", textField: "Metin", textPlaceholder: "Eklenecek metin",
+      textFont: "Yazı tipi", fontsDoc: "Belgeden", fontsStd: "Standart yazı tipleri",
+      textSize: "Boyut (pt)", textColor: "Renk", textAdd: "Sayfaya ekle",
+      textNote: "Yeni metin geçerli sayfaya gelir — sürükleyip yerine koyun. Yerleştirilmiş metne tıklayarak düzenleyin.",
+      textEmpty: "Önce bir metin yazın.", textEditing: "{n}. sayfadaki metin düzenleniyor.",
+      textRemoved: "Metin kaldırıldı.", fontBroken: "gömülemez",
+      fontNoGlyphs: "Bu yazı tipinde şu karakterlerin glifi yok: {chars}",
+      fontEmbedFail: "Belge yazı tipi gömülemedi: {msg}",
+      fontkitMissing: "Yazı tipi motoru yüklenemedi; belge yazı tipleri gömülemez."
     },
     id: {
       claim: "Berjalan sepenuhnya di peramban Anda. Berkas Anda tidak pernah meninggalkan komputer ini.",
@@ -773,21 +922,30 @@
       choosePng: "Pilih PNG", choosePngHint: "dengan latar transparan",
       uploadNote: "Hanya PNG. Format inilah satu-satunya yang membawa transparansi ke dalam PDF.",
       stepPlace: "Tempatkan", placeHere: "Tempatkan di sini", remove: "Hapus",
-      placeNote: "Seret untuk memindahkan, tarik sudutnya untuk mengubah ukuran. Tanda tangan tetap di halaman tempat Anda meletakkannya.",
-      stepSave: "Simpan", saveNote: "Menulis PDF baru. Teks dan jumlah halaman tidak berubah.",
-      saveButton: "Simpan PDF bertanda tangan",
+      placeNote: "Seret untuk memindahkan, tarik sudutnya untuk mengubah ukuran tanda tangan. Semuanya tetap di halaman tempat Anda meletakkannya.",
+      stepSave: "Simpan", saveNote: "Menulis PDF baru. Teks, halaman, dan metadata tidak berubah.",
+      saveButton: "Simpan PDF",
       page: "Halaman", pageOf: "dari {n}",
       emptyTitle: "Belum ada dokumen", emptyBody: "Pilih PDF di sebelah kiri untuk memulai.",
       loading: "Memuat…", pagesLoaded: "{name} — {n} halaman", pageLoaded: "{name} — 1 halaman",
       openFailed: "Berkas tidak dapat dibuka: {msg}", renderFailed: "Halaman tidak dapat ditampilkan: {msg}",
-      libsMissing: "pdf.js atau pdf-lib gagal dimuat. Membuka berkas ini pertama kali memerlukan koneksi internet.",
+      libsMissing: "pdf.js, pdf-lib, atau mesin fonta gagal dimuat. Membuka berkas ini pertama kali memerlukan koneksi internet.",
       padEmpty: "Belum ada yang digambar.", noStrokes: "Tidak ada goresan ditemukan.",
       drawApplied: "Tanda tangan diterapkan.", pngApplied: "PNG diterapkan.",
       pngOnly: "Pilih berkas PNG. Hanya PNG yang membawa transparansi ke dalam PDF.",
       readFailed: "Berkas tidak dapat dibaca.", imageFailed: "Gambar tidak dapat dibaca.",
       needSignature: "Buat tanda tangan dulu.", notPlaced: "Belum ditempatkan.", placedOn: "Di halaman {n}.",
       stateHere: "Tanda tangan di halaman ini", stateOther: "Tanda tangan di halaman {n}", stateNone: "Belum ditempatkan",
-      writing: "Menulis PDF…", saved: "Disimpan sebagai {name}", saveFailed: "Ekspor gagal: {msg}"
+      writing: "Menulis PDF…", saved: "Disimpan sebagai {name}", saveFailed: "Ekspor gagal: {msg}",
+      stepText: "Teks", textField: "Teks", textPlaceholder: "Teks yang disisipkan",
+      textFont: "Fonta", fontsDoc: "Dari dokumen", fontsStd: "Fonta standar",
+      textSize: "Ukuran (pt)", textColor: "Warna", textAdd: "Tambah ke halaman",
+      textNote: "Teks baru mendarat di halaman ini — seret ke tempatnya. Klik teks yang sudah ditempatkan untuk mengeditnya.",
+      textEmpty: "Ketik teks dulu.", textEditing: "Mengedit teks di halaman {n}.",
+      textRemoved: "Teks dihapus.", fontBroken: "tidak bisa disematkan",
+      fontNoGlyphs: "Fonta ini tidak memiliki glif untuk: {chars}",
+      fontEmbedFail: "Fonta dokumen tidak bisa disematkan: {msg}",
+      fontkitMissing: "Mesin fonta gagal dimuat; fonta dokumen tidak bisa disematkan."
     },
     vi: {
       claim: "Chạy hoàn toàn trong trình duyệt. Tệp của bạn không bao giờ rời máy này.",
@@ -798,21 +956,30 @@
       choosePng: "Chọn tệp PNG", choosePngHint: "có nền trong suốt",
       uploadNote: "Chỉ PNG. Đây là định dạng duy nhất mang được độ trong suốt vào PDF.",
       stepPlace: "Đặt vị trí", placeHere: "Đặt tại đây", remove: "Gỡ bỏ",
-      placeNote: "Kéo để di chuyển, kéo góc để đổi kích thước. Chữ ký nằm lại ở trang bạn đã đặt.",
-      stepSave: "Lưu", saveNote: "Tạo một tệp PDF mới. Văn bản và số trang giữ nguyên.",
-      saveButton: "Lưu PDF đã ký",
+      placeNote: "Kéo để di chuyển, kéo góc để đổi kích thước chữ ký. Mọi thứ nằm lại ở trang bạn đã đặt.",
+      stepSave: "Lưu", saveNote: "Tạo một tệp PDF mới. Văn bản, số trang và siêu dữ liệu giữ nguyên.",
+      saveButton: "Lưu PDF",
       page: "Trang", pageOf: "trên {n}",
       emptyTitle: "Chưa có tài liệu", emptyBody: "Chọn một tệp PDF bên trái để bắt đầu.",
       loading: "Đang tải…", pagesLoaded: "{name} — {n} trang", pageLoaded: "{name} — 1 trang",
       openFailed: "Không mở được tệp: {msg}", renderFailed: "Không hiển thị được trang: {msg}",
-      libsMissing: "Không tải được pdf.js hoặc pdf-lib. Lần đầu mở tệp cần có kết nối internet.",
+      libsMissing: "Không tải được pdf.js, pdf-lib hoặc bộ xử lý phông chữ. Lần đầu mở tệp cần có kết nối internet.",
       padEmpty: "Chưa vẽ gì cả.", noStrokes: "Không tìm thấy nét vẽ.",
       drawApplied: "Đã áp dụng chữ ký.", pngApplied: "Đã áp dụng PNG.",
       pngOnly: "Hãy chọn tệp PNG. Chỉ PNG mới mang độ trong suốt vào PDF.",
       readFailed: "Không đọc được tệp.", imageFailed: "Không đọc được ảnh.",
       needSignature: "Hãy tạo chữ ký trước.", notPlaced: "Chưa đặt.", placedOn: "Ở trang {n}.",
       stateHere: "Chữ ký ở trang này", stateOther: "Chữ ký ở trang {n}", stateNone: "Chưa đặt",
-      writing: "Đang ghi PDF…", saved: "Đã lưu thành {name}", saveFailed: "Xuất tệp thất bại: {msg}"
+      writing: "Đang ghi PDF…", saved: "Đã lưu thành {name}", saveFailed: "Xuất tệp thất bại: {msg}",
+      stepText: "Văn bản", textField: "Văn bản", textPlaceholder: "Văn bản cần chèn",
+      textFont: "Phông chữ", fontsDoc: "Từ tài liệu", fontsStd: "Phông chuẩn",
+      textSize: "Cỡ (pt)", textColor: "Màu", textAdd: "Thêm vào trang",
+      textNote: "Văn bản mới rơi xuống trang hiện tại — kéo nó đến đúng chỗ. Nhấp vào văn bản đã đặt để sửa.",
+      textEmpty: "Nhập văn bản trước đã.", textEditing: "Đang sửa văn bản ở trang {n}.",
+      textRemoved: "Đã gỡ văn bản.", fontBroken: "không nhúng được",
+      fontNoGlyphs: "Phông này thiếu glyph cho: {chars}",
+      fontEmbedFail: "Không nhúng được phông của tài liệu: {msg}",
+      fontkitMissing: "Không tải được bộ xử lý phông chữ; không thể nhúng phông của tài liệu."
     },
     zh: {
       claim: "完全在你的浏览器中运行，文件不会离开这台电脑。",
@@ -823,21 +990,30 @@
       choosePng: "选择 PNG", choosePngHint: "需为透明背景",
       uploadNote: "仅限 PNG。只有它能把透明度带入 PDF。",
       stepPlace: "放置", placeHere: "放在这里", remove: "移除",
-      placeNote: "拖动可移动，拖角可缩放。签名会留在你放置它的那一页。",
-      stepSave: "保存", saveNote: "生成新的 PDF，原有文字和页数不变。",
-      saveButton: "保存已签名的 PDF",
+      placeNote: "拖动可移动，拖角可缩放签名。所有内容都会留在你放置它的那一页。",
+      stepSave: "保存", saveNote: "生成新的 PDF，原有文字、页数和元数据不变。",
+      saveButton: "保存 PDF",
       page: "页", pageOf: "/ 共 {n} 页",
       emptyTitle: "尚未选择文档", emptyBody: "在左侧选择一个 PDF 即可开始。",
       loading: "正在加载…", pagesLoaded: "{name} — 共 {n} 页", pageLoaded: "{name} — 共 1 页",
       openFailed: "无法打开此文件：{msg}", renderFailed: "无法显示此页：{msg}",
-      libsMissing: "pdf.js 或 pdf-lib 加载失败。首次打开本文件需要联网。",
+      libsMissing: "pdf.js、pdf-lib 或字体引擎加载失败。首次打开本文件需要联网。",
       padEmpty: "还没有写任何东西。", noStrokes: "未找到笔画。",
       drawApplied: "签名已应用。", pngApplied: "PNG 已应用。",
       pngOnly: "请选择 PNG 文件。只有 PNG 能把透明度带入 PDF。",
       readFailed: "无法读取该文件。", imageFailed: "无法读取该图片。",
       needSignature: "请先创建签名。", notPlaced: "尚未放置。", placedOn: "在第 {n} 页。",
       stateHere: "签名在本页", stateOther: "签名在第 {n} 页", stateNone: "尚未放置",
-      writing: "正在生成 PDF…", saved: "已保存为 {name}", saveFailed: "导出失败：{msg}"
+      writing: "正在生成 PDF…", saved: "已保存为 {name}", saveFailed: "导出失败：{msg}",
+      stepText: "文字", textField: "文字", textPlaceholder: "要插入的文字",
+      textFont: "字体", fontsDoc: "文档内字体", fontsStd: "标准字体",
+      textSize: "字号 (pt)", textColor: "颜色", textAdd: "添加到本页",
+      textNote: "新文字会落在当前页——拖到需要的位置即可。点击已放置的文字可再次编辑。",
+      textEmpty: "请先输入文字。", textEditing: "正在编辑第 {n} 页的文字。",
+      textRemoved: "文字已移除。", fontBroken: "无法嵌入",
+      fontNoGlyphs: "该字体缺少以下字符的字形：{chars}",
+      fontEmbedFail: "无法嵌入文档字体：{msg}",
+      fontkitMissing: "字体引擎加载失败，无法嵌入文档字体。"
     },
     ja: {
       claim: "すべてブラウザ内で処理します。ファイルがこのパソコンから出ることはありません。",
@@ -848,21 +1024,30 @@
       choosePng: "PNG を選ぶ", choosePngHint: "背景が透明なもの",
       uploadNote: "PNG のみ。透明度を PDF に持ち込める唯一の形式です。",
       stepPlace: "配置", placeHere: "ここに配置", remove: "削除",
-      placeNote: "ドラッグで移動、角を引いて拡大縮小。署名は配置したページに残ります。",
-      stepSave: "保存", saveNote: "新しい PDF を作成します。本文とページ数はそのままです。",
-      saveButton: "署名した PDF を保存",
+      placeNote: "ドラッグで移動、角を引くと署名を拡大縮小。置いたものはすべてそのページに残ります。",
+      stepSave: "保存", saveNote: "新しい PDF を作成します。本文・ページ数・メタデータはそのままです。",
+      saveButton: "PDF を保存",
       page: "ページ", pageOf: "/ 全 {n} ページ",
       emptyTitle: "文書が未選択です", emptyBody: "左側で PDF を選ぶと始められます。",
       loading: "読み込み中…", pagesLoaded: "{name} — 全 {n} ページ", pageLoaded: "{name} — 全 1 ページ",
       openFailed: "ファイルを開けませんでした: {msg}", renderFailed: "ページを表示できませんでした: {msg}",
-      libsMissing: "pdf.js または pdf-lib を読み込めませんでした。初回のご利用にはインターネット接続が必要です。",
+      libsMissing: "pdf.js、pdf-lib またはフォントエンジンを読み込めませんでした。初回のご利用にはインターネット接続が必要です。",
       padEmpty: "まだ何も書かれていません。", noStrokes: "筆跡が見つかりません。",
       drawApplied: "署名を適用しました。", pngApplied: "PNG を適用しました。",
       pngOnly: "PNG ファイルを選んでください。透明度を PDF に持ち込めるのは PNG だけです。",
       readFailed: "ファイルを読み取れませんでした。", imageFailed: "画像を読み取れませんでした。",
       needSignature: "先に署名を作成してください。", notPlaced: "未配置です。", placedOn: "{n} ページ目にあります。",
       stateHere: "署名はこのページ", stateOther: "署名は {n} ページ目", stateNone: "未配置",
-      writing: "PDF を作成中…", saved: "{name} として保存しました", saveFailed: "書き出しに失敗しました: {msg}"
+      writing: "PDF を作成中…", saved: "{name} として保存しました", saveFailed: "書き出しに失敗しました: {msg}",
+      stepText: "テキスト", textField: "テキスト", textPlaceholder: "挿入するテキスト",
+      textFont: "フォント", fontsDoc: "文書内のフォント", fontsStd: "標準フォント",
+      textSize: "サイズ (pt)", textColor: "色", textAdd: "ページに追加",
+      textNote: "新しいテキストは現在のページに置かれます。ドラッグで目的の場所へ。置いたテキストをクリックすると再編集できます。",
+      textEmpty: "先にテキストを入力してください。", textEditing: "{n} ページ目のテキストを編集中。",
+      textRemoved: "テキストを削除しました。", fontBroken: "埋め込み不可",
+      fontNoGlyphs: "このフォントには次の文字のグリフがありません: {chars}",
+      fontEmbedFail: "文書フォントを埋め込めませんでした: {msg}",
+      fontkitMissing: "フォントエンジンを読み込めなかったため、文書フォントは埋め込めません。"
     },
     ko: {
       claim: "모든 처리가 브라우저 안에서 이루어집니다. 파일은 이 컴퓨터를 벗어나지 않습니다.",
@@ -873,21 +1058,30 @@
       choosePng: "PNG 선택", choosePngHint: "배경이 투명한 파일",
       uploadNote: "PNG만 가능합니다. 투명도를 PDF로 옮길 수 있는 유일한 형식입니다.",
       stepPlace: "배치", placeHere: "여기에 배치", remove: "제거",
-      placeNote: "끌어서 옴기고 모서리를 당겨 크기를 바꾸세요. 서명은 놓아둔 페이지에 그대로 남습니다.",
-      stepSave: "저장", saveNote: "새 PDF를 만듭니다. 본문과 페이지 수는 그대로입니다.",
-      saveButton: "서명된 PDF 저장",
+      placeNote: "끌어서 옴기고 모서리를 당겨 서명 크기를 바꾸세요. 놓아둔 것은 모두 그 페이지에 남습니다.",
+      stepSave: "저장", saveNote: "새 PDF를 만듭니다. 본문, 페이지 수, 메타데이터는 그대로입니다.",
+      saveButton: "PDF 저장",
       page: "페이지", pageOf: "/ 총 {n}쪽",
       emptyTitle: "아직 문서가 없습니다", emptyBody: "왼쪽에서 PDF를 골라 시작하세요.",
       loading: "불러오는 중…", pagesLoaded: "{name} — 총 {n}쪽", pageLoaded: "{name} — 총 1쪽",
       openFailed: "파일을 열 수 없습니다: {msg}", renderFailed: "페이지를 표시할 수 없습니다: {msg}",
-      libsMissing: "pdf.js 또는 pdf-lib를 불러오지 못했습니다. 처음 여는 대에는 인터넷 연결이 필요합니다.",
+      libsMissing: "pdf.js, pdf-lib 또는 글꼴 엔진을 불러오지 못했습니다. 처음 여는 대에는 인터넷 연결이 필요합니다.",
       padEmpty: "아직 아무것도 쓰지 않았습니다.", noStrokes: "필적을 찾을 수 없습니다.",
       drawApplied: "서명을 적용했습니다.", pngApplied: "PNG를 적용했습니다.",
       pngOnly: "PNG 파일을 선택하세요. 투명도를 PDF로 옮기는 형식은 PNG뿐입니다.",
       readFailed: "파일을 읽지 못했습니다.", imageFailed: "이미지를 읽지 못했습니다.",
       needSignature: "먼저 서명을 만드세요.", notPlaced: "배치되지 않음.", placedOn: "{n}쪽에 있습니다.",
       stateHere: "이 페이지에 서명", stateOther: "{n}쪽에 서명", stateNone: "배치 안 됨",
-      writing: "PDF 작성 중…", saved: "{name}(으)로 저장했습니다", saveFailed: "내보내기 실패: {msg}"
+      writing: "PDF 작성 중…", saved: "{name}(으)로 저장했습니다", saveFailed: "내보내기 실패: {msg}",
+      stepText: "텍스트", textField: "텍스트", textPlaceholder: "삽입할 텍스트",
+      textFont: "글꼴", fontsDoc: "문서의 글꼴", fontsStd: "표준 글꼴",
+      textSize: "크기 (pt)", textColor: "색상", textAdd: "페이지에 추가",
+      textNote: "새 텍스트는 현재 페이지에 놓입니다. 끌어서 원하는 자리에 두세요. 놓인 텍스트를 클릭하면 다시 편집할 수 있습니다.",
+      textEmpty: "먼저 텍스트를 입력하세요.", textEditing: "{n}쪽의 텍스트를 편집 중.",
+      textRemoved: "텍스트를 지웠습니다.", fontBroken: "포함 불가",
+      fontNoGlyphs: "이 글꼴에는 다음 글리프가 없습니다: {chars}",
+      fontEmbedFail: "문서 글꼴을 포함할 수 없습니다: {msg}",
+      fontkitMissing: "글꼴 엔진을 불러오지 못해 문서 글꼴을 포함할 수 없습니다."
     },
     hi: {
       claim: "पूरी तरह आपके ब्राउज़र में चलता है। आपकी फ़ाइल इस कंप्यूटर से कभी बाहर नहीं जाती।",
@@ -898,21 +1092,30 @@
       choosePng: "PNG चुनें", choosePngHint: "पारदर्शी पृष्ठभूमि वाली",
       uploadNote: "केवल PNG। यही एक प्रारूप है जो पारदर्शिता PDF तक ले जाता है।",
       stepPlace: "रखें", placeHere: "यहाँ रखें", remove: "हटाएँ",
-      placeNote: "खींचकर खिसकाएँ, कोना खींचकर आकार बदलें। हस्ताक्षर उसी पृष्ठ पर रहता है जहाँ आपने रखा था।",
-      stepSave: "सहेजें", saveNote: "एक नई PDF बनती है। मूल पाठ और पृष्ठों की संख्या अछूती रहती है।",
-      saveButton: "हस्ताक्षरित PDF सहेजें",
+      placeNote: "खींचकर खिसकाएँ, कोना खींचकर हस्ताक्षर का आकार बदलें। सब कुछ उसी पृष्ठ पर रहता है जहाँ आपने रखा था।",
+      stepSave: "सहेजें", saveNote: "एक नई PDF बनती है। टेक्स्ट, पृष्ठ और मेटाडेटा अछूते रहते हैं।",
+      saveButton: "PDF सहेजें",
       page: "पृष्ठ", pageOf: "/ {n}",
       emptyTitle: "अभी कोई दस्तावेज़ नहीं", emptyBody: "शुरू करने के लिए बाएँ ओर एक PDF चुनें।",
       loading: "लोड हो रहा है…", pagesLoaded: "{name} — {n} पृष्ठ", pageLoaded: "{name} — 1 पृष्ठ",
       openFailed: "फ़ाइल खोली नहीं जा सकी: {msg}", renderFailed: "पृष्ठ दिखाया नहीं जा सका: {msg}",
-      libsMissing: "pdf.js या pdf-lib लोड नहीं हो सका। पहली बार खोलने पर इंटरनेट कनेक्शन चाहिए।",
+      libsMissing: "pdf.js, pdf-lib या फ़ॉन्ट इंजन लोड नहीं हो सका। पहली बार खोलने पर इंटरनेट कनेक्शन चाहिए।",
       padEmpty: "अभी कुछ नहीं बनाया गया।", noStrokes: "कोई लकीर नहीं मिली।",
       drawApplied: "हस्ताक्षर लागू हो गया।", pngApplied: "PNG लागू हो गया।",
       pngOnly: "PNG फ़ाइल चुनें। केवल PNG पारदर्शिता PDF तक ले जाता है।",
       readFailed: "फ़ाइल पढ़ी नहीं जा सकी।", imageFailed: "छवि पढ़ी नहीं जा सकी।",
       needSignature: "पहले हस्ताक्षर बनाएँ।", notPlaced: "अभी रखा नहीं।", placedOn: "पृष्ठ {n} पर।",
       stateHere: "इस पृष्ठ पर हस्ताक्षर", stateOther: "पृष्ठ {n} पर हस्ताक्षर", stateNone: "रखा नहीं",
-      writing: "PDF लिखी जा रही है…", saved: "{name} के रूप में सहेजा गया", saveFailed: "निर्यात विफल: {msg}"
+      writing: "PDF लिखी जा रही है…", saved: "{name} के रूप में सहेजा गया", saveFailed: "निर्यात विफल: {msg}",
+      stepText: "टेक्स्ट", textField: "टेक्स्ट", textPlaceholder: "जोड़ा जाने वाला टेक्स्ट",
+      textFont: "फ़ॉन्ट", fontsDoc: "दस्तावेज़ से", fontsStd: "मानक फ़ॉन्ट",
+      textSize: "आकार (pt)", textColor: "रंग", textAdd: "पृष्ठ पर जोड़ें",
+      textNote: "नया टेक्स्ट मौजूदा पृष्ठ पर आता है — उसे सही जगह खींचें। रखे हुए टेक्स्ट पर क्लिक करके फिर से संपादित करें।",
+      textEmpty: "पहले कुछ टेक्स्ट लिखें।", textEditing: "पृष्ठ {n} का टेक्स्ट संपादित हो रहा है।",
+      textRemoved: "टेक्स्ट हटाया गया।", fontBroken: "एम्बेड नहीं हो सकता",
+      fontNoGlyphs: "इस फ़ॉन्ट में इन अक्षरों के ग्लिफ़ नहीं हैं: {chars}",
+      fontEmbedFail: "दस्तावेज़ फ़ॉन्ट एम्बेड नहीं हो सका: {msg}",
+      fontkitMissing: "फ़ॉन्ट इंजन लोड नहीं हुआ, दस्तावेज़ फ़ॉन्ट एम्बेड नहीं हो सकते।"
     },
     ar: {
       claim: "يعمل بالكامل داخل متصفحك. ملفك لا يغادر هذا الحاسوب أبداً.",
@@ -923,21 +1126,30 @@
       choosePng: "اختر ملف PNG", choosePngHint: "بخلفية شفافة",
       uploadNote: "PNG فقط. هو الصيغة الوحيدة التي تنقل الشفافية إلى ملف PDF.",
       stepPlace: "الموضع", placeHere: "ضعه هنا", remove: "إزالة",
-      placeNote: "اسحب للتحريك، واسحب الزاوية لتغيير الحجم. يبقى التوقيع في الصفحة التي وضعته فيها.",
-      stepSave: "حفظ", saveNote: "يُنشئ ملف PDF جديداً. النص وعدد الصفحات يبقيان كما هما.",
-      saveButton: "حفظ ملف PDF الموقّع",
+      placeNote: "اسحب للتحريك، واسحب الزاوية لتغيير حجم التوقيع. يبقى كل شيء في الصفحة التي وضعته فيها.",
+      stepSave: "حفظ", saveNote: "يُنشئ ملف PDF جديداً. النص والصفحات والبيانات الوصفية تبقى كما هي.",
+      saveButton: "حفظ ملف PDF",
       page: "صفحة", pageOf: "من {n}",
       emptyTitle: "لا يوجد مستند بعد", emptyBody: "اختر ملف PDF من الجانب للبدء.",
       loading: "جارٍ التحميل…", pagesLoaded: "{name} — {n} صفحة", pageLoaded: "{name} — صفحة واحدة",
       openFailed: "تعذر فتح الملف: {msg}", renderFailed: "تعذر عرض الصفحة: {msg}",
-      libsMissing: "تعذر تحميل pdf.js أو pdf-lib. فتح الملف لأول مرة يحتاج إلى اتصال بالإنترنت.",
+      libsMissing: "تعذر تحميل pdf.js أو pdf-lib أو محرك الخطوط. فتح الملف لأول مرة يحتاج إلى اتصال بالإنترنت.",
       padEmpty: "لم ترسم شيئاً بعد.", noStrokes: "لم يُعثر على خطوط.",
       drawApplied: "تم تطبيق التوقيع.", pngApplied: "تم تطبيق ملف PNG.",
       pngOnly: "اختر ملف PNG. وحده PNG ينقل الشفافية إلى PDF.",
       readFailed: "تعذرت قراءة الملف.", imageFailed: "تعذرت قراءة الصورة.",
       needSignature: "أنشئ توقيعاً أولاً.", notPlaced: "لم يُوضع بعد.", placedOn: "في الصفحة {n}.",
       stateHere: "التوقيع في هذه الصفحة", stateOther: "التوقيع في الصفحة {n}", stateNone: "لم يُوضع",
-      writing: "جارٍ كتابة ملف PDF…", saved: "تم الحفظ باسم {name}", saveFailed: "فشل التصدير: {msg}"
+      writing: "جارٍ كتابة ملف PDF…", saved: "تم الحفظ باسم {name}", saveFailed: "فشل التصدير: {msg}",
+      stepText: "نص", textField: "النص", textPlaceholder: "النص المطلوب إدراجه",
+      textFont: "الخط", fontsDoc: "من المستند", fontsStd: "خطوط قياسية",
+      textSize: "الحجم (pt)", textColor: "اللون", textAdd: "إضافة إلى الصفحة",
+      textNote: "يسقط النص الجديد في الصفحة الحالية — اسحبه إلى مكانه. انقر على نص موضوع لتحريره مجدداً.",
+      textEmpty: "اكتب نصاً أولاً.", textEditing: "يجري تحرير النص في الصفحة {n}.",
+      textRemoved: "أُزيل النص.", fontBroken: "لا يمكن تضمينه",
+      fontNoGlyphs: "هذا الخط ينقصه محارف: {chars}",
+      fontEmbedFail: "تعذّر تضمين خط المستند: {msg}",
+      fontkitMissing: "تعذّر تحميل محرك الخطوط، لذا لا يمكن تضمين خطوط المستند."
     }
   };
 
@@ -971,6 +1183,18 @@
   // Points rather than screen pixels, so the position holds at any window size.
   var placement = null;      // { page, x, y, w, h }
 
+  // Text items use the same space: x is the left edge, y the baseline of
+  // the first line. Storing the baseline rather than the box top keeps the
+  // export independent of font ascent metrics.
+  var texts = [];            // { id, page, x, y, text, fontKey, size, color }
+  var selectedText = null;   // id of the item the text pane is editing
+  var textSeq = 0;
+
+  // Fonts lifted out of the document itself, keyed by pdf.js loadedName.
+  var docFonts = {};         // -> { label, data, cssFam, faceBad, kf, kfBad, chars }
+  var pageFontBest = {};     // page -> loadedName of the font carrying the most text
+  var faceSeq = 0;           // counter for generated CSS font-family names
+
   // Status lines are stored as keys so they can be re-rendered on language change
   var statusState = {};
 
@@ -987,6 +1211,11 @@
   var handle = el("handle");
   var pageSelect = el("pageSelect");
   var sigPreview = el("sigPreview");
+  var textInput = el("textInput");
+  var fontSel = el("textFont");
+  var sizeInput = el("textSize");
+  var colorInput = el("textColor");
+  var textLayer = el("textLayer");
 
   function say(id, key, vars, tone) {
     statusState[id] = key ? { key: key, vars: vars, tone: tone } : null;
@@ -1006,6 +1235,11 @@
     for (var i = 0; i < nodes.length; i++) {
       nodes[i].textContent = t(nodes[i].getAttribute("data-i18n"));
     }
+    var phNodes = document.querySelectorAll("[data-i18n-ph]");
+    for (var j = 0; j < phNodes.length; j++) {
+      phNodes[j].placeholder = t(phNodes[j].getAttribute("data-i18n-ph"));
+    }
+    rebuildFontSelect();
     el("pageCount").textContent = pageTotal ? t("pageOf", { n: pageTotal }) : "—";
 
     for (var id in statusState) {
@@ -1085,7 +1319,7 @@
       // pdf.js takes ownership of the buffer it is given, so hand it a copy.
       var copy = originalBytes.slice();
       return workerReady.then(function () {
-        return pdfjsLib.getDocument({ data: copy }).promise;
+        return pdfjsLib.getDocument({ data: copy, fontExtraProperties: true }).promise;
       });
     }).then(function (doc) {
       pdfDoc = doc;
@@ -1093,6 +1327,12 @@
       pageNow = 1;
       geometry = {};
       placement = null;
+      texts = [];
+      selectedText = null;
+      textSeq = 0;
+      docFonts = {};
+      pageFontBest = {};
+      rebuildFontSelect();
 
       pageSelect.innerHTML = "";
       for (var i = 1; i <= pageTotal; i++) {
@@ -1142,6 +1382,8 @@
         view: page.view.slice()   // [x1, y1, x2, y2] of the CropBox, unrotated
       };
 
+      collectFonts(page);
+
       // Fit the whole page, height included: you have to see where the
       // signature line is before you can put a signature on it.
       var stage = el("stage");
@@ -1169,6 +1411,7 @@
       return renderTask.promise.then(function () {
         renderTask = null;
         paintPlacement();
+        paintTexts();
         refreshControls();
       });
     }).catch(function (err) {
@@ -1463,49 +1706,482 @@
   });
 
   // ===========================================================================
-  // Step 4: export
+  // Step 3: text
+  // ===========================================================================
+  // The document's own fonts are lifted out of pdf.js: every font a page
+  // actually typesets is offered in the picker, and the same font bytes go
+  // to a FontFace (for a true preview) and to pdf-lib on export.
+  // ===========================================================================
+  var STD_FONTS = [
+    ["Helvetica", "Helvetica"], ["HelveticaBold", "Helvetica Bold"],
+    ["HelveticaOblique", "Helvetica Italic"], ["HelveticaBoldOblique", "Helvetica Bold Italic"],
+    ["TimesRoman", "Times Roman"], ["TimesRomanBold", "Times Roman Bold"],
+    ["TimesRomanItalic", "Times Roman Italic"], ["TimesRomanBoldItalic", "Times Roman Bold Italic"],
+    ["Courier", "Courier"], ["CourierBold", "Courier Bold"], ["CourierOblique", "Courier Italic"]
+  ];
+
+  var measureCtx = document.createElement("canvas").getContext("2d");
+
+  function clamp(v, lo, hi) { return Math.min(Math.max(v, lo), hi); }
+
+  function textById(id) {
+    for (var i = 0; i < texts.length; i++) if (texts[i].id === id) return texts[i];
+    return null;
+  }
+
+  function selItem() { return selectedText == null ? null : textById(selectedText); }
+
+  // Collect the fonts this page typesets, straight out of pdf.js. Fonts the
+  // text layer merely references but never draws stay unlisted.
+  function collectFonts(page) {
+    // getTextContent alone leaves commonObjs unresolved; the operator list
+    // pass is what makes the FontFaceObject data readable.
+    page.getOperatorList().then(function () {
+      return page.getTextContent();
+    }).then(function (content) {
+      var usage = {};   // loadedName -> characters set on this page
+      for (var i = 0; i < content.items.length; i++) {
+        var it = content.items[i];
+        if (it.fontName && it.str) usage[it.fontName] = (usage[it.fontName] || 0) + it.str.length;
+      }
+      var changed = false, best = null, bestN = 0;
+      for (var name in usage) {
+        if (usage[name] > bestN) { bestN = usage[name]; best = name; }
+        if (docFonts[name]) { docFonts[name].chars += usage[name]; continue; }
+        var face = null;
+        try { face = page.commonObjs.get(name); } catch (e) {}
+        // No font data means a non-embedded standard font: nothing to lift
+        // out, the Standard section of the picker covers those.
+        if (!face || !face.data) continue;
+        var f = {
+          label: String(face.name || name).replace(/^[A-Z]{6}\+/, ""),
+          data: face.data,
+          cssFam: null, faceBad: false,
+          kf: null, kfBad: false,
+          chars: usage[name]
+        };
+        // fontkit mirrors the parse pdf-lib does on export. If the font is
+        // not readable, mark it now so it shows up disabled in the picker.
+        if (typeof fontkit !== "undefined") {
+          try { f.kf = fontkit.create(face.data); }
+          catch (e) { f.kfBad = true; }
+        }
+        docFonts[name] = f;
+        changed = true;
+      }
+      if (best) pageFontBest[page.pageNumber || pageNow] = best;
+      if (changed) rebuildFontSelect();
+    }).catch(function () {
+      // Pages without a text layer simply offer the standard fonts.
+    });
+  }
+
+  function rebuildFontSelect() {
+    var prev = fontSel.value;
+    fontSel.innerHTML = "";
+    var names = Object.keys(docFonts);
+    if (names.length) {
+      var gd = document.createElement("optgroup");
+      gd.label = t("fontsDoc");
+      names.sort(function (a, b) { return docFonts[b].chars - docFonts[a].chars; });
+      for (var i = 0; i < names.length; i++) {
+        var f = docFonts[names[i]];
+        var o = document.createElement("option");
+        o.value = "doc:" + names[i];
+        o.textContent = f.label + (f.kfBad ? " — " + t("fontBroken") : "");
+        o.disabled = !!f.kfBad;
+        gd.appendChild(o);
+      }
+      fontSel.appendChild(gd);
+    }
+    var gs = document.createElement("optgroup");
+    gs.label = t("fontsStd");
+    for (var j = 0; j < STD_FONTS.length; j++) {
+      var o2 = document.createElement("option");
+      o2.value = "std:" + STD_FONTS[j][0];
+      o2.textContent = STD_FONTS[j][1];
+      gs.appendChild(o2);
+    }
+    fontSel.appendChild(gs);
+    fontSel.value = prev;
+    if (fontSel.value !== prev) fontSel.value = preferredFontKey();
+  }
+
+  // The document font that carries the most text, preferring this page.
+  function preferredFontKey() {
+    var best = pageFontBest[pageNow];
+    if (best && docFonts[best] && !docFonts[best].kfBad) return "doc:" + best;
+    var top = null, n = 0;
+    for (var k in docFonts) {
+      if (!docFonts[k].kfBad && docFonts[k].chars > n) { n = docFonts[k].chars; top = k; }
+    }
+    return top ? "doc:" + top : "std:Helvetica";
+  }
+
+  // Document fonts render through the real font file via FontFace, so the
+  // preview matches what the export writes. Standard fonts fall back to
+  // their closest system family.
+  function previewFamily(fontKey) {
+    if (fontKey.indexOf("doc:") === 0) {
+      var f = docFonts[fontKey.slice(4)];
+      if (!f || f.faceBad) return "serif";
+      if (!f.cssFam) {
+        f.cssFam = "opsdoc" + (++faceSeq);
+        try {
+          new FontFace(f.cssFam, f.data).load().then(function (loaded) {
+            document.fonts.add(loaded);
+            paintTexts();
+          }).catch(function () { f.faceBad = true; f.cssFam = null; });
+        } catch (e) {
+          f.faceBad = true; f.cssFam = null;
+          return "serif";
+        }
+      }
+      return "'" + f.cssFam + "', serif";
+    }
+    var std = fontKey.slice(4);
+    if (std.indexOf("Times") === 0) return "'Times New Roman', Times, serif";
+    if (std.indexOf("Courier") === 0) return "'Courier New', Courier, monospace";
+    return "Helvetica, Arial, sans-serif";
+  }
+
+  // PDF anchors text at the baseline, CSS at the line box. The div is
+  // shifted so the first baseline lands exactly on item.y: up by the
+  // measured ascent plus the half-leading of the 1.2em line-height.
+  function topPxFor(it, s) {
+    var px = it.size * s;
+    var asc = px * 0.8, desc = px * 0.25;
+    measureCtx.font = px + "px " + previewFamily(it.fontKey);
+    try {
+      var m = measureCtx.measureText("MgÅy");
+      if (m.fontBoundingBoxAscent) asc = m.fontBoundingBoxAscent;
+      if (m.fontBoundingBoxDescent) desc = m.fontBoundingBoxDescent;
+    } catch (e) {}
+    var halfLead = Math.max(0, (px * 1.2 - (asc + desc)) / 2);
+    return it.y * s - asc - halfLead;
+  }
+
+  function paintTexts() {
+    while (textLayer.firstChild) textLayer.removeChild(textLayer.firstChild);
+    if (!pdfDoc) return;
+    var s = pixelsPerPoint();
+    for (var i = 0; i < texts.length; i++) {
+      var it = texts[i];
+      if (it.page !== pageNow) continue;
+      var d = document.createElement("div");
+      d.className = "tbox" + (it.id === selectedText ? " sel" : "");
+      d.textContent = it.text;
+      d.style.left = (it.x * s) + "px";
+      d.style.top = topPxFor(it, s) + "px";
+      d.style.fontSize = (it.size * s) + "px";
+      d.style.fontFamily = previewFamily(it.fontKey);
+      d.style.color = it.color;
+      d.setAttribute("data-id", it.id);
+      textLayer.appendChild(d);
+    }
+  }
+
+  // WinAnsi codepoints beyond Latin-1 the standard fonts still encode.
+  var WINANSI_EXTRA = {};
+  [0x20AC, 0x0192, 0x201E, 0x2026, 0x2020, 0x2021, 0x02C6, 0x2030, 0x0160, 0x2039,
+   0x0152, 0x017D, 0x2018, 0x2019, 0x201C, 0x201D, 0x2022, 0x2013, 0x2014, 0x02DC,
+   0x2122, 0x0161, 0x203A, 0x0153, 0x017E, 0x0178].forEach(function (cp) {
+    WINANSI_EXTRA[cp] = true;
+  });
+
+  // Characters the chosen font cannot draw — checked before writing so a
+  // subsetted document font never produces silent blank output.
+  function missingGlyphs(fontKey, text) {
+    var isDoc = fontKey.indexOf("doc:") === 0;
+    var kf = null;
+    if (isDoc) {
+      var f = docFonts[fontKey.slice(4)];
+      if (!f) return [fontKey];
+      kf = f.kf;
+      if (!kf && !f.kfBad && typeof fontkit !== "undefined") {
+        try { kf = f.kf = fontkit.create(f.data); } catch (e) { f.kfBad = true; }
+      }
+      if (!kf) return [];   // no fontkit: the export reports the real error
+    }
+    var seen = {}, out = [];
+    for (var i = 0; i < text.length; i++) {
+      var cp = text.codePointAt(i);
+      if (cp > 0xFFFF) i++;             // surrogate pairs count once
+      if (cp === 10 || cp === 13) continue;
+      var ok = isDoc ? kf.hasGlyphForCodePoint(cp)
+                     : (cp >= 0x20 && cp <= 0xFF) || WINANSI_EXTRA[cp] === true;
+      if (!ok && !seen[cp]) { seen[cp] = true; out.push(String.fromCodePoint(cp)); }
+    }
+    return out;
+  }
+
+  function glyphWarn(it) {
+    var miss = missingGlyphs(it.fontKey, it.text);
+    if (miss.length) say("statusText", "fontNoGlyphs", { chars: miss.join(" ") }, "bad");
+    else if (statusState.statusText && statusState.statusText.key === "fontNoGlyphs") {
+      say("statusText", null);
+    }
+  }
+
+  function selectText(id) {
+    if (id === selectedText) return;   // the pane already edits this item
+    selectedText = id;
+    var it = selItem();
+    if (it) {
+      textInput.value = it.text;
+      fontSel.value = it.fontKey;
+      sizeInput.value = it.size;
+      colorInput.value = it.color;
+      say("statusText", "textEditing", { n: it.page });
+      glyphWarn(it);
+    } else {
+      say("statusText", null);
+    }
+    paintTexts();
+    refreshControls();
+  }
+
+  // With an item selected every field edits it live; without one the pane
+  // is the draft the next Add uses.
+  textInput.addEventListener("input", function () {
+    var it = selItem();
+    if (!it) return;
+    it.text = textInput.value;
+    glyphWarn(it);
+    paintTexts();
+  });
+  fontSel.addEventListener("change", function () {
+    var it = selItem();
+    if (!it) return;
+    it.fontKey = fontSel.value;
+    glyphWarn(it);
+    paintTexts();
+  });
+  sizeInput.addEventListener("input", function () {
+    var it = selItem();
+    if (!it) return;
+    it.size = readSize();
+    paintTexts();
+  });
+  colorInput.addEventListener("input", function () {
+    var it = selItem();
+    if (!it) return;
+    it.color = colorInput.value;
+    paintTexts();
+  });
+
+  function readSize() {
+    var v = parseFloat(sizeInput.value);
+    return isFinite(v) ? clamp(v, 4, 200) : 12;
+  }
+
+  function textsOnPage(n) {
+    var c = 0;
+    for (var i = 0; i < texts.length; i++) if (texts[i].page === n) c++;
+    return c;
+  }
+
+  el("btnAddText").addEventListener("click", function () {
+    if (!pdfDoc) return;
+    var txt = textInput.value;
+    if (!txt.replace(/\s/g, "")) { say("statusText", "textEmpty", null, "bad"); return; }
+    var g = geometry[pageNow];
+    if (!g) return;
+    var size = readSize();
+    var base = selItem();
+    var x, y;
+    if (base) {
+      // Adding while a text is selected drops a copy a little offset.
+      x = Math.min(base.x + size, Math.max(0, g.dispW - 8));
+      y = Math.min(base.y + size * 1.7, g.dispH - 4);
+    } else {
+      x = g.dispW * 0.12;
+      y = g.dispH * 0.2 + textsOnPage(pageNow) * size * 1.7;
+    }
+    var it = {
+      id: ++textSeq, page: pageNow, x: x, y: y,
+      text: txt, fontKey: fontSel.value, size: size, color: colorInput.value
+    };
+    texts.push(it);
+    selectText(it.id);
+    say("statusText", "placedOn", { n: pageNow }, "good");
+    glyphWarn(it);
+  });
+
+  el("btnRemoveText").addEventListener("click", function () {
+    if (selectedText == null) return;
+    texts = texts.filter(function (it) { return it.id !== selectedText; });
+    selectedText = null;
+    paintTexts();
+    refreshControls();
+    say("statusText", "textRemoved");
+  });
+
+  // Move only — size comes from the field, so there is no corner handle.
+  var tdrag = null;
+
+  textLayer.addEventListener("pointerdown", function (ev) {
+    var node = ev.target.closest ? ev.target.closest(".tbox") : null;
+    if (!node) return;
+    var it = textById(parseInt(node.getAttribute("data-id"), 10));
+    if (!it) return;
+    selectText(it.id);   // repaints, so re-grab the fresh node
+    tdrag = {
+      node: textLayer.querySelector('[data-id="' + it.id + '"]') || node,
+      it: it,
+      sx: ev.clientX, sy: ev.clientY,
+      fx: it.x, fy: it.y, s: pixelsPerPoint()
+    };
+    textLayer.setPointerCapture(ev.pointerId);
+    ev.preventDefault();
+    ev.stopPropagation();
+  });
+
+  textLayer.addEventListener("pointermove", function (ev) {
+    if (!tdrag) return;
+    var g = geometry[pageNow];
+    var it = tdrag.it;
+    var lines = it.text.split("\n").length;
+    var yMax = g.dispH - (lines - 1) * it.size * 1.2 - it.size * 0.3;
+    it.x = clamp(tdrag.fx + (ev.clientX - tdrag.sx) / tdrag.s, 0, Math.max(0, g.dispW - 8));
+    it.y = clamp(tdrag.fy + (ev.clientY - tdrag.sy) / tdrag.s, it.size * 0.8, Math.max(it.size * 0.8, yMax));
+    tdrag.node.style.left = (it.x * tdrag.s) + "px";
+    tdrag.node.style.top = topPxFor(it, tdrag.s) + "px";
+    ev.preventDefault();
+  });
+
+  function tdragEnd(ev) {
+    if (!tdrag) return;
+    tdrag = null;
+    if (textLayer.hasPointerCapture(ev.pointerId)) textLayer.releasePointerCapture(ev.pointerId);
+    paintTexts();
+  }
+  textLayer.addEventListener("pointerup", tdragEnd);
+  textLayer.addEventListener("pointercancel", tdragEnd);
+
+  pageCanvas.addEventListener("pointerdown", function () {
+    if (selectedText != null) selectText(null);
+  });
+
+  // ===========================================================================
+  // Step 5: export
   // ===========================================================================
   el("btnSave").addEventListener("click", function () {
-    if (!originalBytes || !sigPng || !placement) return;
+    var hasSig = !!(sigPng && placement);
+    if (!originalBytes || (!hasSig && !texts.length)) return;
+
+    // Missing glyphs would end up as silent blank spots — check before
+    // anything is written.
+    for (var i = 0; i < texts.length; i++) {
+      var miss = missingGlyphs(texts[i].fontKey, texts[i].text);
+      if (miss.length) {
+        say("statusSave", "fontNoGlyphs", { chars: miss.join(" ") }, "bad");
+        return;
+      }
+    }
     say("statusSave", "writing");
 
     var PDFDocument = PDFLib.PDFDocument;
     var degrees = PDFLib.degrees;
 
     // ignoreEncryption covers PDFs that only set permissions.
-    PDFDocument.load(originalBytes, { ignoreEncryption: true }).then(function (doc) {
-      return doc.embedPng(sigPng).then(function (image) {
-        var page = doc.getPage(placement.page - 1);
-        var g = geometry[placement.page];
+    // updateMetadata: false keeps the document's own Producer, Creator,
+    // dates and every other Info entry — nothing but the marks gets added.
+    PDFDocument.load(originalBytes, { ignoreEncryption: true, updateMetadata: false }).then(function (doc) {
+      var needKit = texts.some(function (it) { return it.fontKey.indexOf("doc:") === 0; });
+      if (needKit) {
+        if (typeof fontkit === "undefined") throw new Error(t("fontkitMissing"));
+        doc.registerFontkit(fontkit);
+      }
 
-        // CropBox from pdf.js, the same source the preview was built from.
-        var bx1 = g.view[0], by1 = g.view[1], bx2 = g.view[2], by2 = g.view[3];
-        var boxW = bx2 - bx1;   // unrotated
-        var boxH = by2 - by1;
-        var r = g.rotation;
+      var jobs = [];
 
-        // Display space counts y downwards, PDF counts it upwards.
-        var X = placement.x;
-        var Y = g.dispH - (placement.y + placement.h);
+      if (hasSig) {
+        jobs.push(doc.embedPng(sigPng).then(function (image) {
+          var page = doc.getPage(placement.page - 1);
+          var g = geometry[placement.page];
 
-        // Convert display space back into the unrotated page space.
-        // Rotating the image cancels out the display rotation again.
-        var bx, by;
-        if (r === 90) { bx = boxW - Y; by = X; }
-        else if (r === 180) { bx = boxW - X; by = boxH - Y; }
-        else if (r === 270) { bx = Y; by = boxH - X; }
-        else { bx = X; by = Y; }
+          // CropBox from pdf.js, the same source the preview was built from.
+          var bx1 = g.view[0], by1 = g.view[1], bx2 = g.view[2], by2 = g.view[3];
+          var boxW = bx2 - bx1;   // unrotated
+          var boxH = by2 - by1;
+          var r = g.rotation;
 
-        page.drawImage(image, {
-          x: bx + bx1,          // account for the CropBox offset
-          y: by + by1,
-          width: placement.w,
-          height: placement.h,
-          rotate: degrees(r)
-        });
+          // Display space counts y downwards, PDF counts it upwards.
+          var X = placement.x;
+          var Y = g.dispH - (placement.y + placement.h);
 
-        return doc.save();
+          // Convert display space back into the unrotated page space.
+          // Rotating the image cancels out the display rotation again.
+          var bx, by;
+          if (r === 90) { bx = boxW - Y; by = X; }
+          else if (r === 180) { bx = boxW - X; by = boxH - Y; }
+          else if (r === 270) { bx = Y; by = boxH - X; }
+          else { bx = X; by = Y; }
+
+          page.drawImage(image, {
+            x: bx + bx1,          // account for the CropBox offset
+            y: by + by1,
+            width: placement.w,
+            height: placement.h,
+            rotate: degrees(r)
+          });
+        }));
+      }
+
+      // Each distinct font is embedded once, then every text is drawn with it.
+      var fontJobs = {};
+      texts.forEach(function (it) {
+        if (fontJobs[it.fontKey]) return;
+        if (it.fontKey.indexOf("doc:") === 0) {
+          var f = docFonts[it.fontKey.slice(4)];
+          if (!f) throw new Error(t("fontEmbedFail", { msg: it.fontKey }));
+          fontJobs[it.fontKey] = Promise.resolve(doc.embedFont(f.data, { subset: true })).catch(function (e) {
+            throw new Error(t("fontEmbedFail", { msg: e && e.message ? e.message : String(e) }));
+          });
+        } else {
+          fontJobs[it.fontKey] = Promise.resolve(doc.embedFont(PDFLib.StandardFonts[it.fontKey.slice(4)]));
+        }
       });
+
+      var keys = Object.keys(fontJobs);
+      jobs.push(Promise.all(keys.map(function (k) { return fontJobs[k]; })).then(function (fonts) {
+        var map = {};
+        keys.forEach(function (k, i) { map[k] = fonts[i]; });
+        texts.forEach(function (it) {
+          var g = geometry[it.page];
+          if (!g) return;
+          var page = doc.getPage(it.page - 1);
+          var bx1 = g.view[0], by1 = g.view[1], bx2 = g.view[2], by2 = g.view[3];
+          var boxW = bx2 - bx1, boxH = by2 - by1, r = g.rotation;
+
+          // y is the first baseline — the same anchor the preview uses.
+          var X = it.x;
+          var Y = g.dispH - it.y;
+          var bx, by;
+          if (r === 90) { bx = boxW - Y; by = X; }
+          else if (r === 180) { bx = boxW - X; by = boxH - Y; }
+          else if (r === 270) { bx = Y; by = boxH - X; }
+          else { bx = X; by = Y; }
+
+          var c = it.color;
+          page.drawText(it.text, {
+            x: bx + bx1,
+            y: by + by1,
+            size: it.size,
+            font: map[it.fontKey],
+            color: PDFLib.rgb(
+              parseInt(c.slice(1, 3), 16) / 255,
+              parseInt(c.slice(3, 5), 16) / 255,
+              parseInt(c.slice(5, 7), 16) / 255
+            ),
+            rotate: degrees(r),
+            lineHeight: it.size * 1.2
+          });
+        });
+      }));
+
+      return Promise.all(jobs).then(function () { return doc.save(); });
     }).then(function (bytes) {
       var blob = new Blob([bytes], { type: "application/pdf" });
       var url = URL.createObjectURL(blob);
@@ -1531,7 +2207,9 @@
     el("btnNext").disabled = !hasPdf || pageNow >= pageTotal;
     el("btnPlace").disabled = !hasPdf || !sigPng;
     el("btnRemove").disabled = !placement;
-    el("btnSave").disabled = !(hasPdf && sigPng && placement);
+    el("btnAddText").disabled = !hasPdf;
+    el("btnRemoveText").disabled = selectedText == null;
+    el("btnSave").disabled = !(hasPdf && ((sigPng && placement) || texts.length));
 
     if (!hasPdf) say("statusPlace", null);
     else if (!sigPng) say("statusPlace", "needSignature");

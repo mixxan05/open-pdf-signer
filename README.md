@@ -11,14 +11,17 @@ Free, unlimited, and fully local: **your document is never uploaded anywhere.**
 
 - Load a PDF and page through it
 - Create a signature by drawing with mouse, pen or finger — or upload a transparent PNG
+- Add text anywhere — in the **fonts already embedded in the document** where possible, plus the standard PDF fonts
 - Drag to position it, use the corner handle to scale proportionally
 - Live dimensions in PDF points while you drag, so you can see exactly where it will land
-- Export a real PDF: the original file stays the base, the signature is embedded as an image
+- Export a real PDF: the original file stays the base, marks are added on top
 - Available in 15 languages, picked up from your browser automatically
 
-Text stays selectable and the page count never changes. Pages are **not**
-flattened into images, which is what most "sign your PDF" tools do to your
-document.
+Existing text stays selectable and the page count never changes. Pages are
+**not** flattened into images, which is what most "sign your PDF" tools do to
+your document. The document's own metadata — title, author, producer,
+creation and modification dates — is carried over **untouched**: the tool
+only ever adds content, it never rewrites the Info dictionary.
 
 ## Usage
 
@@ -33,14 +36,14 @@ No installation, no build step, no server, no account.
 Your PDF is read straight from disk by the browser and processed in memory.
 There is no upload, no analytics, no tracking, no telemetry.
 
-One honest caveat: pdf.js and pdf-lib are pulled from a CDN the first time you
-open the page, so that initial load needs an internet connection. **After the
-page has loaded, no further network requests are made** — you can watch this
-yourself in the Network tab of your browser's developer tools while loading a
-PDF, signing it and exporting.
+One honest caveat: pdf.js, pdf-lib and fontkit are pulled from a CDN the
+first time you open the page, so that initial load needs an internet
+connection. **After the page has loaded, no further network requests are
+made** — you can watch this yourself in the Network tab of your browser's
+developer tools while loading a PDF, signing it and exporting.
 
-Want it fully offline? Download the two library files, put them next to the
-HTML file, and point the two `<script>` tags at your local copies.
+Want it fully offline? Download the three library files, put them next to the
+HTML file, and point the three `<script>` tags at your local copies.
 
 ## Accuracy
 
@@ -54,6 +57,19 @@ Measured deviation between preview and export is below 0.02 pt (~0.007 mm).
 Signature transparency is preserved: the PNG keeps its alpha channel and is
 embedded with an `/SMask`, so you get your actual signature and not a white box
 sitting on top of the text.
+
+## Document fonts
+
+The text tool reads the fonts a page actually typesets straight out of the
+PDF and offers them in the font picker. What you see in the preview is the
+real embedded font, and the same font file is embedded into the output — so
+added text blends into the document instead of looking stamped on.
+
+One caveat is inherent to how PDF works: most embedded fonts are **subsets**
+that contain only the glyphs the document itself uses. If your new text needs
+a character the subset lacks (say a Cyrillic letter in an all-Latin file), the
+tool tells you which characters are missing before writing anything, rather
+than silently producing blank spots — pick a standard font in that case.
 
 ## Languages
 
@@ -73,11 +89,13 @@ Pull requests welcome.
 - Tested in Chrome. Any modern browser with Pointer Events support should work.
 - Password-protected PDFs are not supported.
 - One signature per document, placed on the page you put it on.
+- Text fields are unlimited; each lives on the page where it was added.
 
 ## Built with
 
-- [pdf.js](https://mozilla.github.io/pdf.js/) — renders the pages
+- [pdf.js](https://mozilla.github.io/pdf.js/) — renders the pages, exposes the embedded fonts
 - [pdf-lib](https://pdf-lib.js.org/) — writes the output PDF
+- [fontkit](https://github.com/foliojs/fontkit) — glyph coverage checks and font embedding
 
 ## License
 
