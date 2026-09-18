@@ -7,6 +7,8 @@ someone else's server?
 This is a single HTML file. Double-click it, sign your PDF, save it.
 Free, unlimited, and fully local: **your document is never uploaded anywhere.**
 
+![Open PDF Signer — sign and annotate a PDF in the browser](screenshot.png)
+
 ## Features
 
 - Load a PDF and page through it
@@ -51,9 +53,11 @@ your device. It never leaves the machine, and the **New** button deletes it.
 
 One honest caveat: pdf.js, pdf-lib and fontkit are pulled from a CDN the
 first time you open the page, so that initial load needs an internet
-connection. **After the page has loaded, no further network requests are
-made** — you can watch this yourself in the Network tab of your browser's
-developer tools while loading a PDF, signing it and exporting.
+connection. The library versions are pinned and verified with Subresource
+Integrity, so a tampered CDN response would be refused rather than run.
+**After the page has loaded, no further network requests are made** — you
+can watch this yourself in the Network tab of your browser's developer
+tools while loading a PDF, signing it and exporting.
 
 Want it fully offline? Download the three library files, put them next to the
 HTML file, and point the three `<script>` tags at your local copies.
