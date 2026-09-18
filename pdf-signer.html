@@ -1888,8 +1888,8 @@
   }
 
   // ox/oy is the spot inside the stage viewport the zoom should hold steady:
-  // the centre for the buttons, the pointer for Ctrl+wheel.
-  function zoomStep(dir, ox, oy) {
+  // the centre for the buttons, the pointer for the wheel.
+  function zoomTo(factor, ox, oy) {
     if (!pdfDoc) return;
     var stage = el("stage");
     pendingCenter = {
@@ -1897,10 +1897,11 @@
       fy: (stage.scrollTop + oy) / Math.max(1, stage.scrollHeight),
       ox: ox, oy: oy
     };
-    zoom = clamp(zoom * (dir > 0 ? 1.25 : 0.8), ZOOM_MIN, ZOOM_MAX);
+    zoom = clamp(zoom * factor, ZOOM_MIN, ZOOM_MAX);
     drawPage();
     persist();
   }
+  function zoomStep(dir, ox, oy) { zoomTo(dir > 0 ? 1.25 : 0.8, ox, oy); }
 
   el("btnZoomIn").addEventListener("click", function () {
     var stage = el("stage");
@@ -1918,12 +1919,24 @@
     persist();
   });
 
-  // Ctrl + wheel — also a trackpad pinch — zooms around the pointer.
+  // Plain wheel zooms around the pointer — like a map, the document under
+  // the cursor stays put. A trackpad pinch reports as Ctrl+wheel and lands
+  // here too. Small trackpad deltas accumulate into whole steps so mouse
+  // notches and smooth scrolling zoom at the same pace.
+  var wheelAcc = 0;
   el("stage").addEventListener("wheel", function (ev) {
-    if (!ev.ctrlKey || !pdfDoc) return;
+    if (!pdfDoc) return;
     ev.preventDefault();
+    var delta = ev.deltaY * (ev.deltaMode === 1 ? 33 : ev.deltaMode === 2 ? 400 : 1);
+    wheelAcc += delta;
+    var steps = Math.floor(Math.abs(wheelAcc) / 55);
+    if (!steps) return;
+    var sign = Math.sign(wheelAcc);          // > 0 scrolls down = zooms out
+    wheelAcc -= sign * steps * 55;
+    if (steps > 3) steps = 3;
     var r = el("stage").getBoundingClientRect();
-    zoomStep(ev.deltaY < 0 ? 1 : -1, ev.clientX - r.left, ev.clientY - r.top);
+    zoomTo(Math.pow(1.25, -sign * steps),
+           ev.clientX - r.left, ev.clientY - r.top);
   }, { passive: false });
 
   var resizeTimer = null;

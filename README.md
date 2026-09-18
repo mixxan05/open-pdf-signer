@@ -12,7 +12,8 @@ Free, unlimited, and fully local: **your document is never uploaded anywhere.**
 - Load a PDF and page through it
 - Create a signature by drawing with mouse, pen or finger — or upload a transparent PNG
 - Add text anywhere — in the **fonts already embedded in the document** where possible, plus the standard PDF fonts
-- Zoom in and out with +/− buttons, Ctrl + scroll, or a trackpad pinch — placements stay put
+- Zoom in and out with +/− buttons or just the scroll wheel — it zooms
+  around the pointer like a map, and placements stay put
 - Drag to position it, use the corner handle to scale proportionally
 - Live dimensions in PDF points while you drag, so you can see exactly where it will land
 - Export a real PDF: the original file stays the base, marks are added on top
