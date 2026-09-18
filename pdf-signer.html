@@ -2240,10 +2240,37 @@
     var PDFDocument = PDFLib.PDFDocument;
     var degrees = PDFLib.degrees;
 
+    // Incrementally updated PDFs keep revived objects (generation > 0),
+    // and pdf-lib writes those back with corrupt xref entries — strict
+    // viewers reject the file outright. Rebuilding the pages into a fresh
+    // document renumbers every object cleanly; ordinary files skip the copy.
+    function prepDocForSave(src) {
+      var needsCopy = false;
+      src.context.enumerateIndirectObjects().forEach(function (pair) {
+        if (pair[0].generationNumber > 0) needsCopy = true;
+      });
+      if (!needsCopy) return Promise.resolve(src);
+      return PDFDocument.create().then(function (fresh) {
+        return fresh.copyPages(src, src.getPageIndices()).then(function (copied) {
+          copied.forEach(function (p) { fresh.addPage(p); });
+          // Carry the Info dict over wholesale so no synthetic field survives.
+          var srcInfo = src.context.lookup(src.context.trailerInfo.Info);
+          var dstInfo = fresh.context.lookup(fresh.context.trailerInfo.Info);
+          if (srcInfo && dstInfo && typeof srcInfo.entries === "function") {
+            dstInfo.entries().forEach(function (e) { dstInfo.delete(e[0]); });
+            srcInfo.entries().forEach(function (e) { dstInfo.set(e[0], e[1]); });
+          }
+          return fresh;
+        });
+      });
+    }
+
     // ignoreEncryption covers PDFs that only set permissions.
     // updateMetadata: false keeps the document's own Producer, Creator,
     // dates and every other Info entry — nothing but the marks gets added.
-    PDFDocument.load(originalBytes, { ignoreEncryption: true, updateMetadata: false }).then(function (doc) {
+    PDFDocument.load(originalBytes, { ignoreEncryption: true, updateMetadata: false })
+      .then(prepDocForSave)
+      .then(function (doc) {
       var needKit = texts.some(function (it) { return it.fontKey.indexOf("doc:") === 0; });
       if (needKit) {
         if (typeof fontkit === "undefined") throw new Error(t("fontkitMissing"));
@@ -2337,7 +2364,11 @@
         });
       }));
 
-      return Promise.all(jobs).then(function () { return doc.save(); });
+      // Object streams break on incrementally updated PDFs: pdf-lib writes
+      // wrong generation info for revived objects (e.g. catalog 15 1 R),
+      // leaving a corrupt xref that strict viewers reject. The classic
+      // xref table is a few bytes larger but valid for every document.
+      return Promise.all(jobs).then(function () { return doc.save({ useObjectStreams: false }); });
     }).then(function (bytes) {
       var blob = new Blob([bytes], { type: "application/pdf" });
       var url = URL.createObjectURL(blob);
