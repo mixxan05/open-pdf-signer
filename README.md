@@ -88,6 +88,17 @@ a character the subset lacks (say a Cyrillic letter in an all-Latin file), the
 tool tells you which characters are missing before writing anything, rather
 than silently producing blank spots — pick a standard font in that case.
 
+## Legal scope
+
+The signature this tool applies is a *simple electronic signature*: an image
+of your handwritten signature placed into the PDF, not a cryptographic
+certificate signature. Under eIDAS (EU) and ESIGN/UETA (US) that is legally
+binding for most everyday contracts, since consent matters more than the
+technology used. It offers no signer authentication or tamper evidence, and
+it cannot replace wet ink or qualified signatures where the law demands them
+(notarized documents, certain employment contracts). For those cases a
+certificate-based signing service is the right tool.
+
 ## Languages
 
 English, 中文, हिन्दी, Español, العربية, Français, Português, Русский, 日本語,
