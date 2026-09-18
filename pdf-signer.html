@@ -434,6 +434,10 @@
     background: #FFF;
     border-radius: 3px;
     box-shadow: 0 2px 8px rgba(0,0,0,.1), 0 20px 55px rgba(0,0,0,.18);
+    /* Wheel-zoom previews retarget this every tick — the transition turns the
+       discrete wheel steps into one continuous glide like a map app. */
+    transition: transform 80ms ease-out;
+    will-change: transform;
   }
   .sheet.on { display: inline-block; }
   #pageCanvas { display: block; border-radius: 3px; }
@@ -1877,10 +1881,13 @@
           renderedZoom = zoom;
           // Preview served its purpose — drop it only now that the sharp
           // frame is in place, then measure against the new layout.
+          // transition:none stops the clear from animating back to scale(1).
           var sh = el("sheet");
+          sh.style.transition = "none";
           sh.style.transform = "";
           sh.style.transformOrigin = "";
           zoomAnchor = null;
+          requestAnimationFrame(function () { sh.style.transition = ""; });
         }
         paintPlacement();
         paintTexts();
@@ -1948,8 +1955,10 @@
     zoomSettle = null;
     zoomAnchor = null;
     var sheet = el("sheet");
+    sheet.style.transition = "none";   // clear instantly, never animated
     sheet.style.transform = "";
     sheet.style.transformOrigin = "";
+    requestAnimationFrame(function () { sheet.style.transition = ""; });
   }
 
   // ox/oy is the spot inside the stage viewport the zoom should hold steady:
