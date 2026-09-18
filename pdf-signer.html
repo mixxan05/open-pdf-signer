@@ -511,6 +511,9 @@
           <span data-i18n="choosePdfHint"></span>
           <input type="file" id="pdfInput" accept="application/pdf,.pdf">
         </label>
+        <div class="row" style="margin-top:8px">
+          <button id="btnNew" disabled data-i18n="newDoc"></button>
+        </div>
         <div class="status" id="statusPdf"></div>
       </section>
 
@@ -681,6 +684,7 @@
       page: "Page", pageOf: "of {n}",
       zoomIn: "Zoom in", zoomOut: "Zoom out", zoomFit: "Reset zoom",
       fontUses: "This document uses: {fonts}",
+      newDoc: "New", sessionRestored: "Session restored — nothing was lost",
       emptyTitle: "No document yet", emptyBody: "Choose a PDF on the left to get started.",
       loading: "Loading…", pagesLoaded: "{name} — {n} pages", pageLoaded: "{name} — 1 page",
       openFailed: "Could not open this file: {msg}", renderFailed: "Could not display this page: {msg}",
@@ -717,6 +721,7 @@
       page: "Seite", pageOf: "von {n}",
       zoomIn: "Vergrößern", zoomOut: "Verkleinern", zoomFit: "Zoom zurücksetzen",
       fontUses: "Dieses Dokument nutzt: {fonts}",
+      newDoc: "Neu", sessionRestored: "Sitzung wiederhergestellt — nichts ging verloren",
       emptyTitle: "Noch kein Dokument", emptyBody: "Links eine PDF-Datei auswählen, dann geht es los.",
       loading: "Wird geladen…", pagesLoaded: "{name} — {n} Seiten", pageLoaded: "{name} — 1 Seite",
       openFailed: "Datei konnte nicht geöffnet werden: {msg}", renderFailed: "Seite konnte nicht dargestellt werden: {msg}",
@@ -753,6 +758,7 @@
       page: "Página", pageOf: "de {n}",
       zoomIn: "Acercar", zoomOut: "Alejar", zoomFit: "Restablecer zoom",
       fontUses: "Este documento usa: {fonts}",
+      newDoc: "Nuevo", sessionRestored: "Sesión restaurada: no se perdió nada",
       emptyTitle: "Aún no hay documento", emptyBody: "Elige un PDF a la izquierda para empezar.",
       loading: "Cargando…", pagesLoaded: "{name} — {n} páginas", pageLoaded: "{name} — 1 página",
       openFailed: "No se pudo abrir el archivo: {msg}", renderFailed: "No se pudo mostrar la página: {msg}",
@@ -789,6 +795,7 @@
       page: "Page", pageOf: "sur {n}",
       zoomIn: "Zoom avant", zoomOut: "Zoom arrière", zoomFit: "Réinitialiser le zoom",
       fontUses: "Ce document utilise : {fonts}",
+      newDoc: "Nouveau", sessionRestored: "Session restaurée — rien n’a été perdu",
       emptyTitle: "Aucun document", emptyBody: "Choisissez un PDF à gauche pour commencer.",
       loading: "Chargement…", pagesLoaded: "{name} — {n} pages", pageLoaded: "{name} — 1 page",
       openFailed: "Impossible d’ouvrir ce fichier : {msg}", renderFailed: "Impossible d’afficher cette page : {msg}",
@@ -825,6 +832,7 @@
       page: "Pagina", pageOf: "di {n}",
       zoomIn: "Ingrandisci", zoomOut: "Riduci", zoomFit: "Reimposta zoom",
       fontUses: "Questo documento usa: {fonts}",
+      newDoc: "Nuovo", sessionRestored: "Sessione ripristinata: niente è andato perso",
       emptyTitle: "Nessun documento", emptyBody: "Scegli un PDF a sinistra per iniziare.",
       loading: "Caricamento…", pagesLoaded: "{name} — {n} pagine", pageLoaded: "{name} — 1 pagina",
       openFailed: "Impossibile aprire il file: {msg}", renderFailed: "Impossibile mostrare la pagina: {msg}",
@@ -861,6 +869,7 @@
       page: "Página", pageOf: "de {n}",
       zoomIn: "Ampliar", zoomOut: "Reduzir", zoomFit: "Redefinir zoom",
       fontUses: "Este documento usa: {fonts}",
+      newDoc: "Novo", sessionRestored: "Sessão restaurada — nada foi perdido",
       emptyTitle: "Ainda sem documento", emptyBody: "Escolha um PDF à esquerda para começar.",
       loading: "A carregar…", pagesLoaded: "{name} — {n} páginas", pageLoaded: "{name} — 1 página",
       openFailed: "Não foi possível abrir o ficheiro: {msg}", renderFailed: "Não foi possível mostrar a página: {msg}",
@@ -897,6 +906,7 @@
       page: "Страница", pageOf: "из {n}",
       zoomIn: "Увеличить", zoomOut: "Уменьшить", zoomFit: "Сбросить масштаб",
       fontUses: "В документе используется: {fonts}",
+      newDoc: "Новый", sessionRestored: "Сессия восстановлена — ничего не потеряно",
       emptyTitle: "Документ не выбран", emptyBody: "Выберите PDF слева, чтобы начать.",
       loading: "Загрузка…", pagesLoaded: "{name} — страниц: {n}", pageLoaded: "{name} — 1 страница",
       openFailed: "Не удалось открыть файл: {msg}", renderFailed: "Не удалось показать страницу: {msg}",
@@ -933,6 +943,7 @@
       page: "Sayfa", pageOf: "/ {n}",
       zoomIn: "Yakınlaştır", zoomOut: "Uzaklaştır", zoomFit: "Yakınlaştırmayı sıfırla",
       fontUses: "Bu belge şu yazı tiplerini kullanıyor: {fonts}",
+      newDoc: "Yeni", sessionRestored: "Oturum geri yüklendi — hiçbir şey kaybolmadı",
       emptyTitle: "Henüz belge yok", emptyBody: "Başlamak için soldan bir PDF seçin.",
       loading: "Yükleniyor…", pagesLoaded: "{name} — {n} sayfa", pageLoaded: "{name} — 1 sayfa",
       openFailed: "Dosya açılamadı: {msg}", renderFailed: "Sayfa gösterilemedi: {msg}",
@@ -969,6 +980,7 @@
       page: "Halaman", pageOf: "dari {n}",
       zoomIn: "Perbesar", zoomOut: "Perkecil", zoomFit: "Atur ulang zoom",
       fontUses: "Dokumen ini memakai: {fonts}",
+      newDoc: "Baru", sessionRestored: "Sesi dipulihkan — tidak ada yang hilang",
       emptyTitle: "Belum ada dokumen", emptyBody: "Pilih PDF di sebelah kiri untuk memulai.",
       loading: "Memuat…", pagesLoaded: "{name} — {n} halaman", pageLoaded: "{name} — 1 halaman",
       openFailed: "Berkas tidak dapat dibuka: {msg}", renderFailed: "Halaman tidak dapat ditampilkan: {msg}",
@@ -1005,6 +1017,7 @@
       page: "Trang", pageOf: "trên {n}",
       zoomIn: "Phóng to", zoomOut: "Thu nhỏ", zoomFit: "Đặt lại thu phóng",
       fontUses: "Tài liệu này dùng: {fonts}",
+      newDoc: "Mới", sessionRestored: "Đã khôi phục phiên — không mất gì",
       emptyTitle: "Chưa có tài liệu", emptyBody: "Chọn một tệp PDF bên trái để bắt đầu.",
       loading: "Đang tải…", pagesLoaded: "{name} — {n} trang", pageLoaded: "{name} — 1 trang",
       openFailed: "Không mở được tệp: {msg}", renderFailed: "Không hiển thị được trang: {msg}",
@@ -1041,6 +1054,7 @@
       page: "页", pageOf: "/ 共 {n} 页",
       zoomIn: "放大", zoomOut: "缩小", zoomFit: "重置缩放",
       fontUses: "本文档使用的字体：{fonts}",
+      newDoc: "新建", sessionRestored: "已恢复会话——未丢失任何内容",
       emptyTitle: "尚未选择文档", emptyBody: "在左侧选择一个 PDF 即可开始。",
       loading: "正在加载…", pagesLoaded: "{name} — 共 {n} 页", pageLoaded: "{name} — 共 1 页",
       openFailed: "无法打开此文件：{msg}", renderFailed: "无法显示此页：{msg}",
@@ -1077,6 +1091,7 @@
       page: "ページ", pageOf: "/ 全 {n} ページ",
       zoomIn: "拡大", zoomOut: "縮小", zoomFit: "ズームをリセット",
       fontUses: "この文書で使われているフォント: {fonts}",
+      newDoc: "新規", sessionRestored: "セッションを復元しました — 失われたものはありません",
       emptyTitle: "文書が未選択です", emptyBody: "左側で PDF を選ぶと始められます。",
       loading: "読み込み中…", pagesLoaded: "{name} — 全 {n} ページ", pageLoaded: "{name} — 全 1 ページ",
       openFailed: "ファイルを開けませんでした: {msg}", renderFailed: "ページを表示できませんでした: {msg}",
@@ -1113,6 +1128,7 @@
       page: "페이지", pageOf: "/ 총 {n}쪽",
       zoomIn: "확대", zoomOut: "축소", zoomFit: "확대/축소 재설정",
       fontUses: "이 문서에서 사용하는 글꼴: {fonts}",
+      newDoc: "새로 만들기", sessionRestored: "세션이 복원되었습니다 — 손실된 것 없음",
       emptyTitle: "아직 문서가 없습니다", emptyBody: "왼쪽에서 PDF를 골라 시작하세요.",
       loading: "불러오는 중…", pagesLoaded: "{name} — 총 {n}쪽", pageLoaded: "{name} — 총 1쪽",
       openFailed: "파일을 열 수 없습니다: {msg}", renderFailed: "페이지를 표시할 수 없습니다: {msg}",
@@ -1149,6 +1165,7 @@
       page: "पृष्ठ", pageOf: "/ {n}",
       zoomIn: "बड़ा करें", zoomOut: "छोटा करें", zoomFit: "ज़ूम रीसेट करें",
       fontUses: "यह दस्तावेज़ इन फ़ॉन्ट का उपयोग करता है: {fonts}",
+      newDoc: "नया", sessionRestored: "सत्र पुनर्स्थापित — कुछ भी नहीं खोया",
       emptyTitle: "अभी कोई दस्तावेज़ नहीं", emptyBody: "शुरू करने के लिए बाएँ ओर एक PDF चुनें।",
       loading: "लोड हो रहा है…", pagesLoaded: "{name} — {n} पृष्ठ", pageLoaded: "{name} — 1 पृष्ठ",
       openFailed: "फ़ाइल खोली नहीं जा सकी: {msg}", renderFailed: "पृष्ठ दिखाया नहीं जा सका: {msg}",
@@ -1185,6 +1202,7 @@
       page: "صفحة", pageOf: "من {n}",
       zoomIn: "تكبير", zoomOut: "تصغير", zoomFit: "إعادة ضبط التكبير",
       fontUses: "هذا المستند يستخدم: {fonts}",
+      newDoc: "جديد", sessionRestored: "تمت استعادة الجلسة — لم يُفقد شيء",
       emptyTitle: "لا يوجد مستند بعد", emptyBody: "اختر ملف PDF من الجانب للبدء.",
       loading: "جارٍ التحميل…", pagesLoaded: "{name} — {n} صفحة", pageLoaded: "{name} — صفحة واحدة",
       openFailed: "تعذر فتح الملف: {msg}", renderFailed: "تعذر عرض الصفحة: {msg}",
@@ -1374,20 +1392,24 @@
   // ===========================================================================
   // Step 1: load the PDF
   // ===========================================================================
-  pdfInput.addEventListener("change", function () {
-    var file = pdfInput.files && pdfInput.files[0];
-    if (!file) return;
-    say("statusPdf", "loading");
+  // Opens a PDF from raw bytes — shared by the file picker and the session
+  // restore, which hands over bytes kept in IndexedDB. Resolves to true
+  // when the document is ready so callers can chain state on top.
+  // Serialises competing loads: a superseded openPdf must not apply its
+  // state over the document that replaced it (stored session vs. file pick).
+  var loadSeq = 0;
+  var userPickedFile = false;
 
-    file.arrayBuffer().then(function (buffer) {
-      originalBytes = new Uint8Array(buffer);
-      originalName = file.name || "document.pdf";
-      // pdf.js takes ownership of the buffer it is given, so hand it a copy.
-      var copy = originalBytes.slice();
-      return workerReady.then(function () {
-        return pdfjsLib.getDocument({ data: copy, fontExtraProperties: true }).promise;
-      });
+  function openPdf(bytes, name) {
+    var seq = ++loadSeq;
+    originalBytes = bytes;
+    originalName = name || "document.pdf";
+    // pdf.js takes ownership of the buffer it is given, so hand it a copy.
+    var copy = bytes.slice();
+    return workerReady.then(function () {
+      return pdfjsLib.getDocument({ data: copy, fontExtraProperties: true }).promise;
     }).then(function (doc) {
+      if (seq !== loadSeq) return false;
       pdfDoc = doc;
       pageTotal = doc.numPages;
       pageNow = 1;
@@ -1416,16 +1438,175 @@
       sheet.classList.add("on");
 
       say("statusPdf", pageTotal === 1 ? "pageLoaded" : "pagesLoaded",
-          { name: file.name, n: pageTotal }, "good");
-      return drawPage();
+          { name: originalName, n: pageTotal }, "good");
+      return drawPage().then(function () { return true; });
     }).catch(function (err) {
+      if (seq !== loadSeq) return false;
       pdfDoc = null;
       originalBytes = null;
       sheet.classList.remove("on");
       empty.style.display = "";
       say("statusPdf", "openFailed", { msg: err && err.message ? err.message : String(err) }, "bad");
       refreshControls();
+      return false;
     });
+  }
+
+  pdfInput.addEventListener("change", function () {
+    var file = pdfInput.files && pdfInput.files[0];
+    if (!file) return;
+    // Set before any async work so a late session restore can tell the
+    // user's own pick apart from the stored document it is about to load.
+    userPickedFile = true;
+    say("statusPdf", "loading");
+    file.arrayBuffer().then(function (buffer) {
+      return openPdf(new Uint8Array(buffer), file.name);
+    }).then(function (ok) {
+      if (ok) persist();
+    }).catch(function () {
+      say("statusPdf", "readFailed", null, "bad");
+    });
+  });
+
+  // ===========================================================================
+  // Session persistence: the whole working state survives a reload. Kept in
+  // IndexedDB because the PDF itself outgrows localStorage quickly. "New"
+  // wipes the record, opening another file overwrites it.
+  // ===========================================================================
+  var idbReady = new Promise(function (resolve) {
+    var req;
+    try { req = indexedDB.open("ops-session", 1); }
+    catch (e) { resolve(null); return; }
+    req.onupgradeneeded = function () { req.result.createObjectStore("kv"); };
+    req.onsuccess = function () { resolve(req.result); };
+    req.onerror = function () { resolve(null); };
+  });
+
+  function idbPut(value) {
+    return idbReady.then(function (db) {
+      if (!db) return;
+      var tx = db.transaction("kv", "readwrite");
+      tx.objectStore("kv").put(value, "session");
+    });
+  }
+
+  function idbGet() {
+    return idbReady.then(function (db) {
+      if (!db) return null;
+      return new Promise(function (resolve) {
+        var g = db.transaction("kv", "readonly").objectStore("kv").get("session");
+        g.onsuccess = function () { resolve(g.result || null); };
+        g.onerror = function () { resolve(null); };
+      });
+    });
+  }
+
+  function idbClear() {
+    return idbReady.then(function (db) {
+      if (!db) return;
+      var tx = db.transaction("kv", "readwrite");
+      tx.objectStore("kv").clear();
+    });
+  }
+
+  var persistTimer = null;
+  function writeSession() {
+    if (!originalBytes) return;
+    idbPut({
+      v: 1,
+      name: originalName,
+      pdf: originalBytes,
+      sigPng: sigPng,
+      sigRatio: sigRatio,
+      placement: placement,
+      texts: texts,
+      textSeq: textSeq,
+      selectedText: selectedText,
+      page: pageNow,
+      zoom: zoom
+    });
+  }
+  // Debounced: drags and keystrokes fire this constantly.
+  function persist() {
+    clearTimeout(persistTimer);
+    persistTimer = setTimeout(writeSession, 250);
+  }
+  // Last-second edits would otherwise die with the pending debounce.
+  window.addEventListener("beforeunload", function () {
+    clearTimeout(persistTimer);
+    writeSession();
+  });
+
+  // Re-applies a stored session after its PDF has been reopened.
+  function restoreState(s) {
+    if (s.sigPng) {
+      sigPng = s.sigPng;
+      sigRatio = s.sigRatio || 1;
+      sigImage.src = sigPng;
+      sigPreview.src = sigPng;
+      sigPreview.style.display = "block";
+    }
+    placement = s.placement || null;
+    texts = Array.isArray(s.texts) ? s.texts : [];
+    textSeq = s.textSeq || texts.length;
+    zoom = typeof s.zoom === "number" ? clamp(s.zoom, ZOOM_MIN, ZOOM_MAX) : 1;
+    pendingCenter = null;
+
+    pageNow = Math.min(Math.max(s.page || pageNow, 1), pageTotal);
+    pageSelect.value = String(pageNow);
+    // The canvas was already rendered by openPdf at zoom=1 — re-render so a
+    // restored zoom factor reaches the pixels, not just the overlay layer.
+    drawPage();
+    if (s.selectedText != null && textById(s.selectedText)) selectText(s.selectedText);
+    refreshControls();
+    say("statusPdf", "sessionRestored", null, "good");
+  }
+
+  // "New" drops the whole session: stored record, document, signature,
+  // texts — everything returns to the empty start state.
+  el("btnNew").addEventListener("click", function () {
+    clearTimeout(persistTimer);
+    // A restore answer already in flight must not resurrect what "New" wipes.
+    userPickedFile = true;
+    idbClear();
+    if (renderTask) { renderTask.cancel(); renderTask = null; }
+    pdfDoc = null;
+    originalBytes = null;
+    originalName = "document.pdf";
+    pageTotal = 0;
+    pageNow = 1;
+    geometry = {};
+    placement = null;
+    texts = [];
+    selectedText = null;
+    textSeq = 0;
+    docFonts = {};
+    docFontNames = {};
+    pageFontBest = {};
+    sigPng = null;
+    sigRatio = 1;
+    sigImage.removeAttribute("src");
+    sigPreview.removeAttribute("src");
+    sigPreview.style.display = "";
+    zoom = 1;
+    pendingCenter = null;
+    pad.clearRect(0, 0, padCanvas.width, padCanvas.height);
+    hasStrokes = false;
+    pageSelect.innerHTML = "";
+    pageSelect.disabled = true;
+    el("pageCount").textContent = "—";
+    pdfInput.value = "";
+    pngInput.value = "";
+    textInput.value = "";
+    sheet.classList.remove("on");
+    empty.style.display = "";
+    rebuildFontSelect();
+    paintTexts();
+    paintPlacement();
+    paintZoom();
+    ["statusPdf", "statusSignature", "statusText", "statusPlace", "statusSave"]
+      .forEach(function (id) { say(id, null); });
+    refreshControls();
   });
 
   // ===========================================================================
@@ -1504,6 +1685,7 @@
     pageNow = Math.min(Math.max(n, 1), pageTotal);
     pageSelect.value = String(pageNow);
     drawPage();
+    persist();
   }
 
   el("btnPrev").addEventListener("click", function () { goToPage(pageNow - 1); });
@@ -1535,6 +1717,7 @@
     };
     zoom = clamp(zoom * (dir > 0 ? 1.25 : 0.8), ZOOM_MIN, ZOOM_MAX);
     drawPage();
+    persist();
   }
 
   el("btnZoomIn").addEventListener("click", function () {
@@ -1550,6 +1733,7 @@
     zoom = 1;
     pendingCenter = null;
     drawPage();
+    persist();
   });
 
   // Ctrl + wheel — also a trackpad pinch — zooms around the pointer.
@@ -1714,6 +1898,7 @@
       }
       paintPlacement();
       refreshControls();
+      persist();
     };
     img.onerror = function () { say("statusSignature", "imageFailed", null, "bad"); };
     img.src = dataUrl;
@@ -1732,12 +1917,14 @@
     placeOnCurrentPage();
     paintPlacement();
     refreshControls();
+    persist();
   });
 
   el("btnRemove").addEventListener("click", function () {
     placement = null;
     paintPlacement();
     refreshControls();
+    persist();
   });
 
   // ===========================================================================
@@ -1824,6 +2011,7 @@
     if (!drag) return;
     drag = null;
     if (ev.currentTarget.hasPointerCapture(ev.pointerId)) ev.currentTarget.releasePointerCapture(ev.pointerId);
+    persist();
   }
 
   [sigBox, handle].forEach(function (node) {
@@ -2105,6 +2293,7 @@
     it.text = textInput.value;
     glyphWarn(it);
     paintTexts();
+    persist();
   });
   fontSel.addEventListener("change", function () {
     var it = selItem();
@@ -2112,18 +2301,21 @@
     it.fontKey = fontSel.value;
     glyphWarn(it);
     paintTexts();
+    persist();
   });
   sizeInput.addEventListener("input", function () {
     var it = selItem();
     if (!it) return;
     it.size = readSize();
     paintTexts();
+    persist();
   });
   colorInput.addEventListener("input", function () {
     var it = selItem();
     if (!it) return;
     it.color = colorInput.value;
     paintTexts();
+    persist();
   });
 
   function readSize() {
@@ -2162,6 +2354,7 @@
     selectText(it.id);
     say("statusText", "placedOn", { n: pageNow }, "good");
     glyphWarn(it);
+    persist();
   });
 
   el("btnRemoveText").addEventListener("click", function () {
@@ -2171,6 +2364,7 @@
     paintTexts();
     refreshControls();
     say("statusText", "textRemoved");
+    persist();
   });
 
   // Move only — size comes from the field, so there is no corner handle.
@@ -2211,6 +2405,7 @@
     tdrag = null;
     if (textLayer.hasPointerCapture(ev.pointerId)) textLayer.releasePointerCapture(ev.pointerId);
     paintTexts();
+    persist();
   }
   textLayer.addEventListener("pointerup", tdragEnd);
   textLayer.addEventListener("pointercancel", tdragEnd);
@@ -2395,6 +2590,7 @@
     el("btnZoomOut").disabled = !hasPdf || zoom <= ZOOM_MIN;
     el("btnZoomIn").disabled = !hasPdf || zoom >= ZOOM_MAX;
     el("zoomLabel").disabled = !hasPdf;
+    el("btnNew").disabled = !hasPdf && !sigPng && !texts.length;
     el("btnPlace").disabled = !hasPdf || !sigPng;
     el("btnRemove").disabled = !placement;
     el("btnAddText").disabled = !hasPdf;
@@ -2409,6 +2605,19 @@
 
   applyLanguage();
   refreshControls();
+
+  // Reopen the stored session, if there is one — the empty state paints
+  // first, the document follows as soon as it is read back.
+  idbGet().then(function (s) {
+    // pdfDoc/userPickedFile means the user already picked a file before the
+    // restore answer arrived — that wins, the stored session stays untouched.
+    if (!s || !s.pdf || pdfDoc || userPickedFile) return;
+    say("statusPdf", "loading");
+    var bytes = s.pdf instanceof Uint8Array ? s.pdf : new Uint8Array(s.pdf);
+    openPdf(bytes, s.name).then(function (ok) {
+      if (ok && !userPickedFile) restoreState(s);
+    });
+  });
 })();
 </script>
 </body>

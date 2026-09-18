@@ -16,6 +16,9 @@ Free, unlimited, and fully local: **your document is never uploaded anywhere.**
 - Drag to position it, use the corner handle to scale proportionally
 - Live dimensions in PDF points while you drag, so you can see exactly where it will land
 - Export a real PDF: the original file stays the base, marks are added on top
+- Keeps working where you left off: the session survives a page reload —
+  document, signature, texts, page and zoom are stored locally (IndexedDB)
+  and restored on the next visit. **New** wipes the slate clean
 - Available in 15 languages, picked up from your browser automatically
 
 Existing text stays selectable and the page count never changes. Pages are
@@ -36,6 +39,10 @@ No installation, no build step, no server, no account.
 
 Your PDF is read straight from disk by the browser and processed in memory.
 There is no upload, no analytics, no tracking, no telemetry.
+
+So your work survives a reload, the current session — the document itself,
+signature, texts, positions — is kept in the browser's local IndexedDB on
+your device. It never leaves the machine, and the **New** button deletes it.
 
 One honest caveat: pdf.js, pdf-lib and fontkit are pulled from a CDN the
 first time you open the page, so that initial load needs an internet
