@@ -1027,9 +1027,9 @@
   </main>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"
-        integrity="sha384-/1qUCSGwTur9vjf/z9lmu/eCUYbpOTgSjmpbMQZ1/CtX2v/WcAIKqRv+U1DUCG6e"
-        crossorigin="anonymous"></script>
+<!-- pdf.js is an ES module from v4 on, so it is no longer a plain <script>.
+     It is fetched, integrity-checked and imported at runtime (see pdfjsReady
+     below), which keeps a bare file:// open working and preserves SRI. -->
 <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"
         integrity="sha384-weMABwrltA6jWR8DDe9Jp5blk+tZQh7ugpCsF3JwSA53WZM9/14PjS5LAJNHNjAI"
         crossorigin="anonymous"></script>
@@ -1043,7 +1043,16 @@
 (function () {
   "use strict";
 
-  var WORKER_URL = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
+  // pdf.js 6.3.289, ES-module ("legacy" build for the widest browser support).
+  // v6 dropped the eval-based glyph compiler that was CVE-2024-4367 in the 3.x
+  // line, so a crafted font can no longer run script through the renderer.
+  var PDFJS_URL  = "https://cdn.jsdelivr.net/npm/pdfjs-dist@6.3.289/legacy/build/pdf.min.mjs";
+  var PDFJS_SRI  = "sha384-5NjcDwbJzXhI7QGdIeL4gC2aaEUnzbpPCN461DegG6G/1ym8f1MBJQpAjcXNOi5s";
+  var WORKER_URL = "https://cdn.jsdelivr.net/npm/pdfjs-dist@6.3.289/legacy/build/pdf.worker.min.mjs";
+  var WORKER_SRI = "sha384-2elss7Fc57S3C8hPKJxxGbtpWJRNsg0VWJqPR6PSSaIetveaFPnpIRIGVSml+d5+";
+  // Populated by pdfjsReady once the module is fetched and verified. The classic
+  // <script> build used to expose this as a global; now it is a scope variable.
+  var pdfjsLib = null;
 
   // ===========================================================================
   // Translations. Placeholders written as {n}, {name} and {msg}.
@@ -2135,21 +2144,44 @@
   })();
 
   // ===========================================================================
-  // pdf.js worker: fetch the source once during page load and bind it as a blob.
-  // Without this pdf.js would fetch the worker when the first PDF is opened,
-  // which would be a network request after load.
-  //
-  // The worker is handed over as workerPort rather than workerSrc: opened over
-  // file:// the origin is "file://" while the blob address is "blob:null/…".
-  // pdf.js fails that same-origin check and would fall back to running
-  // everything on the main thread. workerPort skips the check entirely.
+  // pdf.js itself: from v4 on it ships only as an ES module, so it is fetched
+  // with the same SRI guarantee a <script integrity> gives, verified, and then
+  // imported from a blob. Doing it here rather than via <script type="module">
+  // keeps a bare file:// open working and lets the rest of this classic script
+  // await it. The imported namespace becomes our pdfjsLib.
   // ===========================================================================
-  var workerReady = (function () {
-    if (typeof pdfjsLib === "undefined") return Promise.reject(new Error("pdf.js missing"));
+  var pdfjsReady = fetch(PDFJS_URL, { integrity: PDFJS_SRI })
+    .then(function (r) {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.text();
+    })
+    .then(function (source) {
+      var address = URL.createObjectURL(new Blob([source], { type: "text/javascript" }));
+      return import(address);
+    })
+    .then(function (ns) { pdfjsLib = ns; });
+
+  // ===========================================================================
+  // pdf.js worker: fetch the source once during page load and bind it as a blob,
+  // so opening a PDF makes no further network request. The v6 worker is an ES
+  // module, and how it is bound depends on where the tool is opened from:
+  //
+  //  • http(s): a same-origin blob is handed over as workerSrc. pdf.js spawns a
+  //    real module worker and, on its own, falls back to the main thread if that
+  //    ever fails — its workerSrc path is health-checked.
+  //
+  //  • file://: the page origin is "null", where a spawned module worker is
+  //    unreliable. pdf.js's workerPort path has no health check, so a dead
+  //    worker would hang forever. Instead the verified worker module is imported
+  //    and exposed as globalThis.pdfjsWorker, which makes pdf.js run the worker
+  //    code in-page (its "fake worker"): slower than a real worker, identical
+  //    output, still no network after load.
+  // ===========================================================================
+  var workerReady = pdfjsReady.then(function () {
     return fetch(WORKER_URL, {
-      // Same SRI guarantee as the script tags: the worker source is verified
+      // Same SRI guarantee as the module above: the worker source is verified
       // before it ever runs, so the CDN can't hand out tampered code.
-      integrity: "sha384-SnzOobpRMLXZ52iJvZm/C0fYw0OQemTXzTjIsdsfMcrCtCEe9qgzxTd3RSklO5x2"
+      integrity: WORKER_SRI
     })
       .then(function (r) {
         if (!r.ok) throw new Error("HTTP " + r.status);
@@ -2157,25 +2189,29 @@
       })
       .then(function (source) {
         var address = URL.createObjectURL(new Blob([source], { type: "text/javascript" }));
-        try {
-          pdfjsLib.GlobalWorkerOptions.workerPort = new Worker(address);
-        } catch (e) {
-          // Some browsers refuse workers over file://. pdf.js then works on the
-          // main thread: slower, same result.
-          pdfjsLib.GlobalWorkerOptions.workerSrc = address;
+        if (location.protocol === "file:") {
+          return import(address).then(function (ns) { globalThis.pdfjsWorker = ns; });
         }
+        pdfjsLib.GlobalWorkerOptions.workerSrc = address;
       })
       .catch(function () {
-        // Last resort: worker straight from the CDN. That does produce a request
-        // when the first PDF is opened, but the tool stays usable.
+        // Last resort: let pdf.js fetch the worker from the CDN itself. That
+        // does produce a request when the first PDF is opened, but the tool
+        // stays usable.
         pdfjsLib.GlobalWorkerOptions.workerSrc = WORKER_URL;
       });
-  })();
+  });
 
-  if (typeof pdfjsLib === "undefined" || typeof PDFLib === "undefined") {
+  // pdf-lib, fontkit and node-forge are classic scripts and are ready now.
+  // pdf.js resolves asynchronously, so its failure is reported from pdfjsReady.
+  if (typeof PDFLib === "undefined") {
     say("statusPdf", "libsMissing", null, "bad");
     pdfInput.disabled = true;
   }
+  pdfjsReady.catch(function () {
+    say("statusPdf", "libsMissing", null, "bad");
+    pdfInput.disabled = true;
+  });
 
   // ===========================================================================
   // Step 1: load the PDF
@@ -2195,6 +2231,10 @@
     // pdf.js takes ownership of the buffer it is given, so hand it a copy.
     var copy = bytes.slice();
     return workerReady.then(function () {
+      // fontExtraProperties keeps the raw font bytes on each font object so the
+      // document's own fonts can be lifted for the text tool and re-embedded on
+      // export. pdf.js 6.x removed the eval-based glyph compiler that was
+      // CVE-2024-4367 in 3.x, so no isEvalSupported guard is needed any more.
       return pdfjsLib.getDocument({ data: copy, fontExtraProperties: true }).promise;
     }).then(function (doc) {
       if (seq !== loadSeq) return false;
