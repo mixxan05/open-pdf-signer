@@ -341,6 +341,9 @@
   }
   .filepick:hover .ic { stroke: var(--accent); }
   .filepick strong { display: block; color: var(--text); font-weight: 600; font-size: 13px; margin-bottom: 2px; }
+  /* A file dragged over a drop target lights it up the way hover does */
+  .filepick.drop { border-color: var(--accent); background: var(--accent-soft); }
+  .filepick.drop .ic { stroke: var(--accent); }
 
   /* iOS segmented control between drawing and uploading */
   .switch {
@@ -515,6 +518,7 @@
     align-items: flex-start;
     background: radial-gradient(ellipse at 50% 0%, var(--stage-hi), var(--stage-lo));
   }
+  .stage.drop { box-shadow: inset 0 0 0 2px var(--accent); }
 
   .empty {
     margin-top: 76px;
@@ -980,6 +984,7 @@
           <h2 class="step-name" data-i18n="stepSave"></h2>
         </div>
         <p class="note" style="margin-top:0" data-i18n="saveNote"></p>
+        <p class="note" id="signedNote" data-i18n="pdfSignedNote" hidden></p>
         <div class="status" id="statusSave"></div>
       </section>
 
@@ -1086,6 +1091,9 @@
       emptyTitle: "No document yet", emptyBody: "Choose a PDF on the left to get started.",
       loading: "Loading…", pagesLoaded: "{name} — {n} pages", pageLoaded: "{name} — 1 page",
       openFailed: "Could not open this file: {msg}", renderFailed: "Could not display this page: {msg}",
+      pdfEncrypted: "This PDF is encrypted. Encrypted or password-protected PDFs cannot be edited here — remove the protection first.",
+      pdfOnly: "That is not a PDF file.",
+      pdfSignedNote: "This PDF is already digitally signed. Saving appends your changes as an update, so the existing signature stays intact — viewers will show that the document was changed after signing.",
       libsMissing: "pdf.js, pdf-lib or the font engine could not be loaded. Opening this file the first time needs an internet connection.",
       padEmpty: "Nothing drawn yet.", noStrokes: "No strokes found.",
       drawApplied: "Signature applied.", pngApplied: "PNG applied.",
@@ -1103,6 +1111,7 @@
       fontNoGlyphs: "This font has no glyphs for: {chars}",
       fontEmbedFail: "Document font could not be embedded: {msg}",
       fontkitMissing: "The font engine could not be loaded, so document fonts cannot be embedded.",
+      fontRestoreLost: "A document font could not be restored — the affected text now uses Helvetica.",
       stepCrypto: "Digital signature",
       cryptoCreate: "Create certificate", cryptoImport: "Import .p12/.pfx",
       cryptoName: "Name on the certificate", cryptoNamePh: "e.g. Jane Doe",
@@ -1125,7 +1134,12 @@
       cryptoUnlocked: "Key unlocked.",
       cryptoRemoved: "Certificate removed.",
       cryptoGenFail: "Certificate could not be created.",
-      cryptoUnavailable: "The crypto engine could not be loaded."
+      cryptoUnavailable: "The crypto engine could not be loaded.",
+      cryptoPassShort: "The passphrase needs at least {n} characters.",
+      cryptoRemoveConfirm: "Remove the certificate and its private key from this browser? This cannot be undone.",
+      cryptoKeyUnsupported: "This certificate uses an unsupported key type. RSA and ECDSA (P-256, P-384, P-521) work.",
+      cryptoCertBroken: "The stored certificate is damaged. Remove it and create a new one.",
+      cryptoInsecure: "Digital signatures need a secure page — open the file directly or over https."
     },
     de: {
       claim: "Läuft vollständig im Browser. Deine Datei verlässt diesen Rechner nicht.",
@@ -1146,6 +1160,9 @@
       emptyTitle: "Noch kein Dokument", emptyBody: "Links eine PDF-Datei auswählen, dann geht es los.",
       loading: "Wird geladen…", pagesLoaded: "{name} — {n} Seiten", pageLoaded: "{name} — 1 Seite",
       openFailed: "Datei konnte nicht geöffnet werden: {msg}", renderFailed: "Seite konnte nicht dargestellt werden: {msg}",
+      pdfEncrypted: "Dieses PDF ist verschlüsselt. Verschlüsselte oder passwortgeschützte PDFs lassen sich hier nicht bearbeiten — entferne zuerst den Schutz.",
+      pdfOnly: "Das ist keine PDF-Datei.",
+      pdfSignedNote: "Dieses PDF ist bereits digital signiert. Beim Speichern werden deine Änderungen als Update angehängt, die vorhandene Signatur bleibt intakt — PDF-Viewer zeigen aber an, dass das Dokument nach der Signatur geändert wurde.",
       libsMissing: "pdf.js, pdf-lib oder die Font-Engine konnte nicht geladen werden. Beim ersten Öffnen wird eine Internetverbindung benötigt.",
       padEmpty: "Noch nichts gezeichnet.", noStrokes: "Keine Striche gefunden.",
       drawApplied: "Unterschrift übernommen.", pngApplied: "PNG übernommen.",
@@ -1163,6 +1180,7 @@
       fontNoGlyphs: "Dieser Schrift fehlen Glyphen für: {chars}",
       fontEmbedFail: "Dokumentschrift konnte nicht eingebettet werden: {msg}",
       fontkitMissing: "Die Font-Engine konnte nicht geladen werden, Dokumentschriften lassen sich nicht einbetten.",
+      fontRestoreLost: "Eine Dokumentschrift ließ sich nicht wiederherstellen — der betroffene Text nutzt jetzt Helvetica.",
       stepCrypto: "Digitale Signatur",
       cryptoCreate: "Zertifikat erstellen", cryptoImport: ".p12/.pfx importieren",
       cryptoName: "Name im Zertifikat", cryptoNamePh: "z. B. Jane Doe",
@@ -1185,7 +1203,12 @@
       cryptoUnlocked: "Schlüssel entsperrt.",
       cryptoRemoved: "Zertifikat entfernt.",
       cryptoGenFail: "Zertifikat konnte nicht erzeugt werden.",
-      cryptoUnavailable: "Die Krypto-Engine konnte nicht geladen werden."
+      cryptoUnavailable: "Die Krypto-Engine konnte nicht geladen werden.",
+      cryptoPassShort: "Die Passphrase braucht mindestens {n} Zeichen.",
+      cryptoRemoveConfirm: "Zertifikat samt privatem Schlüssel aus diesem Browser entfernen? Das lässt sich nicht rückgängig machen.",
+      cryptoKeyUnsupported: "Dieses Zertifikat nutzt einen nicht unterstützten Schlüsseltyp. Unterstützt werden RSA und ECDSA (P-256, P-384, P-521).",
+      cryptoCertBroken: "Das gespeicherte Zertifikat ist beschädigt. Entferne es und erstelle ein neues.",
+      cryptoInsecure: "Digitale Signaturen brauchen eine sichere Seite — öffne die Datei direkt oder über https."
     },
     es: {
       claim: "Funciona por completo en tu navegador. Tu archivo nunca sale de este ordenador.",
@@ -1206,6 +1229,9 @@
       emptyTitle: "Aún no hay documento", emptyBody: "Elige un PDF a la izquierda para empezar.",
       loading: "Cargando…", pagesLoaded: "{name} — {n} páginas", pageLoaded: "{name} — 1 página",
       openFailed: "No se pudo abrir el archivo: {msg}", renderFailed: "No se pudo mostrar la página: {msg}",
+      pdfEncrypted: "Este PDF está cifrado. Los PDF cifrados o protegidos con contraseña no se pueden editar aquí — quita primero la protección.",
+      pdfOnly: "Eso no es un archivo PDF.",
+      pdfSignedNote: "Este PDF ya tiene una firma digital. Al guardar, tus cambios se añaden como actualización y la firma existente sigue intacta — los visores indicarán que el documento se modificó después de firmarse.",
       libsMissing: "No se pudieron cargar pdf.js, pdf-lib o el motor de fuentes. La primera vez que abres el archivo hace falta conexión a internet.",
       padEmpty: "Todavía no has dibujado nada.", noStrokes: "No se encontraron trazos.",
       drawApplied: "Firma aplicada.", pngApplied: "PNG aplicado.",
@@ -1223,6 +1249,7 @@
       fontNoGlyphs: "A esta fuente le faltan glifos para: {chars}",
       fontEmbedFail: "No se pudo incrustar la fuente del documento: {msg}",
       fontkitMissing: "No se pudo cargar el motor de fuentes; las del documento no se pueden incrustar.",
+      fontRestoreLost: "No se pudo restaurar una fuente del documento — el texto afectado ahora usa Helvetica.",
       stepCrypto: "Firma digital",
       cryptoCreate: "Crear certificado", cryptoImport: "Importar .p12/.pfx",
       cryptoName: "Nombre en el certificado", cryptoNamePh: "p. ej. Jane Doe",
@@ -1245,7 +1272,12 @@
       cryptoUnlocked: "Clave desbloqueada.",
       cryptoRemoved: "Certificado eliminado.",
       cryptoGenFail: "No se pudo crear el certificado.",
-      cryptoUnavailable: "No se pudo cargar el motor criptográfico."
+      cryptoUnavailable: "No se pudo cargar el motor criptográfico.",
+      cryptoPassShort: "La frase necesita al menos {n} caracteres.",
+      cryptoRemoveConfirm: "¿Quitar el certificado y su clave privada de este navegador? No se puede deshacer.",
+      cryptoKeyUnsupported: "Este certificado usa un tipo de clave no compatible. Funcionan RSA y ECDSA (P-256, P-384, P-521).",
+      cryptoCertBroken: "El certificado guardado está dañado. Quítalo y crea uno nuevo.",
+      cryptoInsecure: "La firma digital necesita una página segura — abre el archivo directamente o por https."
     },
     fr: {
       claim: "Fonctionne entièrement dans votre navigateur. Votre fichier ne quitte jamais cet ordinateur.",
@@ -1266,6 +1298,9 @@
       emptyTitle: "Aucun document", emptyBody: "Choisissez un PDF à gauche pour commencer.",
       loading: "Chargement…", pagesLoaded: "{name} — {n} pages", pageLoaded: "{name} — 1 page",
       openFailed: "Impossible d’ouvrir ce fichier : {msg}", renderFailed: "Impossible d’afficher cette page : {msg}",
+      pdfEncrypted: "Ce PDF est chiffré. Les PDF chiffrés ou protégés par mot de passe ne peuvent pas être modifiés ici — retirez d’abord la protection.",
+      pdfOnly: "Ce n’est pas un fichier PDF.",
+      pdfSignedNote: "Ce PDF porte déjà une signature numérique. À l’enregistrement, vos modifications sont ajoutées en mise à jour et la signature existante reste intacte — les lecteurs PDF indiqueront toutefois que le document a été modifié après sa signature.",
       libsMissing: "pdf.js, pdf-lib ou le moteur de polices n’a pas pu être chargé. La première ouverture nécessite une connexion internet.",
       padEmpty: "Rien n’a encore été dessiné.", noStrokes: "Aucun tracé trouvé.",
       drawApplied: "Signature appliquée.", pngApplied: "PNG appliqué.",
@@ -1283,21 +1318,22 @@
       fontNoGlyphs: "Cette police n’a pas de glyphes pour : {chars}",
       fontEmbedFail: "Impossible d’incorporer la police du document : {msg}",
       fontkitMissing: "Le moteur de polices n’a pas pu être chargé ; les polices du document ne peuvent pas être incorporées.",
+      fontRestoreLost: "Une police du document n’a pas pu être restaurée — le texte concerné utilise désormais Helvetica.",
       stepCrypto: "Signature numérique",
       cryptoCreate: "Créer un certificat", cryptoImport: "Importer .p12/.pfx",
       cryptoName: "Nom sur le certificat", cryptoNamePh: "p. ex. Jane Doe",
-      cryptoPass: "La phrase protège la clé", cryptoPassPh: "Phrase secrète",
+      cryptoPass: "La phrase secrète protège la clé", cryptoPassPh: "Phrase secrète",
       cryptoGenerate: "Générer", cryptoWorking: "Génération de la clé…",
       cryptoFile: "Fichier de certificat", cryptoP12Pass: "Mot de passe du fichier",
       cryptoImportGo: "Importer",
-      cryptoNote: "Ajoute une vraie signature cryptographique à l'enregistrement — le fichier devient inviolable. Tout local : crée gratuitement un certificat auto-signé ou importe le tien.",
-      cryptoSign: "Signer numériquement à l'enregistrement",
-      cryptoUnlockLbl: "Clé verrouillée — saisir la phrase",
+      cryptoNote: "Ajoute une vraie signature cryptographique à l’enregistrement — toute modification ultérieure devient détectable. Tout en local : créez gratuitement un certificat auto-signé ou importez le vôtre.",
+      cryptoSign: "Signer numériquement à l’enregistrement",
+      cryptoUnlockLbl: "Clé verrouillée — saisissez la phrase secrète",
       cryptoUnlock: "Déverrouiller",
-      cryptoNeedBoth: "Nom et phrase requis.",
-      cryptoNeedFile: "Choisis d'abord un fichier de certificat.",
-      cryptoNeedUnlock: "Déverrouille d'abord le certificat.",
-      cryptoWrongPass: "Phrase incorrecte.",
+      cryptoNeedBoth: "Nom et phrase secrète requis.",
+      cryptoNeedFile: "Choisissez d’abord un fichier de certificat.",
+      cryptoNeedUnlock: "Déverrouillez d’abord le certificat.",
+      cryptoWrongPass: "Phrase secrète incorrecte.",
       cryptoImportFail: "Certificat illisible — mot de passe ou format incorrect.",
       cryptoSignFail: "Échec de la signature numérique : {msg}",
       cryptoCertOk: "Certificat : {name}",
@@ -1305,7 +1341,12 @@
       cryptoUnlocked: "Clé déverrouillée.",
       cryptoRemoved: "Certificat supprimé.",
       cryptoGenFail: "Impossible de créer le certificat.",
-      cryptoUnavailable: "Le moteur cryptographique n'a pas pu être chargé."
+      cryptoUnavailable: "Le moteur cryptographique n’a pas pu être chargé.",
+      cryptoPassShort: "La phrase secrète doit comporter au moins {n} caractères.",
+      cryptoRemoveConfirm: "Supprimer le certificat et sa clé privée de ce navigateur ? Cette action est irréversible.",
+      cryptoKeyUnsupported: "Ce certificat utilise un type de clé non pris en charge. RSA et ECDSA (P-256, P-384, P-521) fonctionnent.",
+      cryptoCertBroken: "Le certificat enregistré est endommagé. Supprimez-le et créez-en un nouveau.",
+      cryptoInsecure: "La signature numérique nécessite une page sécurisée — ouvrez le fichier directement ou via https."
     },
     it: {
       claim: "Funziona interamente nel browser. Il tuo file non lascia mai questo computer.",
@@ -1326,6 +1367,9 @@
       emptyTitle: "Nessun documento", emptyBody: "Scegli un PDF a sinistra per iniziare.",
       loading: "Caricamento…", pagesLoaded: "{name} — {n} pagine", pageLoaded: "{name} — 1 pagina",
       openFailed: "Impossibile aprire il file: {msg}", renderFailed: "Impossibile mostrare la pagina: {msg}",
+      pdfEncrypted: "Questo PDF è cifrato. I PDF cifrati o protetti da password non si possono modificare qui — rimuovi prima la protezione.",
+      pdfOnly: "Questo non è un file PDF.",
+      pdfSignedNote: "Questo PDF ha già una firma digitale. Al salvataggio le tue modifiche vengono aggiunte come aggiornamento e la firma esistente resta intatta — i visualizzatori PDF mostreranno però che il documento è stato modificato dopo la firma.",
       libsMissing: "Non è stato possibile caricare pdf.js, pdf-lib o il motore dei caratteri. La prima apertura richiede una connessione a internet.",
       padEmpty: "Non hai ancora disegnato nulla.", noStrokes: "Nessun tratto trovato.",
       drawApplied: "Firma applicata.", pngApplied: "PNG applicato.",
@@ -1343,6 +1387,7 @@
       fontNoGlyphs: "A questo carattere mancano i glifi per: {chars}",
       fontEmbedFail: "Impossibile incorporare il carattere del documento: {msg}",
       fontkitMissing: "Il motore dei caratteri non è stato caricato; i caratteri del documento non possono essere incorporati.",
+      fontRestoreLost: "Non è stato possibile ripristinare un carattere del documento — il testo interessato ora usa Helvetica.",
       stepCrypto: "Firma digitale",
       cryptoCreate: "Crea certificato", cryptoImport: "Importa .p12/.pfx",
       cryptoName: "Nome sul certificato", cryptoNamePh: "es. Jane Doe",
@@ -1365,7 +1410,12 @@
       cryptoUnlocked: "Chiave sbloccata.",
       cryptoRemoved: "Certificato rimosso.",
       cryptoGenFail: "Impossibile creare il certificato.",
-      cryptoUnavailable: "Impossibile caricare il motore crittografico."
+      cryptoUnavailable: "Impossibile caricare il motore crittografico.",
+      cryptoPassShort: "La passphrase deve avere almeno {n} caratteri.",
+      cryptoRemoveConfirm: "Rimuovere il certificato e la sua chiave privata da questo browser? L’operazione non si può annullare.",
+      cryptoKeyUnsupported: "Questo certificato usa un tipo di chiave non supportato. Funzionano RSA ed ECDSA (P-256, P-384, P-521).",
+      cryptoCertBroken: "Il certificato salvato è danneggiato. Rimuovilo e creane uno nuovo.",
+      cryptoInsecure: "La firma digitale richiede una pagina sicura — apri il file direttamente o tramite https."
     },
     pt: {
       claim: "Funciona inteiramente no navegador. O seu ficheiro nunca sai deste computador.",
@@ -1386,6 +1436,9 @@
       emptyTitle: "Ainda sem documento", emptyBody: "Escolha um PDF à esquerda para começar.",
       loading: "A carregar…", pagesLoaded: "{name} — {n} páginas", pageLoaded: "{name} — 1 página",
       openFailed: "Não foi possível abrir o ficheiro: {msg}", renderFailed: "Não foi possível mostrar a página: {msg}",
+      pdfEncrypted: "Este PDF está encriptado. PDFs encriptados ou protegidos por palavra-passe não podem ser editados aqui — remova primeiro a proteção.",
+      pdfOnly: "Isto não é um ficheiro PDF.",
+      pdfSignedNote: "Este PDF já tem uma assinatura digital. Ao guardar, as suas alterações são acrescentadas como atualização e a assinatura existente fica intacta — os leitores de PDF indicarão que o documento foi alterado depois de assinado.",
       libsMissing: "Não foi possível carregar o pdf.js, o pdf-lib ou o motor de tipos. A primeira abertura precisa de ligação à internet.",
       padEmpty: "Ainda não desenhou nada.", noStrokes: "Nenhum traço encontrado.",
       drawApplied: "Assinatura aplicada.", pngApplied: "PNG aplicado.",
@@ -1403,29 +1456,35 @@
       fontNoGlyphs: "Este tipo de letra não tem glifos para: {chars}",
       fontEmbedFail: "Não foi possível incorporar o tipo do documento: {msg}",
       fontkitMissing: "O motor de tipos não pôde ser carregado; os tipos do documento não podem ser incorporados.",
+      fontRestoreLost: "Não foi possível restaurar um tipo de letra do documento — o texto afetado usa agora Helvetica.",
       stepCrypto: "Assinatura digital",
       cryptoCreate: "Criar certificado", cryptoImport: "Importar .p12/.pfx",
       cryptoName: "Nome no certificado", cryptoNamePh: "ex.: Jane Doe",
-      cryptoPass: "A frase protege a chave", cryptoPassPh: "Frase-senha",
-      cryptoGenerate: "Gerar", cryptoWorking: "Gerando a chave…",
-      cryptoFile: "Arquivo de certificado", cryptoP12Pass: "Senha do arquivo",
+      cryptoPass: "A frase-passe protege a chave", cryptoPassPh: "Frase-passe",
+      cryptoGenerate: "Gerar", cryptoWorking: "A gerar a chave…",
+      cryptoFile: "Ficheiro de certificado", cryptoP12Pass: "Palavra-passe do ficheiro",
       cryptoImportGo: "Importar",
-      cryptoNote: "Adiciona uma assinatura criptográfica real ao salvar — o arquivo fica à prova de adulteração. Tudo local: cria grátis um certificado autoassinado ou importa o teu.",
-      cryptoSign: "Assinar digitalmente ao salvar",
-      cryptoUnlockLbl: "Chave bloqueada — insere a frase",
+      cryptoNote: "Adiciona uma assinatura criptográfica real ao guardar — qualquer alteração posterior passa a ser detetável. Tudo local: crie gratuitamente um certificado autoassinado ou importe o seu.",
+      cryptoSign: "Assinar digitalmente ao guardar",
+      cryptoUnlockLbl: "Chave bloqueada — introduza a frase-passe",
       cryptoUnlock: "Desbloquear",
-      cryptoNeedBoth: "Nome e frase necessários.",
-      cryptoNeedFile: "Escolhe primeiro um arquivo de certificado.",
-      cryptoNeedUnlock: "Desbloqueia primeiro o certificado.",
-      cryptoWrongPass: "Frase incorreta.",
-      cryptoImportFail: "Não foi possível ler o certificado — senha ou formato errado.",
+      cryptoNeedBoth: "Nome e frase-passe necessários.",
+      cryptoNeedFile: "Escolha primeiro um ficheiro de certificado.",
+      cryptoNeedUnlock: "Desbloqueie primeiro o certificado.",
+      cryptoWrongPass: "Frase-passe incorreta.",
+      cryptoImportFail: "Não foi possível ler o certificado — palavra-passe ou formato errado.",
       cryptoSignFail: "A assinatura digital falhou: {msg}",
       cryptoCertOk: "Certificado: {name}",
       cryptoSelf: "autoassinado",
       cryptoUnlocked: "Chave desbloqueada.",
       cryptoRemoved: "Certificado removido.",
       cryptoGenFail: "Não foi possível criar o certificado.",
-      cryptoUnavailable: "Não foi possível carregar o motor criptográfico."
+      cryptoUnavailable: "Não foi possível carregar o motor criptográfico.",
+      cryptoPassShort: "A frase-passe precisa de pelo menos {n} caracteres.",
+      cryptoRemoveConfirm: "Remover o certificado e a respetiva chave privada deste navegador? Não é possível anular.",
+      cryptoKeyUnsupported: "Este certificado usa um tipo de chave não suportado. Funcionam RSA e ECDSA (P-256, P-384, P-521).",
+      cryptoCertBroken: "O certificado guardado está danificado. Remova-o e crie um novo.",
+      cryptoInsecure: "A assinatura digital precisa de uma página segura — abra o ficheiro diretamente ou por https."
     },
     ru: {
       claim: "Работает полностью в браузере. Файл никогда не покидает этот компьютер.",
@@ -1446,6 +1505,9 @@
       emptyTitle: "Документ не выбран", emptyBody: "Выберите PDF слева, чтобы начать.",
       loading: "Загрузка…", pagesLoaded: "{name} — страниц: {n}", pageLoaded: "{name} — 1 страница",
       openFailed: "Не удалось открыть файл: {msg}", renderFailed: "Не удалось показать страницу: {msg}",
+      pdfEncrypted: "Этот PDF зашифрован. Зашифрованные или защищённые паролем PDF здесь редактировать нельзя — сначала снимите защиту.",
+      pdfOnly: "Это не PDF-файл.",
+      pdfSignedNote: "Этот PDF уже подписан цифровой подписью. При сохранении ваши изменения добавляются как обновление, и существующая подпись остаётся нетронутой — но программы просмотра покажут, что документ изменён после подписания.",
       libsMissing: "Не удалось загрузить pdf.js, pdf-lib или шрифтовой движок. При первом открытии нужно интернет-соединение.",
       padEmpty: "Пока ничего не нарисовано.", noStrokes: "Штрихи не найдены.",
       drawApplied: "Подпись применена.", pngApplied: "PNG применён.",
@@ -1463,6 +1525,7 @@
       fontNoGlyphs: "В этом шрифте нет глифов для: {chars}",
       fontEmbedFail: "Не удалось встроить шрифт документа: {msg}",
       fontkitMissing: "Не удалось загрузить шрифтовой движок, шрифты документа встроить нельзя.",
+      fontRestoreLost: "Не удалось восстановить шрифт документа — затронутый текст теперь набран шрифтом Helvetica.",
       stepCrypto: "Цифровая подпись",
       cryptoCreate: "Создать сертификат", cryptoImport: "Импорт .p12/.pfx",
       cryptoName: "Имя в сертификате", cryptoNamePh: "напр., Jane Doe",
@@ -1485,7 +1548,12 @@
       cryptoUnlocked: "Ключ разблокирован.",
       cryptoRemoved: "Сертификат удалён.",
       cryptoGenFail: "Не удалось создать сертификат.",
-      cryptoUnavailable: "Не удалось загрузить криптодвижок."
+      cryptoUnavailable: "Не удалось загрузить криптодвижок.",
+      cryptoPassShort: "Парольная фраза должна содержать не менее {n} символов.",
+      cryptoRemoveConfirm: "Удалить сертификат вместе с закрытым ключом из этого браузера? Это действие нельзя отменить.",
+      cryptoKeyUnsupported: "Этот сертификат использует неподдерживаемый тип ключа. Поддерживаются RSA и ECDSA (P-256, P-384, P-521).",
+      cryptoCertBroken: "Сохранённый сертификат повреждён. Удалите его и создайте новый.",
+      cryptoInsecure: "Для цифровой подписи нужна защищённая страница — откройте файл напрямую или по https."
     },
     tr: {
       claim: "Tamamen tarayıcınızda çalışır. Dosyanız bu bilgisayardan hiç çıkmaz.",
@@ -1506,6 +1574,9 @@
       emptyTitle: "Henüz belge yok", emptyBody: "Başlamak için soldan bir PDF seçin.",
       loading: "Yükleniyor…", pagesLoaded: "{name} — {n} sayfa", pageLoaded: "{name} — 1 sayfa",
       openFailed: "Dosya açılamadı: {msg}", renderFailed: "Sayfa gösterilemedi: {msg}",
+      pdfEncrypted: "Bu PDF şifrelenmiş. Şifrelenmiş veya parola korumalı PDF’ler burada düzenlenemez — önce korumayı kaldırın.",
+      pdfOnly: "Bu bir PDF dosyası değil.",
+      pdfSignedNote: "Bu PDF zaten dijital olarak imzalanmış. Kaydettiğinizde değişiklikleriniz güncelleme olarak eklenir ve mevcut imza bozulmaz — ancak PDF görüntüleyiciler belgenin imzadan sonra değiştirildiğini gösterir.",
       libsMissing: "pdf.js, pdf-lib veya yazı tipi motoru yüklenemedi. Dosyayı ilk kez açarken internet bağlantısı gerekir.",
       padEmpty: "Henüz bir şey çizilmedi.", noStrokes: "Çizgi bulunamadı.",
       drawApplied: "İmza uygulandı.", pngApplied: "PNG uygulandı.",
@@ -1523,6 +1594,7 @@
       fontNoGlyphs: "Bu yazı tipinde şu karakterlerin glifi yok: {chars}",
       fontEmbedFail: "Belge yazı tipi gömülemedi: {msg}",
       fontkitMissing: "Yazı tipi motoru yüklenemedi; belge yazı tipleri gömülemez.",
+      fontRestoreLost: "Bir belge yazı tipi geri yüklenemedi — ilgili metin artık Helvetica kullanıyor.",
       stepCrypto: "Dijital imza",
       cryptoCreate: "Sertifika oluştur", cryptoImport: ".p12/.pfx içe aktar",
       cryptoName: "Sertifikadaki ad", cryptoNamePh: "örn. Jane Doe",
@@ -1530,13 +1602,13 @@
       cryptoGenerate: "Oluştur", cryptoWorking: "Anahtar oluşturuluyor…",
       cryptoFile: "Sertifika dosyası", cryptoP12Pass: "Dosya parolası",
       cryptoImportGo: "İçe aktar",
-      cryptoNote: "Kaydederken gerçek bir kriptografik imza ekler — dosya kurcalanmaya karşı korunur. Tamamen yerel: ücretsiz kendinden imzalı sertifika oluştur veya kendi sertifikanı içe aktar.",
+      cryptoNote: "Kaydederken gerçek bir kriptografik imza ekler — dosyada sonradan yapılan her değişiklik fark edilir. Tamamen yerel: ücretsiz, kendinden imzalı bir sertifika oluşturun veya kendi sertifikanızı içe aktarın.",
       cryptoSign: "Kaydederken dijital imzala",
-      cryptoUnlockLbl: "Anahtar kilitli — parolayı gir",
+      cryptoUnlockLbl: "Anahtar kilitli — parolayı girin",
       cryptoUnlock: "Kilidi aç",
       cryptoNeedBoth: "Ad ve parola gerekli.",
-      cryptoNeedFile: "Önce bir sertifika dosyası seç.",
-      cryptoNeedUnlock: "Önce sertifikayı aç.",
+      cryptoNeedFile: "Önce bir sertifika dosyası seçin.",
+      cryptoNeedUnlock: "Önce sertifikanın kilidini açın.",
       cryptoWrongPass: "Yanlış parola.",
       cryptoImportFail: "Sertifika okunamadı — yanlış parola veya biçim.",
       cryptoSignFail: "Dijital imza başarısız: {msg}",
@@ -1545,7 +1617,12 @@
       cryptoUnlocked: "Anahtar açıldı.",
       cryptoRemoved: "Sertifika kaldırıldı.",
       cryptoGenFail: "Sertifika oluşturulamadı.",
-      cryptoUnavailable: "Kripto motoru yüklenemedi."
+      cryptoUnavailable: "Kripto motoru yüklenemedi.",
+      cryptoPassShort: "Parola en az {n} karakter olmalıdır.",
+      cryptoRemoveConfirm: "Sertifika ve özel anahtarı bu tarayıcıdan kaldırılsın mı? Bu işlem geri alınamaz.",
+      cryptoKeyUnsupported: "Bu sertifika desteklenmeyen bir anahtar türü kullanıyor. RSA ve ECDSA (P-256, P-384, P-521) desteklenir.",
+      cryptoCertBroken: "Kayıtlı sertifika bozuk. Kaldırıp yeni bir sertifika oluşturun.",
+      cryptoInsecure: "Dijital imza için güvenli bir sayfa gerekir — dosyayı doğrudan veya https üzerinden açın."
     },
     id: {
       claim: "Berjalan sepenuhnya di peramban Anda. Berkas Anda tidak pernah meninggalkan komputer ini.",
@@ -1566,6 +1643,9 @@
       emptyTitle: "Belum ada dokumen", emptyBody: "Pilih PDF di sebelah kiri untuk memulai.",
       loading: "Memuat…", pagesLoaded: "{name} — {n} halaman", pageLoaded: "{name} — 1 halaman",
       openFailed: "Berkas tidak dapat dibuka: {msg}", renderFailed: "Halaman tidak dapat ditampilkan: {msg}",
+      pdfEncrypted: "PDF ini terenkripsi. PDF yang terenkripsi atau dilindungi kata sandi tidak dapat diedit di sini — hapus dulu perlindungannya.",
+      pdfOnly: "Itu bukan berkas PDF.",
+      pdfSignedNote: "PDF ini sudah bertanda tangan digital. Saat menyimpan, perubahan Anda ditambahkan sebagai pembaruan sehingga tanda tangan yang ada tetap utuh — namun penampil PDF akan menunjukkan bahwa dokumen diubah setelah ditandatangani.",
       libsMissing: "pdf.js, pdf-lib, atau mesin fonta gagal dimuat. Membuka berkas ini pertama kali memerlukan koneksi internet.",
       padEmpty: "Belum ada yang digambar.", noStrokes: "Tidak ada goresan ditemukan.",
       drawApplied: "Tanda tangan diterapkan.", pngApplied: "PNG diterapkan.",
@@ -1583,6 +1663,7 @@
       fontNoGlyphs: "Fonta ini tidak memiliki glif untuk: {chars}",
       fontEmbedFail: "Fonta dokumen tidak bisa disematkan: {msg}",
       fontkitMissing: "Mesin fonta gagal dimuat; fonta dokumen tidak bisa disematkan.",
+      fontRestoreLost: "Sebuah fonta dokumen tidak dapat dipulihkan — teks yang terdampak kini memakai Helvetica.",
       stepCrypto: "Tanda tangan digital",
       cryptoCreate: "Buat sertifikat", cryptoImport: "Impor .p12/.pfx",
       cryptoName: "Nama di sertifikat", cryptoNamePh: "mis. Jane Doe",
@@ -1590,7 +1671,7 @@
       cryptoGenerate: "Buat", cryptoWorking: "Membuat kunci…",
       cryptoFile: "Berkas sertifikat", cryptoP12Pass: "Kata sandi berkas",
       cryptoImportGo: "Impor",
-      cryptoNote: "Menambahkan tanda tangan kriptografis asli saat menyimpan — berkas menjadi tahan perubahan. Sepenuhnya lokal: buat sertifikat self-signed gratis atau impor milikmu.",
+      cryptoNote: "Menambahkan tanda tangan kriptografis asli saat menyimpan — setiap perubahan sesudahnya akan terdeteksi. Sepenuhnya lokal: buat sertifikat self-signed gratis atau impor milik Anda.",
       cryptoSign: "Tandatangani digital saat menyimpan",
       cryptoUnlockLbl: "Kunci terkunci — masukkan frasa sandi",
       cryptoUnlock: "Buka kunci",
@@ -1605,7 +1686,12 @@
       cryptoUnlocked: "Kunci terbuka.",
       cryptoRemoved: "Sertifikat dihapus.",
       cryptoGenFail: "Sertifikat tidak dapat dibuat.",
-      cryptoUnavailable: "Mesin kripto gagal dimuat."
+      cryptoUnavailable: "Mesin kripto gagal dimuat.",
+      cryptoPassShort: "Frasa sandi minimal {n} karakter.",
+      cryptoRemoveConfirm: "Hapus sertifikat beserta kunci privatnya dari peramban ini? Tindakan ini tidak dapat dibatalkan.",
+      cryptoKeyUnsupported: "Sertifikat ini memakai jenis kunci yang tidak didukung. RSA dan ECDSA (P-256, P-384, P-521) didukung.",
+      cryptoCertBroken: "Sertifikat yang tersimpan rusak. Hapus lalu buat yang baru.",
+      cryptoInsecure: "Tanda tangan digital memerlukan halaman yang aman — buka berkas secara langsung atau melalui https."
     },
     vi: {
       claim: "Chạy hoàn toàn trong trình duyệt. Tệp của bạn không bao giờ rời máy này.",
@@ -1626,6 +1712,9 @@
       emptyTitle: "Chưa có tài liệu", emptyBody: "Chọn một tệp PDF bên trái để bắt đầu.",
       loading: "Đang tải…", pagesLoaded: "{name} — {n} trang", pageLoaded: "{name} — 1 trang",
       openFailed: "Không mở được tệp: {msg}", renderFailed: "Không hiển thị được trang: {msg}",
+      pdfEncrypted: "Tệp PDF này đã được mã hóa. Không thể chỉnh sửa PDF được mã hóa hoặc có mật khẩu tại đây — hãy gỡ bảo vệ trước.",
+      pdfOnly: "Đây không phải là tệp PDF.",
+      pdfSignedNote: "Tệp PDF này đã có chữ ký số. Khi lưu, thay đổi của bạn được nối thêm dưới dạng bản cập nhật nên chữ ký hiện có vẫn nguyên vẹn — nhưng trình xem PDF sẽ cho biết tài liệu đã bị thay đổi sau khi ký.",
       libsMissing: "Không tải được pdf.js, pdf-lib hoặc bộ xử lý phông chữ. Lần đầu mở tệp cần có kết nối internet.",
       padEmpty: "Chưa vẽ gì cả.", noStrokes: "Không tìm thấy nét vẽ.",
       drawApplied: "Đã áp dụng chữ ký.", pngApplied: "Đã áp dụng PNG.",
@@ -1643,6 +1732,7 @@
       fontNoGlyphs: "Phông này thiếu glyph cho: {chars}",
       fontEmbedFail: "Không nhúng được phông của tài liệu: {msg}",
       fontkitMissing: "Không tải được bộ xử lý phông chữ; không thể nhúng phông của tài liệu.",
+      fontRestoreLost: "Không khôi phục được một phông của tài liệu — văn bản liên quan giờ dùng Helvetica.",
       stepCrypto: "Chữ ký số",
       cryptoCreate: "Tạo chứng chỉ", cryptoImport: "Nhập .p12/.pfx",
       cryptoName: "Tên trên chứng chỉ", cryptoNamePh: "vd. Jane Doe",
@@ -1665,7 +1755,12 @@
       cryptoUnlocked: "Đã mở khóa.",
       cryptoRemoved: "Đã xóa chứng chỉ.",
       cryptoGenFail: "Không tạo được chứng chỉ.",
-      cryptoUnavailable: "Không tải được bộ máy mã hóa."
+      cryptoUnavailable: "Không tải được bộ máy mã hóa.",
+      cryptoPassShort: "Cụm mật khẩu cần ít nhất {n} ký tự.",
+      cryptoRemoveConfirm: "Xóa chứng chỉ và khóa riêng của nó khỏi trình duyệt này? Không thể hoàn tác.",
+      cryptoKeyUnsupported: "Chứng chỉ này dùng loại khóa không được hỗ trợ. Hỗ trợ RSA và ECDSA (P-256, P-384, P-521).",
+      cryptoCertBroken: "Chứng chỉ đã lưu bị hỏng. Hãy xóa và tạo chứng chỉ mới.",
+      cryptoInsecure: "Chữ ký số cần một trang an toàn — hãy mở tệp trực tiếp hoặc qua https."
     },
     zh: {
       claim: "完全在你的浏览器中运行，文件不会离开这台电脑。",
@@ -1686,6 +1781,9 @@
       emptyTitle: "尚未选择文档", emptyBody: "在左侧选择一个 PDF 即可开始。",
       loading: "正在加载…", pagesLoaded: "{name} — 共 {n} 页", pageLoaded: "{name} — 共 1 页",
       openFailed: "无法打开此文件：{msg}", renderFailed: "无法显示此页：{msg}",
+      pdfEncrypted: "此 PDF 已加密。加密或受密码保护的 PDF 无法在此编辑——请先解除保护。",
+      pdfOnly: "这不是 PDF 文件。",
+      pdfSignedNote: "此 PDF 已带有数字签名。保存时你的修改会作为增量更新追加，现有签名保持完好——但 PDF 阅读器会显示文档在签名后被修改过。",
       libsMissing: "pdf.js、pdf-lib 或字体引擎加载失败。首次打开本文件需要联网。",
       padEmpty: "还没有写任何东西。", noStrokes: "未找到笔画。",
       drawApplied: "签名已应用。", pngApplied: "PNG 已应用。",
@@ -1703,6 +1801,7 @@
       fontNoGlyphs: "该字体缺少以下字符的字形：{chars}",
       fontEmbedFail: "无法嵌入文档字体：{msg}",
       fontkitMissing: "字体引擎加载失败，无法嵌入文档字体。",
+      fontRestoreLost: "有一种文档字体无法恢复——相关文字已改用 Helvetica。",
       stepCrypto: "数字签名",
       cryptoCreate: "创建证书", cryptoImport: "导入 .p12/.pfx",
       cryptoName: "证书上的姓名", cryptoNamePh: "例如 Jane Doe",
@@ -1725,7 +1824,12 @@
       cryptoUnlocked: "密钥已解锁。",
       cryptoRemoved: "证书已移除。",
       cryptoGenFail: "无法创建证书。",
-      cryptoUnavailable: "加密引擎加载失败。"
+      cryptoUnavailable: "加密引擎加载失败。",
+      cryptoPassShort: "口令至少需要 {n} 个字符。",
+      cryptoRemoveConfirm: "要从此浏览器中移除证书及其私钥吗？此操作无法撤销。",
+      cryptoKeyUnsupported: "此证书使用了不受支持的密钥类型。支持 RSA 和 ECDSA（P-256、P-384、P-521）。",
+      cryptoCertBroken: "已保存的证书已损坏。请将其移除并新建一个。",
+      cryptoInsecure: "数字签名需要安全页面——请直接打开文件或通过 https 打开。"
     },
     ja: {
       claim: "すべてブラウザ内で処理します。ファイルがこのパソコンから出ることはありません。",
@@ -1746,6 +1850,9 @@
       emptyTitle: "文書が未選択です", emptyBody: "左側で PDF を選ぶと始められます。",
       loading: "読み込み中…", pagesLoaded: "{name} — 全 {n} ページ", pageLoaded: "{name} — 全 1 ページ",
       openFailed: "ファイルを開けませんでした: {msg}", renderFailed: "ページを表示できませんでした: {msg}",
+      pdfEncrypted: "この PDF は暗号化されています。暗号化またはパスワード保護された PDF はここでは編集できません。先に保護を解除してください。",
+      pdfOnly: "PDF ファイルではありません。",
+      pdfSignedNote: "この PDF にはすでにデジタル署名があります。保存すると変更は増分更新として追記されるため、既存の署名は損なわれません。ただし PDF ビューアーには、署名後に文書が変更されたと表示されます。",
       libsMissing: "pdf.js、pdf-lib またはフォントエンジンを読み込めませんでした。初回のご利用にはインターネット接続が必要です。",
       padEmpty: "まだ何も書かれていません。", noStrokes: "筆跡が見つかりません。",
       drawApplied: "署名を適用しました。", pngApplied: "PNG を適用しました。",
@@ -1763,6 +1870,7 @@
       fontNoGlyphs: "このフォントには次の文字のグリフがありません: {chars}",
       fontEmbedFail: "文書フォントを埋め込めませんでした: {msg}",
       fontkitMissing: "フォントエンジンを読み込めなかったため、文書フォントは埋め込めません。",
+      fontRestoreLost: "文書フォントを復元できませんでした。該当するテキストは Helvetica に切り替わりました。",
       stepCrypto: "デジタル署名",
       cryptoCreate: "証明書を作成", cryptoImport: ".p12/.pfx を読み込む",
       cryptoName: "証明書の名前", cryptoNamePh: "例: Jane Doe",
@@ -1779,13 +1887,18 @@
       cryptoNeedUnlock: "先に証明書のロックを解除してください。",
       cryptoWrongPass: "パスフレーズが違います。",
       cryptoImportFail: "証明書を読み込めません——パスワードか形式が違います。",
-      cryptoSignFail: "デジタル署名に失敗:{msg}",
-      cryptoCertOk: "証明書:{name}",
+      cryptoSignFail: "デジタル署名に失敗しました: {msg}",
+      cryptoCertOk: "証明書: {name}",
       cryptoSelf: "自己署名",
       cryptoUnlocked: "ロックを解除しました。",
       cryptoRemoved: "証明書を削除しました。",
       cryptoGenFail: "証明書を作成できませんでした。",
-      cryptoUnavailable: "暗号エンジンを読み込めませんでした。"
+      cryptoUnavailable: "暗号エンジンを読み込めませんでした。",
+      cryptoPassShort: "パスフレーズは {n} 文字以上にしてください。",
+      cryptoRemoveConfirm: "証明書と秘密鍵をこのブラウザーから削除しますか？この操作は元に戻せません。",
+      cryptoKeyUnsupported: "この証明書の鍵の種類には対応していません。対応しているのは RSA と ECDSA（P-256、P-384、P-521）です。",
+      cryptoCertBroken: "保存されている証明書が破損しています。削除して新しく作成してください。",
+      cryptoInsecure: "デジタル署名には安全なページが必要です。ファイルを直接開くか、https 経由で開いてください。"
     },
     ko: {
       claim: "모든 처리가 브라우저 안에서 이루어집니다. 파일은 이 컴퓨터를 벗어나지 않습니다.",
@@ -1796,7 +1909,7 @@
       choosePng: "PNG 선택", choosePngHint: "배경이 투명한 파일",
       uploadNote: "PNG만 가능합니다. 투명도를 PDF로 옮길 수 있는 유일한 형식입니다.",
       stepPlace: "배치", placeHere: "여기에 배치", remove: "제거",
-      placeNote: "끌어서 옴기고 모서리를 당겨 서명 크기를 바꾸세요. 놓아둔 것은 모두 그 페이지에 남습니다.",
+      placeNote: "끌어서 옮기고 모서리를 당겨 서명 크기를 바꾸세요. 놓아둔 것은 모두 그 페이지에 남습니다.",
       stepSave: "저장", saveNote: "새 PDF를 만듭니다. 본문, 페이지 수, 메타데이터는 그대로입니다.",
       saveButton: "PDF 저장",
       page: "페이지", pageOf: "/ 총 {n}쪽",
@@ -1806,7 +1919,10 @@
       emptyTitle: "아직 문서가 없습니다", emptyBody: "왼쪽에서 PDF를 골라 시작하세요.",
       loading: "불러오는 중…", pagesLoaded: "{name} — 총 {n}쪽", pageLoaded: "{name} — 총 1쪽",
       openFailed: "파일을 열 수 없습니다: {msg}", renderFailed: "페이지를 표시할 수 없습니다: {msg}",
-      libsMissing: "pdf.js, pdf-lib 또는 글꼴 엔진을 불러오지 못했습니다. 처음 여는 대에는 인터넷 연결이 필요합니다.",
+      pdfEncrypted: "이 PDF는 암호화되어 있습니다. 암호화되었거나 비밀번호로 보호된 PDF는 여기서 편집할 수 없습니다. 먼저 보호를 해제하세요.",
+      pdfOnly: "PDF 파일이 아닙니다.",
+      pdfSignedNote: "이 PDF에는 이미 디지털 서명이 있습니다. 저장하면 변경 사항이 업데이트로 덧붙여져 기존 서명은 그대로 유지되지만, PDF 뷰어에는 서명 후 문서가 변경되었다고 표시됩니다.",
+      libsMissing: "pdf.js, pdf-lib 또는 글꼴 엔진을 불러오지 못했습니다. 처음 열 때에는 인터넷 연결이 필요합니다.",
       padEmpty: "아직 아무것도 쓰지 않았습니다.", noStrokes: "필적을 찾을 수 없습니다.",
       drawApplied: "서명을 적용했습니다.", pngApplied: "PNG를 적용했습니다.",
       pngOnly: "PNG 파일을 선택하세요. 투명도를 PDF로 옮기는 형식은 PNG뿐입니다.",
@@ -1823,6 +1939,7 @@
       fontNoGlyphs: "이 글꼴에는 다음 글리프가 없습니다: {chars}",
       fontEmbedFail: "문서 글꼴을 포함할 수 없습니다: {msg}",
       fontkitMissing: "글꼴 엔진을 불러오지 못해 문서 글꼴을 포함할 수 없습니다.",
+      fontRestoreLost: "문서 글꼴 하나를 복원하지 못했습니다. 해당 텍스트는 이제 Helvetica를 사용합니다.",
       stepCrypto: "디지털 서명",
       cryptoCreate: "인증서 만들기", cryptoImport: ".p12/.pfx 가져오기",
       cryptoName: "인증서 이름", cryptoNamePh: "예: Jane Doe",
@@ -1845,7 +1962,12 @@
       cryptoUnlocked: "잠금 해제됨.",
       cryptoRemoved: "인증서가 삭제되었습니다.",
       cryptoGenFail: "인증서를 만들 수 없습니다.",
-      cryptoUnavailable: "암호화 엔진을 불러오지 못했습니다."
+      cryptoUnavailable: "암호화 엔진을 불러오지 못했습니다.",
+      cryptoPassShort: "암호 문구는 {n}자 이상이어야 합니다.",
+      cryptoRemoveConfirm: "이 브라우저에서 인증서와 개인 키를 삭제할까요? 되돌릴 수 없습니다.",
+      cryptoKeyUnsupported: "이 인증서는 지원되지 않는 키 유형을 사용합니다. RSA와 ECDSA(P-256, P-384, P-521)를 지원합니다.",
+      cryptoCertBroken: "저장된 인증서가 손상되었습니다. 삭제한 뒤 새로 만드세요.",
+      cryptoInsecure: "디지털 서명에는 보안 페이지가 필요합니다. 파일을 직접 열거나 https로 여세요."
     },
     hi: {
       claim: "पूरी तरह आपके ब्राउज़र में चलता है। आपकी फ़ाइल इस कंप्यूटर से कभी बाहर नहीं जाती।",
@@ -1866,6 +1988,9 @@
       emptyTitle: "अभी कोई दस्तावेज़ नहीं", emptyBody: "शुरू करने के लिए बाएँ ओर एक PDF चुनें।",
       loading: "लोड हो रहा है…", pagesLoaded: "{name} — {n} पृष्ठ", pageLoaded: "{name} — 1 पृष्ठ",
       openFailed: "फ़ाइल खोली नहीं जा सकी: {msg}", renderFailed: "पृष्ठ दिखाया नहीं जा सका: {msg}",
+      pdfEncrypted: "यह PDF एन्क्रिप्टेड है। एन्क्रिप्टेड या पासवर्ड-सुरक्षित PDF यहाँ संपादित नहीं की जा सकतीं — पहले सुरक्षा हटाएँ।",
+      pdfOnly: "यह PDF फ़ाइल नहीं है।",
+      pdfSignedNote: "इस PDF पर पहले से डिजिटल हस्ताक्षर है। सहेजने पर आपके बदलाव अपडेट के रूप में जोड़े जाते हैं, इसलिए मौजूदा हस्ताक्षर जस का तस रहता है — लेकिन PDF व्यूअर दिखाएँगे कि हस्ताक्षर के बाद दस्तावेज़ बदला गया।",
       libsMissing: "pdf.js, pdf-lib या फ़ॉन्ट इंजन लोड नहीं हो सका। पहली बार खोलने पर इंटरनेट कनेक्शन चाहिए।",
       padEmpty: "अभी कुछ नहीं बनाया गया।", noStrokes: "कोई लकीर नहीं मिली।",
       drawApplied: "हस्ताक्षर लागू हो गया।", pngApplied: "PNG लागू हो गया।",
@@ -1883,6 +2008,7 @@
       fontNoGlyphs: "इस फ़ॉन्ट में इन अक्षरों के ग्लिफ़ नहीं हैं: {chars}",
       fontEmbedFail: "दस्तावेज़ फ़ॉन्ट एम्बेड नहीं हो सका: {msg}",
       fontkitMissing: "फ़ॉन्ट इंजन लोड नहीं हुआ, दस्तावेज़ फ़ॉन्ट एम्बेड नहीं हो सकते।",
+      fontRestoreLost: "एक दस्तावेज़ फ़ॉन्ट पुनर्स्थापित नहीं हो सका — संबंधित टेक्स्ट अब Helvetica में है।",
       stepCrypto: "डिजिटल हस्ताक्षर",
       cryptoCreate: "प्रमाणपत्र बनाएँ", cryptoImport: ".p12/.pfx आयात करें",
       cryptoName: "प्रमाणपत्र पर नाम", cryptoNamePh: "जैसे Jane Doe",
@@ -1905,7 +2031,12 @@
       cryptoUnlocked: "कुंजी अनलॉक हुई।",
       cryptoRemoved: "प्रमाणपत्र हटाया गया।",
       cryptoGenFail: "प्रमाणपत्र नहीं बन सका।",
-      cryptoUnavailable: "क्रिप्टो इंजन लोड नहीं हुआ।"
+      cryptoUnavailable: "क्रिप्टो इंजन लोड नहीं हुआ।",
+      cryptoPassShort: "पासफ़्रेज़ में कम से कम {n} अक्षर होने चाहिए।",
+      cryptoRemoveConfirm: "प्रमाणपत्र और उसकी निजी कुंजी इस ब्राउज़र से हटाएँ? इसे पूर्ववत नहीं किया जा सकता।",
+      cryptoKeyUnsupported: "यह प्रमाणपत्र असमर्थित कुंजी प्रकार का उपयोग करता है। RSA और ECDSA (P-256, P-384, P-521) समर्थित हैं।",
+      cryptoCertBroken: "सहेजा गया प्रमाणपत्र क्षतिग्रस्त है। इसे हटाकर नया बनाएँ।",
+      cryptoInsecure: "डिजिटल हस्ताक्षर के लिए सुरक्षित पेज चाहिए — फ़ाइल सीधे या https से खोलें।"
     },
     ar: {
       claim: "يعمل بالكامل داخل متصفحك. ملفك لا يغادر هذا الحاسوب أبداً.",
@@ -1926,6 +2057,9 @@
       emptyTitle: "لا يوجد مستند بعد", emptyBody: "اختر ملف PDF من الجانب للبدء.",
       loading: "جارٍ التحميل…", pagesLoaded: "{name} — {n} صفحة", pageLoaded: "{name} — صفحة واحدة",
       openFailed: "تعذر فتح الملف: {msg}", renderFailed: "تعذر عرض الصفحة: {msg}",
+      pdfEncrypted: "ملف PDF هذا مشفّر. لا يمكن تحرير ملفات PDF المشفّرة أو المحمية بكلمة مرور هنا — أزل الحماية أولاً.",
+      pdfOnly: "هذا ليس ملف PDF.",
+      pdfSignedNote: "ملف PDF هذا موقّع رقمياً بالفعل. عند الحفظ تُضاف تعديلاتك كتحديث فيبقى التوقيع الحالي سليماً — لكن برامج عرض PDF ستُظهر أن المستند عُدّل بعد توقيعه.",
       libsMissing: "تعذر تحميل pdf.js أو pdf-lib أو محرك الخطوط. فتح الملف لأول مرة يحتاج إلى اتصال بالإنترنت.",
       padEmpty: "لم ترسم شيئاً بعد.", noStrokes: "لم يُعثر على خطوط.",
       drawApplied: "تم تطبيق التوقيع.", pngApplied: "تم تطبيق ملف PNG.",
@@ -1943,6 +2077,7 @@
       fontNoGlyphs: "هذا الخط ينقصه محارف: {chars}",
       fontEmbedFail: "تعذّر تضمين خط المستند: {msg}",
       fontkitMissing: "تعذّر تحميل محرك الخطوط، لذا لا يمكن تضمين خطوط المستند.",
+      fontRestoreLost: "تعذّرت استعادة أحد خطوط المستند — النص المعني يستخدم الآن Helvetica.",
       stepCrypto: "التوقيع الرقمي",
       cryptoCreate: "إنشاء شهادة", cryptoImport: "استيراد .p12/.pfx",
       cryptoName: "الاسم في الشهادة", cryptoNamePh: "مثل Jane Doe",
@@ -1965,7 +2100,12 @@
       cryptoUnlocked: "تم فتح المفتاح.",
       cryptoRemoved: "تمت إزالة الشهادة.",
       cryptoGenFail: "تعذّر إنشاء الشهادة.",
-      cryptoUnavailable: "تعذّر تحميل محرك التشفير."
+      cryptoUnavailable: "تعذّر تحميل محرك التشفير.",
+      cryptoPassShort: "يجب ألا تقل عبارة المرور عن {n} أحرف.",
+      cryptoRemoveConfirm: "إزالة الشهادة ومفتاحها الخاص من هذا المتصفح؟ لا يمكن التراجع عن ذلك.",
+      cryptoKeyUnsupported: "تستخدم هذه الشهادة نوع مفتاح غير مدعوم. المدعوم: RSA وECDSA (P-256 وP-384 وP-521).",
+      cryptoCertBroken: "الشهادة المحفوظة تالفة. أزلها وأنشئ شهادة جديدة.",
+      cryptoInsecure: "يتطلب التوقيع الرقمي صفحة آمنة — افتح الملف مباشرة أو عبر https."
     }
   };
 
@@ -1987,6 +2127,7 @@
   var pdfDoc = null;         // pdf.js document driving the preview
   var originalBytes = null;  // untouched bytes of the source file, for pdf-lib
   var originalName = "document.pdf";
+  var docSigned = false;     // the file already carries a digital signature
   var pageTotal = 0;
   var pageNow = 1;
   var zoom = 1;            // multiplier on top of the fit-to-stage scale
@@ -2009,10 +2150,13 @@
   var selectedText = null;   // id of the item the text pane is editing
   var textSeq = 0;
 
-  // Fonts lifted out of the document itself, keyed by pdf.js loadedName.
-  var docFonts = {};         // -> { label, data, cssFam, faceBad, kf, kfBad, chars }
+  // Fonts lifted out of the document itself, keyed by a hash of their bytes
+  // (see fontId) — the same key after a reload, unlike pdf.js's loadedName.
+  var docFonts = {};         // -> { label, data, cssFam, faceBad, kf, kfBad, chars, fits }
   var docFontNames = {};     // every font the text layer references -> { label, chars }
-  var pageFontBest = {};     // page -> loadedName of the font carrying the most text
+  var fontIdOf = {};         // pdf.js loadedName -> font id, for this document load
+  var fontPagesDone = {};    // page -> "busy" or true once its fonts were collected
+  var pageFontBest = {};     // page -> id of the font carrying the most text
   var fontAutoPicked = false; // true once the picker jumped to a document font
   var faceSeq = 0;           // counter for generated CSS font-family names
 
@@ -2045,6 +2189,16 @@
     node.className = "status" + (tone ? " " + tone : "");
   }
 
+  // Errors that already carry a complete, translatable message. Status
+  // lines show them as they are instead of prefixing them a second time.
+  function failure(key, vars) {
+    var e = new Error(t(key, vars));
+    e.i18n = { key: key, vars: vars };
+    return e;
+  }
+
+  function errText(err) { return err && err.message ? err.message : String(err); }
+
   // ===========================================================================
   // Language
   // ===========================================================================
@@ -2069,6 +2223,7 @@
       titleNodes[q].setAttribute("title", t(titleNodes[q].getAttribute("data-i18n-title")));
     }
     rebuildFontSelect();
+    paintCertName();
     el("pageCount").textContent = pageTotal ? t("pageOf", { n: pageTotal }) : "—";
 
     for (var id in statusState) {
@@ -2193,25 +2348,24 @@
           return import(address).then(function (ns) { globalThis.pdfjsWorker = ns; });
         }
         pdfjsLib.GlobalWorkerOptions.workerSrc = address;
-      })
-      .catch(function () {
-        // Last resort: let pdf.js fetch the worker from the CDN itself. That
-        // does produce a request when the first PDF is opened, but the tool
-        // stays usable.
-        pdfjsLib.GlobalWorkerOptions.workerSrc = WORKER_URL;
       });
+    // Deliberately no fallback to the bare CDN URL: a failed integrity check
+    // is the very case SRI exists for, and letting pdf.js fetch the worker on
+    // its own would run exactly that unverified code. No verified worker, no
+    // PDF — the failure is reported below.
   });
 
   // pdf-lib, fontkit and node-forge are classic scripts and are ready now.
-  // pdf.js resolves asynchronously, so its failure is reported from pdfjsReady.
-  if (typeof PDFLib === "undefined") {
+  // pdf.js and its worker resolve asynchronously; workerReady rejects when
+  // either fails, so one handler covers both.
+  var libsFailed = false;
+  function reportLibsMissing() {
+    libsFailed = true;
     say("statusPdf", "libsMissing", null, "bad");
     pdfInput.disabled = true;
   }
-  pdfjsReady.catch(function () {
-    say("statusPdf", "libsMissing", null, "bad");
-    pdfInput.disabled = true;
-  });
+  if (typeof PDFLib === "undefined") reportLibsMissing();
+  workerReady.catch(reportLibsMissing);
 
   // ===========================================================================
   // Step 1: load the PDF
@@ -2226,19 +2380,35 @@
 
   function openPdf(bytes, name) {
     var seq = ++loadSeq;
-    originalBytes = bytes;
-    originalName = name || "document.pdf";
     // pdf.js takes ownership of the buffer it is given, so hand it a copy.
     var copy = bytes.slice();
+    var task = null, doc = null;
+    // A document that is not going to be shown frees its worker again. pdf.js
+    // 6 destroys through the loading task — the document proxy has no destroy()
+    // — and a load that fails outright never produces a proxy at all.
+    function drop() { if (task) task.destroy().catch(function () {}); }
     return workerReady.then(function () {
       // fontExtraProperties keeps the raw font bytes on each font object so the
       // document's own fonts can be lifted for the text tool and re-embedded on
       // export. pdf.js 6.x removed the eval-based glyph compiler that was
       // CVE-2024-4367 in 3.x, so no isEvalSupported guard is needed any more.
-      return pdfjsLib.getDocument({ data: copy, fontExtraProperties: true }).promise;
-    }).then(function (doc) {
-      if (seq !== loadSeq) return false;
+      task = pdfjsLib.getDocument({ data: copy, fontExtraProperties: true });
+      return task.promise;
+    }).then(function (d) {
+      doc = d;
+      return doc.getMetadata();
+    }).then(function (meta) {
+      if (seq !== loadSeq) { drop(); return false; }
+      var info = (meta && meta.info) || {};
+      // An owner password only restricts permissions, so pdf.js opens such a
+      // file without asking — but pdf-lib cannot decrypt it, and whatever it
+      // appended would be unreadable in the still-encrypted result. Refuse the
+      // file now instead of producing a broken one at save time.
+      if (info.EncryptFilterName) throw failure("pdfEncrypted");
       pdfDoc = doc;
+      originalBytes = bytes;
+      originalName = name || "document.pdf";
+      docSigned = !!info.IsSignaturesPresent;
       pageTotal = doc.numPages;
       pageNow = 1;
       geometry = {};
@@ -2251,8 +2421,12 @@
       textSeq = 0;
       docFonts = {};
       docFontNames = {};
+      fontIdOf = {};
+      fontPagesDone = {};
       pageFontBest = {};
+      fontAutoPicked = false;
       rebuildFontSelect();
+      el("signedNote").hidden = !docSigned;
 
       pageSelect.innerHTML = "";
       for (var i = 1; i <= pageTotal; i++) {
@@ -2270,31 +2444,46 @@
           { name: originalName, n: pageTotal }, "good");
       return drawPage().then(function () { return true; });
     }).catch(function (err) {
+      if (!doc || doc !== pdfDoc) drop();   // never the document on screen
       if (seq !== loadSeq) return false;
-      pdfDoc = null;
-      originalBytes = null;
-      sheet.classList.remove("on");
-      empty.style.display = "";
-      say("statusPdf", "openFailed", { msg: err && err.message ? err.message : String(err) }, "bad");
+      // pdf.js asks for a password when the file needs one just to open.
+      if (err && err.name === "PasswordException") err = failure("pdfEncrypted");
+      // A document that was already open stays open — only the new file failed.
+      if (libsFailed) say("statusPdf", "libsMissing", null, "bad");
+      else if (err && err.i18n) say("statusPdf", err.i18n.key, err.i18n.vars, "bad");
+      else say("statusPdf", "openFailed", { msg: errText(err) }, "bad");
       refreshControls();
       return false;
     });
   }
 
-  pdfInput.addEventListener("change", function () {
-    var file = pdfInput.files && pdfInput.files[0];
-    if (!file) return;
+  // Shared by the file picker and drag-and-drop. The check looks at the
+  // bytes, not the name: a PDF saved without extension still opens.
+  function openPickedFile(file) {
+    if (!file || libsFailed) return;
     // Set before any async work so a late session restore can tell the
     // user's own pick apart from the stored document it is about to load.
     userPickedFile = true;
     say("statusPdf", "loading");
     file.arrayBuffer().then(function (buffer) {
-      return openPdf(new Uint8Array(buffer), file.name);
+      var bytes = new Uint8Array(buffer);
+      if (indexOfBytes(bytes, "%PDF-", 0, 1024) < 0) {
+        say("statusPdf", "pdfOnly", null, "bad");
+        return false;
+      }
+      return openPdf(bytes, file.name);   // reports its own failures
+    }, function () {
+      say("statusPdf", "readFailed", null, "bad");
+      return false;
     }).then(function (ok) {
       if (ok) persist();
-    }).catch(function () {
-      say("statusPdf", "readFailed", null, "bad");
     });
+  }
+
+  pdfInput.addEventListener("change", function () {
+    openPickedFile(pdfInput.files && pdfInput.files[0]);
+    // Picking the same file again must fire "change" again.
+    pdfInput.value = "";
   });
 
   // ===========================================================================
@@ -2342,7 +2531,7 @@
   function writeSession() {
     if (!originalBytes) return;
     idbPut({
-      v: 1,
+      v: 2,
       name: originalName,
       pdf: originalBytes,
       sigPng: sigPng,
@@ -2352,8 +2541,22 @@
       textSeq: textSeq,
       selectedText: selectedText,
       page: pageNow,
-      zoom: zoomLive
+      zoom: zoomLive,
+      fonts: sessionFonts()
     });
+  }
+
+  // The document fonts the texts use travel with the session: after a
+  // reload a text may sit on a page that has not been rendered yet, whose
+  // fonts pdf.js has therefore not handed over.
+  function sessionFonts() {
+    var out = {};
+    texts.forEach(function (it) {
+      if (it.fontKey.indexOf("doc:") !== 0) return;
+      var id = it.fontKey.slice(4), f = docFonts[id];
+      if (f && !out[id]) out[id] = { label: f.label, data: f.data };
+    });
+    return out;
   }
   // Debounced: drags and keystrokes fire this constantly.
   function persist() {
@@ -2378,6 +2581,22 @@
     placement = s.placement || null;
     texts = Array.isArray(s.texts) ? s.texts : [];
     textSeq = s.textSeq || texts.length;
+    var fonts = s.v >= 2 && s.fonts ? s.fonts : {};
+    Object.keys(fonts).forEach(function (id) {
+      var f = fonts[id];
+      if (!docFonts[id] && f && f.data) docFonts[id] = makeDocFont(f.label, f.data, 0);
+    });
+    // Sessions from before v2 keyed document fonts by pdf.js load order,
+    // which no longer resolves. Switch such texts to a standard font and say
+    // so — never let them export in some other font without a word.
+    var fontLost = false;
+    texts.forEach(function (it) {
+      if (it.fontKey.indexOf("doc:") === 0 && !docFonts[it.fontKey.slice(4)]) {
+        it.fontKey = "std:Helvetica";
+        fontLost = true;
+      }
+    });
+    rebuildFontSelect();
     zoom = typeof s.zoom === "number" ? clamp(s.zoom, ZOOM_MIN, ZOOM_MAX) : 1;
     zoomLive = zoom;
     pendingCenter = null;
@@ -2390,19 +2609,24 @@
     if (s.selectedText != null && textById(s.selectedText)) selectText(s.selectedText);
     refreshControls();
     say("statusPdf", "sessionRestored", null, "good");
+    if (fontLost) say("statusText", "fontRestoreLost", null, "bad");
   }
 
   // "New" drops the whole session: stored record, document, signature,
   // texts — everything returns to the empty start state.
   el("btnNew").addEventListener("click", function () {
     clearTimeout(persistTimer);
-    // A restore answer already in flight must not resurrect what "New" wipes.
+    // A restore answer already in flight must not resurrect what "New" wipes,
+    // and neither may a document that is still loading.
     userPickedFile = true;
+    loadSeq++;
     idbClear();
     if (renderTask) { renderTask.cancel(); renderTask = null; }
     pdfDoc = null;
     originalBytes = null;
     originalName = "document.pdf";
+    docSigned = false;
+    el("signedNote").hidden = true;
     pageTotal = 0;
     pageNow = 1;
     geometry = {};
@@ -2412,6 +2636,8 @@
     textSeq = 0;
     docFonts = {};
     docFontNames = {};
+    fontIdOf = {};
+    fontPagesDone = {};
     pageFontBest = {};
     fontAutoPicked = false;
     sigPng = null;
@@ -2446,6 +2672,35 @@
   // ===========================================================================
   var scratchCanvas = null;   // offscreen buffer for blit renders
 
+  // A viewport at scale 1 is exactly the PDF points of the display space
+  // (getViewport already accounts for /Rotate). pdf.js also scales it by the
+  // page's /UserUnit, so display points are physical points; the export
+  // divides that factor out again to get back to page coordinates.
+  function geomOf(page) {
+    var base = page.getViewport({ scale: 1 });
+    return {
+      dispW: base.width,
+      dispH: base.height,
+      rotation: ((page.rotate % 360) + 360) % 360,
+      view: page.view.slice(),   // [x1, y1, x2, y2] of the CropBox, unrotated
+      unit: page.userUnit || 1
+    };
+  }
+
+  // Geometry of any page, rendered or not. A restored session can hold
+  // texts and the signature on pages this visit never showed, and the
+  // export needs the geometry of every one of them. doc pins the document
+  // a save started with, should another one be opened meanwhile.
+  function pageGeometry(n, doc) {
+    doc = doc || pdfDoc;
+    if (doc === pdfDoc && geometry[n]) return Promise.resolve(geometry[n]);
+    return doc.getPage(n).then(function (page) {
+      var g = geomOf(page);
+      if (doc === pdfDoc) geometry[n] = g;
+      return g;
+    });
+  }
+
   function drawPage(blit) {
     if (!pdfDoc) return Promise.resolve();
 
@@ -2455,16 +2710,7 @@
     }
 
     return pdfDoc.getPage(pageNow).then(function (page) {
-      // A viewport at scale 1 is exactly the PDF points of the display space
-      // (getViewport already accounts for /Rotate).
-      var base = page.getViewport({ scale: 1 });
-
-      geometry[pageNow] = {
-        dispW: base.width,
-        dispH: base.height,
-        rotation: ((page.rotate % 360) + 360) % 360,
-        view: page.view.slice()   // [x1, y1, x2, y2] of the CropBox, unrotated
-      };
+      var g = geometry[pageNow] = geomOf(page);
 
       collectFonts(page);
 
@@ -2472,8 +2718,8 @@
       // signature line is before you can put a signature on it. The zoom
       // factor rides on top of that fit.
       var stage = el("stage");
-      var fit = Math.min((stage.clientWidth - 64) / base.width,
-                         (stage.clientHeight - 64) / base.height);
+      var fit = Math.min((stage.clientWidth - 64) / g.dispW,
+                         (stage.clientHeight - 64) / g.dispH);
       var scale = Math.min(Math.max(fit * zoom, 0.15), 10);
       var viewport = page.getViewport({ scale: scale });
       var dpr = window.devicePixelRatio || 1;
@@ -2686,12 +2932,34 @@
     persist();
   }
 
-  // Plain wheel zooms around the pointer — like a map, the document under
+  // A mouse wheel zooms, a trackpad scrolls. Ctrl/⌘+wheel and pinch (which
+  // browsers report as Ctrl+wheel) always zoom, Shift+wheel always scrolls
+  // sideways. Plain wheel events carry no device type, so a gesture is
+  // judged by its first event and keeps that reading until it pauses —
+  // momentum scrolling must not flip into zooming halfway.
+  var wheelGesture = { at: 0, zoom: true };
+  function wheelZooms(ev) {
+    if (ev.ctrlKey || ev.metaKey) return true;
+    if (ev.shiftKey) return false;
+    var now = Date.now(), fresh = now - wheelGesture.at > 300;
+    wheelGesture.at = now;
+    if (fresh) {
+      // deltaMode goes first: Firefox reports notched wheels in lines only
+      // when it is read before the deltas.
+      if (ev.deltaMode !== 0) wheelGesture.zoom = true;             // line/page steps: a notched wheel
+      else if (ev.deltaX !== 0) wheelGesture.zoom = false;          // sideways motion: a trackpad
+      else if (ev.wheelDeltaY) wheelGesture.zoom = ev.wheelDeltaY % 120 === 0;  // notches come in 120s
+      else wheelGesture.zoom = true;
+    }
+    return wheelGesture.zoom;
+  }
+
+  // Wheel zoom works around the pointer — like a map, the document under
   // the cursor stays put. Continuous, fine-grained: every pixel of wheel
   // delta bends the scale a little instead of jumping in fixed steps.
-  // A trackpad pinch reports as Ctrl+wheel and lands here too.
   el("stage").addEventListener("wheel", function (ev) {
-    if (!pdfDoc) return;
+    // Not a zoom: leave the event alone and let the stage scroll natively.
+    if (!pdfDoc || !wheelZooms(ev)) return;
     ev.preventDefault();
     var delta = ev.deltaY * (ev.deltaMode === 1 ? 33 : ev.deltaMode === 2 ? 400 : 1);
     var sheet = el("sheet");
@@ -2863,8 +3131,7 @@
   // ===========================================================================
   // Step 2b: upload a PNG
   // ===========================================================================
-  pngInput.addEventListener("change", function () {
-    var file = pngInput.files && pngInput.files[0];
+  function usePickedPng(file) {
     if (!file) return;
     if (file.type !== "image/png" && !/\.png$/i.test(file.name)) {
       say("statusSignature", "pngOnly", null, "bad");
@@ -2874,6 +3141,59 @@
     reader.onload = function () { useSignature(reader.result, "pngApplied"); };
     reader.onerror = function () { say("statusSignature", "readFailed", null, "bad"); };
     reader.readAsDataURL(file);
+  }
+
+  pngInput.addEventListener("change", function () {
+    usePickedPng(pngInput.files && pngInput.files[0]);
+    pngInput.value = "";
+  });
+
+  // ===========================================================================
+  // Drag-and-drop: a PDF dropped on the document card or the page area opens
+  // like a picked one, a PNG dropped on the upload card becomes the
+  // signature. A file dropped anywhere else is swallowed — the browser would
+  // otherwise navigate to it and take the whole session with it.
+  // ===========================================================================
+  function isFileDrag(ev) {
+    var types = ev.dataTransfer && ev.dataTransfer.types;
+    return !!types && Array.prototype.indexOf.call(types, "Files") >= 0;
+  }
+
+  function dropTarget(node, onFile) {
+    var depth = 0;   // dragenter/leave also fire for every child crossed
+    node.addEventListener("dragenter", function (ev) {
+      if (!isFileDrag(ev)) return;
+      depth++;
+      node.classList.add("drop");
+    });
+    node.addEventListener("dragleave", function () {
+      if (depth > 0 && --depth === 0) node.classList.remove("drop");
+    });
+    node.addEventListener("dragover", function (ev) {
+      if (!isFileDrag(ev)) return;
+      ev.preventDefault();
+      ev.dataTransfer.dropEffect = "copy";
+    });
+    node.addEventListener("drop", function (ev) {
+      if (!isFileDrag(ev)) return;
+      ev.preventDefault();
+      depth = 0;
+      node.classList.remove("drop");
+      onFile(ev.dataTransfer.files && ev.dataTransfer.files[0]);
+    });
+  }
+
+  dropTarget(pdfInput.closest(".filepick"), openPickedFile);
+  dropTarget(el("stage"), openPickedFile);
+  dropTarget(pngInput.closest(".filepick"), usePickedPng);
+
+  window.addEventListener("dragover", function (ev) {
+    if (!isFileDrag(ev) || ev.defaultPrevented) return;   // a drop target took it
+    ev.preventDefault();
+    ev.dataTransfer.dropEffect = "none";
+  });
+  window.addEventListener("drop", function (ev) {
+    if (isFileDrag(ev)) ev.preventDefault();
   });
 
   // ===========================================================================
@@ -3050,14 +3370,53 @@
 
   function selItem() { return selectedText == null ? null : textById(selectedText); }
 
+  // A document font's key is a hash of its bytes. pdf.js's own loadedName
+  // (g_d0_f3) counts documents per tab and fonts in render order, so after a
+  // reload the same name points at another font or at none; the bytes are
+  // the same every time. 64 bits plus the length — collisions are moot.
+  function fontId(bytes) {
+    var h1 = 0xDEADBEEF ^ bytes.length, h2 = 0x41C6CE57 ^ bytes.length;
+    for (var i = 0; i < bytes.length; i++) {
+      h1 = Math.imul(h1 ^ bytes[i], 2654435761);
+      h2 = Math.imul(h2 ^ bytes[i], 1597334677);
+    }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    return "f" + ("0000000" + (h2 >>> 0).toString(16)).slice(-8) +
+           ("0000000" + (h1 >>> 0).toString(16)).slice(-8) + "." + bytes.length;
+  }
+
+  function makeDocFont(name, data, chars) {
+    var f = {
+      label: String(name).replace(/^[A-Z]{6}\+/, ""),
+      data: data,
+      cssFam: null, faceBad: false,
+      kf: null, kfBad: false,
+      chars: chars, fits: null
+    };
+    // fontkit mirrors the parse pdf-lib does on export. If the font is
+    // not readable, mark it now so it shows up disabled in the picker.
+    if (typeof fontkit !== "undefined") {
+      try { f.kf = fontkit.create(data); }
+      catch (e) { f.kfBad = true; }
+    }
+    return f;
+  }
+
   // Collect the fonts this page typesets, straight out of pdf.js. Fonts the
-  // text layer merely references but never draws stay unlisted.
+  // text layer merely references but never draws stay unlisted. Once per
+  // page and document: re-renders (zoom, resize) must not count twice.
   function collectFonts(page) {
+    var n = page.pageNumber, doc = pdfDoc;
+    if (fontPagesDone[n]) return;
+    fontPagesDone[n] = "busy";
     // getTextContent alone leaves commonObjs unresolved; the operator list
     // pass is what makes the FontFaceObject data readable.
     page.getOperatorList().then(function () {
       return page.getTextContent();
     }).then(function (content) {
+      if (doc !== pdfDoc) return;   // another document took over meanwhile
+      fontPagesDone[n] = true;
       var usage = {};   // loadedName -> characters set on this page
       for (var i = 0; i < content.items.length; i++) {
         var it = content.items[i];
@@ -3065,8 +3424,6 @@
       }
       var changed = false, best = null, bestN = 0;
       for (var name in usage) {
-        if (usage[name] > bestN) { bestN = usage[name]; best = name; }
-        if (docFonts[name]) { docFonts[name].chars += usage[name]; continue; }
         var face = null;
         try { face = page.commonObjs.get(name); } catch (e) {}
         // Track the name for the note either way — a font we cannot lift
@@ -3080,26 +3437,18 @@
         // No font data means a non-embedded standard font: nothing to lift
         // out, the Standard section of the picker covers those.
         if (!face || !face.data) continue;
-        var f = {
-          label: String(face.name || name).replace(/^[A-Z]{6}\+/, ""),
-          data: face.data,
-          cssFam: null, faceBad: false,
-          kf: null, kfBad: false,
-          chars: usage[name]
-        };
-        // fontkit mirrors the parse pdf-lib does on export. If the font is
-        // not readable, mark it now so it shows up disabled in the picker.
-        if (typeof fontkit !== "undefined") {
-          try { f.kf = fontkit.create(face.data); }
-          catch (e) { f.kfBad = true; }
-        }
-        docFonts[name] = f;
+        var id = fontIdOf[name] || (fontIdOf[name] = fontId(face.data));
+        if (usage[name] > bestN) { bestN = usage[name]; best = id; }
+        if (docFonts[id]) docFonts[id].chars += usage[name];
+        else docFonts[id] = makeDocFont(face.name || name, face.data, usage[name]);
         changed = true;
       }
-      if (best) pageFontBest[page.pageNumber || pageNow] = best;
+      if (best) pageFontBest[n] = best;
       if (changed) rebuildFontSelect();
     }).catch(function () {
-      // Pages without a text layer simply offer the standard fonts.
+      // Pages without a text layer simply offer the standard fonts; a page
+      // whose collection failed may try again on its next render.
+      if (doc === pdfDoc) delete fontPagesDone[n];
     });
   }
 
@@ -3130,12 +3479,13 @@
       gs.appendChild(o2);
     }
     fontSel.appendChild(gs);
-    // The first time a document's own fonts show up, jump the picker onto
-    // the most-used one — new text should match the document by default.
-    // Afterwards the user's pick wins, even when more fonts arrive later.
-    if (!fontAutoPicked && names.length) {
+    // When a document's own fonts show up, jump the picker onto the most-used
+    // one that can set new text — new text should match the document by
+    // default. Only a document font ends that phase (a usable one may still
+    // turn up on a later page), and the user's own pick always wins.
+    if (!fontAutoPicked && names.length && selectedText == null) {
       fontSel.value = preferredFontKey();
-      fontAutoPicked = true;
+      if (fontSel.value.indexOf("doc:") === 0) fontAutoPicked = true;
     } else {
       fontSel.value = prev;
       // prev is "" on the first build and whenever the old pick vanished —
@@ -3162,13 +3512,28 @@
     node.hidden = false;
   }
 
-  // The document font that carries the most text, preferring this page.
+  // Embedded fonts are usually subsets holding only the glyphs the document
+  // itself uses — often not even every letter. A document font is only a
+  // sensible default for new text when it covers the basic Latin alphabet
+  // and the digits; otherwise nearly every new text would fail its glyph check.
+  var FIT_PROBE = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  function fitsNewText(f) {
+    if (f.fits == null) {
+      f.fits = !!f.kf && !f.kfBad;
+      for (var i = 0; f.fits && i < FIT_PROBE.length; i++) {
+        f.fits = f.kf.hasGlyphForCodePoint(FIT_PROBE.charCodeAt(i));
+      }
+    }
+    return f.fits;
+  }
+
+  // The usable document font that carries the most text, preferring this page.
   function preferredFontKey() {
     var best = pageFontBest[pageNow];
-    if (best && docFonts[best] && !docFonts[best].kfBad) return "doc:" + best;
-    var top = null, n = 0;
+    if (best && docFonts[best] && fitsNewText(docFonts[best])) return "doc:" + best;
+    var top = null, n = -1;
     for (var k in docFonts) {
-      if (!docFonts[k].kfBad && docFonts[k].chars > n) { n = docFonts[k].chars; top = k; }
+      if (docFonts[k].chars > n && fitsNewText(docFonts[k])) { n = docFonts[k].chars; top = k; }
     }
     return top ? "doc:" + top : "std:Helvetica";
   }
@@ -3251,7 +3616,8 @@
     var kf = null;
     if (isDoc) {
       var f = docFonts[fontKey.slice(4)];
-      if (!f) return [fontKey];
+      // An unknown font is not a glyph problem; the export names it properly.
+      if (!f) return [];
       kf = f.kf;
       if (!kf && !f.kfBad && typeof fontkit !== "undefined") {
         try { kf = f.kf = fontkit.create(f.data); } catch (e) { f.kfBad = true; }
@@ -3368,7 +3734,12 @@
       text: txt, fontKey: fontSel.value, size: size, color: colorInput.value
     };
     texts.push(it);
-    selectText(it.id);
+    // The pane goes back to drafting. Left selected, the new text would be
+    // what the next keystrokes rewrite — typing the following text would
+    // silently replace this one.
+    selectedText = null;
+    paintTexts();
+    refreshControls();
     say("statusText", "placedOn", { n: pageNow }, "good");
     glyphWarn(it);
     persist();
@@ -3432,10 +3803,15 @@
   });
 
   // ===========================================================================
-  // Digital signature — a real PKCS#7/CMS signature embedded into the file.
+  // Digital signature — a real CMS (PKCS#7) signature embedded into the file.
   // The certificate lives in its own IndexedDB so "New" wipes the document
-  // session but keeps the user's identity. The private key stays encrypted
-  // at rest and only exists in memory after unlocking.
+  // session but keeps the user's identity. The private key is stored sealed
+  // (AES-256-GCM under PBKDF2-HMAC-SHA-256, 600 000 rounds) and in memory it
+  // only exists as a non-extractable WebCrypto key, after unlocking.
+  // forge reads .p12 files and issues certificates. The CMS structure itself
+  // is assembled here from raw DER: forge re-encodes certificate names on the
+  // way and UTF-8-encodes non-ASCII ones a second time, so its signatures name
+  // a signer that does not exist and no validator can check them.
   // ===========================================================================
   var cryptoStore = (function () {
     var ready = new Promise(function (resolve) {
@@ -3470,9 +3846,378 @@
     };
   })();
 
-  var cryptoCert = null;   // {type:"gen"|"p12", label, certPem, chain:[pem], keyData}
-  var cryptoKey = null;    // forge private key — present only while unlocked
+  var subtle = window.crypto && window.crypto.subtle;   // secure contexts only
   var forgeOk = typeof forge !== "undefined";
+  var cryptoOk = forgeOk && !!subtle;
+  var cryptoCert = null;   // stored identity record, see cryptoAdopt
+  var cryptoView = null;   // what signing needs from that record's certificate
+  var cryptoKey = null;    // WebCrypto signing key — present only while unlocked
+  var PASS_MIN = 8;
+  var KDF_ROUNDS = 600000; // OWASP's current figure for PBKDF2-HMAC-SHA-256
+
+  var OID = {
+    rsa: "1.2.840.113549.1.1.1", ec: "1.2.840.10045.2.1",
+    p256: "1.2.840.10045.3.1.7", p384: "1.3.132.0.34", p521: "1.3.132.0.35",
+    cn: "2.5.4.3", org: "2.5.4.10",
+    data: "1.2.840.113549.1.7.1", signedData: "1.2.840.113549.1.7.2",
+    contentType: "1.2.840.113549.1.9.3", messageDigest: "1.2.840.113549.1.9.4",
+    signingTime: "1.2.840.113549.1.9.5", signingCertV2: "1.2.840.113549.1.9.16.2.47",
+    sha256: "2.16.840.1.101.3.4.2.1", sha384: "2.16.840.1.101.3.4.2.2",
+    sha512: "2.16.840.1.101.3.4.2.3",
+    ecdsa256: "1.2.840.10045.4.3.2", ecdsa384: "1.2.840.10045.4.3.3",
+    ecdsa512: "1.2.840.10045.4.3.4"
+  };
+
+  // Signing parameters per key type. RSA signs PKCS#1 v1.5 over SHA-256 like
+  // every PDF signer does; ECDSA matches the hash to the curve's strength.
+  var SIG = {
+    "RSA":   { hash: "SHA-256", digest: OID.sha256, alg: OID.rsa, nullParams: true,
+               key: { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, sign: { name: "RSASSA-PKCS1-v1_5" } },
+    "P-256": { hash: "SHA-256", digest: OID.sha256, alg: OID.ecdsa256, coord: 32,
+               key: { name: "ECDSA", namedCurve: "P-256" }, sign: { name: "ECDSA", hash: "SHA-256" } },
+    "P-384": { hash: "SHA-384", digest: OID.sha384, alg: OID.ecdsa384, coord: 48,
+               key: { name: "ECDSA", namedCurve: "P-384" }, sign: { name: "ECDSA", hash: "SHA-384" } },
+    "P-521": { hash: "SHA-512", digest: OID.sha512, alg: OID.ecdsa512, coord: 66,
+               key: { name: "ECDSA", namedCurve: "P-521" }, sign: { name: "ECDSA", hash: "SHA-512" } }
+  };
+
+  // --- bytes -----------------------------------------------------------------
+  function ascii(s) {
+    var u = new Uint8Array(s.length);
+    for (var i = 0; i < s.length; i++) u[i] = s.charCodeAt(i);
+    return u;
+  }
+
+  // forge speaks "binary strings" (one char per byte), WebCrypto speaks bytes.
+  function binToBytes(bin) {
+    var u = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i) & 0xFF;
+    return u;
+  }
+
+  function bytesToBin(u) {
+    var s = "";
+    for (var i = 0; i < u.length; i += 32768) s += String.fromCharCode.apply(null, u.subarray(i, i + 32768));
+    return s;
+  }
+
+  function toHex(u) {
+    var s = "";
+    for (var i = 0; i < u.length; i++) s += (u[i] < 16 ? "0" : "") + u[i].toString(16);
+    return s;
+  }
+
+  function sameBytes(a, b) {
+    if (a.length !== b.length) return false;
+    for (var i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+    return true;
+  }
+
+  function pemToDer(pem) {
+    return binToBytes(atob(pem.replace(/-----[^-]+-----/g, "").replace(/\s+/g, "")));
+  }
+
+  // Position of an ASCII string in a byte array, searching [from, to).
+  function indexOfBytes(buf, str, from, to) {
+    var n = str.length, first = str.charCodeAt(0);
+    var last = Math.min(to == null ? buf.length : to, buf.length) - n;
+    outer: for (var i = from || 0; i <= last; i++) {
+      if (buf[i] !== first) continue;
+      for (var k = 1; k < n; k++) if (buf[i + k] !== str.charCodeAt(k)) continue outer;
+      return i;
+    }
+    return -1;
+  }
+
+  // --- DER, only as much as CMS needs -----------------------------------------
+  // The TLV at pos: its tag, where its content starts and ends, its full span.
+  function derAt(buf, pos) {
+    if (pos + 2 > buf.length) throw new Error("truncated DER");
+    var len = buf[pos + 1], p = pos + 2;
+    if (len & 0x80) {
+      var n = len & 0x7F;
+      if (n < 1 || n > 4) throw new Error("unsupported DER length");
+      for (len = 0; n > 0; n--) len = len * 256 + buf[p++];
+    }
+    if (p + len > buf.length) throw new Error("truncated DER");
+    return { tag: buf[pos], pos: pos, start: p, end: p + len };
+  }
+
+  function derKids(buf, node) {
+    var out = [];
+    for (var p = node.start; p < node.end; p = out[out.length - 1].end) out.push(derAt(buf, p));
+    return out;
+  }
+
+  function derRaw(buf, node) { return buf.subarray(node.pos, node.end); }
+
+  // der(tag, part, ...): one TLV around the concatenated parts.
+  function der(tag) {
+    var parts = Array.prototype.slice.call(arguments, 1), len = 0, i;
+    for (i = 0; i < parts.length; i++) len += parts[i].length;
+    var head = [tag];
+    if (len < 0x80) head.push(len);
+    else {
+      var lb = [];
+      for (var n = len; n > 0; n = Math.floor(n / 256)) lb.unshift(n & 0xFF);
+      head = head.concat([0x80 | lb.length], lb);
+    }
+    var out = new Uint8Array(head.length + len), o = head.length;
+    out.set(head, 0);
+    for (i = 0; i < parts.length; i++) { out.set(parts[i], o); o += parts[i].length; }
+    return out;
+  }
+
+  function derOid(dotted) {
+    var arcs = dotted.split(".").map(Number), body = [arcs[0] * 40 + arcs[1]];
+    for (var i = 2; i < arcs.length; i++) {
+      var v = arcs[i], chunk = [v & 0x7F];
+      for (v = Math.floor(v / 128); v > 0; v = Math.floor(v / 128)) chunk.unshift(0x80 | (v & 0x7F));
+      body = body.concat(chunk);
+    }
+    return der(0x06, body);
+  }
+
+  function isOid(buf, node, dotted) { return !!node && sameBytes(derRaw(buf, node), derOid(dotted)); }
+
+  function curveOf(buf, node) {
+    return isOid(buf, node, OID.p256) ? "P-256" : isOid(buf, node, OID.p384) ? "P-384" :
+           isOid(buf, node, OID.p521) ? "P-521" : null;
+  }
+
+  // What signing needs from a certificate, sliced from its DER. Issuer and
+  // serial go into the signature byte for byte — never re-encoded.
+  function certInfo(cert) {
+    var tbs = derKids(cert, derKids(cert, derAt(cert, 0))[0]);
+    var i = tbs[0].tag === 0xA0 ? 1 : 0;   // [0] version is absent in v1 certificates
+    var spki = derKids(cert, tbs[i + 5]);
+    var alg = derKids(cert, spki[0]);
+    var kind = null, rsaLen = 0;
+    if (isOid(cert, alg[0], OID.rsa)) {
+      kind = "RSA";
+      // RSAPublicKey sits in the BIT STRING, after its unused-bits byte
+      var modulus = derKids(cert, derAt(cert, spki[1].start + 1))[0];
+      rsaLen = modulus.end - modulus.start - (cert[modulus.start] === 0 ? 1 : 0);
+    } else if (isOid(cert, alg[0], OID.ec)) {
+      kind = curveOf(cert, alg[1]);
+    }
+    return {
+      der: cert,
+      serial: derRaw(cert, tbs[i]),
+      issuer: derRaw(cert, tbs[i + 2]),
+      spki: derRaw(cert, tbs[i + 5]),
+      name: nameOf(cert, tbs[i + 4]),
+      kind: kind,
+      rsaLen: rsaLen
+    };
+  }
+
+  // Common name for display, the organisation as fallback — decoded from
+  // whichever string type the certificate uses.
+  function nameOf(buf, name) {
+    var cn = "", org = "";
+    derKids(buf, name).forEach(function (rdn) {
+      derKids(buf, rdn).forEach(function (atv) {
+        var kv = derKids(buf, atv);
+        if (!cn && isOid(buf, kv[0], OID.cn)) cn = derText(buf, kv[1]);
+        else if (!org && isOid(buf, kv[0], OID.org)) org = derText(buf, kv[1]);
+      });
+    });
+    return cn || org;
+  }
+
+  function derText(buf, node) {
+    var b = buf.subarray(node.start, node.end), s = "", i;
+    if (node.tag === 0x0C) return new TextDecoder().decode(b);                // UTF8String
+    if (node.tag === 0x1E) {                                                   // BMPString
+      for (i = 0; i + 1 < b.length; i += 2) s += String.fromCharCode(b[i] << 8 | b[i + 1]);
+      return s;
+    }
+    for (i = 0; i < b.length; i++) s += String.fromCharCode(b[i]);          // Printable, IA5, Teletex
+    return s;
+  }
+
+  // Key type of a PKCS#8 private key, as a SIG entry name.
+  function keyKind(p8) {
+    var alg = derKids(p8, derKids(p8, derAt(p8, 0))[1]);   // privateKeyAlgorithm
+    if (isOid(p8, alg[0], OID.rsa)) return "RSA";
+    if (isOid(p8, alg[0], OID.ec)) return curveOf(p8, alg[1]);
+    return null;
+  }
+
+  // --- keys at rest -----------------------------------------------------------
+  function wrapKeyFor(pass, salt, rounds) {
+    return subtle.importKey("raw", new TextEncoder().encode(pass), "PBKDF2", false, ["deriveKey"])
+      .then(function (base) {
+        return subtle.deriveKey({ name: "PBKDF2", hash: "SHA-256", salt: salt, iterations: rounds },
+                                base, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+      });
+  }
+
+  // Encrypts a PKCS#8 private key under the passphrase, for storage.
+  function sealKey(pkcs8, pass) {
+    var salt = crypto.getRandomValues(new Uint8Array(16));
+    var iv = crypto.getRandomValues(new Uint8Array(12));
+    return wrapKeyFor(pass, salt, KDF_ROUNDS).then(function (k) {
+      return subtle.encrypt({ name: "AES-GCM", iv: iv }, k, pkcs8);
+    }).then(function (data) {
+      return { kdf: "PBKDF2-SHA-256", rounds: KDF_ROUNDS, salt: salt, iv: iv, data: new Uint8Array(data) };
+    });
+  }
+
+  // AES-GCM authenticates: a wrong passphrase rejects instead of yielding junk.
+  function unsealKey(sealed, pass) {
+    return wrapKeyFor(pass, sealed.salt, sealed.rounds).then(function (k) {
+      return subtle.decrypt({ name: "AES-GCM", iv: sealed.iv }, k, sealed.data);
+    }).then(function (p8) { return new Uint8Array(p8); });
+  }
+
+  // Non-extractable: page code can sign while the key is unlocked, but can
+  // never read the key itself out.
+  function signingKey(pkcs8, kind) {
+    return subtle.importKey("pkcs8", pkcs8, SIG[kind].key, false, ["sign"]);
+  }
+
+  // --- identities -------------------------------------------------------------
+  // What signing needs from a stored record. Records from before sealed keys
+  // (v1) carried PEM certificates and read the same way.
+  function identityView(rec) {
+    var info = certInfo(rec.certDer || pemToDer(rec.certPem));
+    if (!info.kind) throw new Error("unsupported key type");
+    return {
+      info: info,
+      chain: rec.chainDer || (rec.chain || []).map(pemToDer),
+      sig: SIG[info.kind],
+      label: rec.label
+    };
+  }
+
+  // RSA-2048 from WebCrypto, the certificate from forge. The name goes in
+  // as UTF8String — forge defaults to PrintableString, which holds neither
+  // umlauts nor any non-Latin script — and the serial is positive, as
+  // RFC 5280 demands: DER integers are signed, so the top bit stays clear.
+  function createIdentity(name, pass) {
+    var p8 = null;
+    return subtle.generateKey({ name: "RSASSA-PKCS1-v1_5", modulusLength: 2048,
+                                publicExponent: new Uint8Array([1, 0, 1]), hash: "SHA-256" },
+                              true, ["sign", "verify"])
+      .then(function (pair) { return subtle.exportKey("pkcs8", pair.privateKey); })
+      .then(function (raw) {
+        p8 = new Uint8Array(raw);
+        var key = forge.pki.privateKeyFromAsn1(forge.asn1.fromDer(bytesToBin(p8)));
+        var cert = forge.pki.createCertificate();
+        cert.publicKey = forge.pki.setRsaPublicKey(key.n, key.e);
+        var serial = forge.random.getBytesSync(16);
+        cert.serialNumber = forge.util.bytesToHex(
+          String.fromCharCode(0x40 | (serial.charCodeAt(0) & 0x3F)) + serial.slice(1));
+        cert.validity.notBefore = new Date(Date.now() - 60000);
+        cert.validity.notAfter = new Date(Date.now() + 10 * 365.25 * 864e5);
+        var attrs = [{ name: "commonName", value: name, valueTagClass: forge.asn1.Type.UTF8 }];
+        cert.setSubject(attrs);
+        cert.setIssuer(attrs);
+        cert.setExtensions([
+          { name: "basicConstraints", cA: false },
+          { name: "keyUsage", digitalSignature: true, nonRepudiation: true },
+          { name: "subjectKeyIdentifier" }
+        ]);
+        cert.sign(key, forge.md.sha256.create());
+        var certDer = binToBytes(forge.asn1.toDer(forge.pki.certificateToAsn1(cert)).getBytes());
+        return Promise.all([sealKey(p8, pass), signingKey(p8, "RSA")]).then(function (r) {
+          return {
+            rec: { v: 2, type: "gen", label: name, certDer: certDer, chainDer: [], sealed: r[0] },
+            key: r[1]
+          };
+        });
+      })
+      .then(function (out) {
+        p8.fill(0);
+        return out;
+      }, function (err) {
+        if (p8) p8.fill(0);
+        throw err;
+      });
+  }
+
+  // Every private key (as PKCS#8) and every certificate (as DER) of a
+  // PKCS#12 file. forge models RSA keys only — EC keys and certificates come
+  // back as raw ASN.1, which is all this needs. Throws on a wrong password.
+  function p12Read(bin, pass) {
+    var p12 = forge.pkcs12.pkcs12FromAsn1(forge.asn1.fromDer(bin), pass);
+    var oids = forge.pki.oids;
+    function bags(type) { return p12.getBags({ bagType: type })[type] || []; }
+    function bytesOf(asn1) { return binToBytes(forge.asn1.toDer(asn1).getBytes()); }
+    return {
+      keys: bags(oids.pkcs8ShroudedKeyBag).concat(bags(oids.keyBag)).map(function (b) {
+        return bytesOf(b.key ? forge.pki.wrapRsaPrivateKey(forge.pki.privateKeyToAsn1(b.key)) : b.asn1);
+      }),
+      certs: bags(oids.certBag).map(function (b) {
+        return bytesOf(b.cert ? forge.pki.certificateToAsn1(b.cert) : b.asn1);
+      })
+    };
+  }
+
+  // Which certificate belongs to the key: sign a nonce and verify it with
+  // each certificate's public key. Works for every key type and needs no
+  // bag attributes.
+  function pairKey(p8, certs) {
+    var kind = null, key = null, nonce = crypto.getRandomValues(new Uint8Array(32));
+    try { kind = keyKind(p8); } catch (e) {}
+    if (!kind) return Promise.reject(failure("cryptoKeyUnsupported"));
+    var s = SIG[kind];
+    return signingKey(p8, kind).catch(function () {
+      throw failure("cryptoKeyUnsupported");
+    }).then(function (k) {
+      key = k;
+      return subtle.sign(s.sign, key, nonce);
+    }).then(function (sig) {
+      return Promise.all(certs.map(function (c) {
+        var info;
+        try { info = certInfo(c); } catch (e) { return false; }
+        if (info.kind !== kind) return false;
+        return subtle.importKey("spki", info.spki, s.key, false, ["verify"]).then(function (pub) {
+          return subtle.verify(s.sign, pub, sig, nonce);
+        }).catch(function () { return false; });
+      }));
+    }).then(function (hits) {
+      var at = hits.indexOf(true);
+      if (at < 0) throw failure("cryptoImportFail");
+      return { key: key, index: at };
+    });
+  }
+
+  // Opens the stored key with the passphrase. v1 records kept it under
+  // forge's PBKDF2-HMAC-SHA-1 with 2048 rounds (or inside the stored .p12):
+  // those are opened the old way once and re-sealed under the current
+  // scheme, so the weak copy is gone for good.
+  function unlockIdentity(pass) {
+    var rec = cryptoCert, view = cryptoView;
+    if (rec.v >= 2) {
+      return unsealKey(rec.sealed, pass).then(function (p8) {
+        return signingKey(p8, view.info.kind).then(function (key) {
+          p8.fill(0);
+          return key;
+        });
+      });
+    }
+    return new Promise(function (resolve) {
+      if (rec.type === "gen") {
+        var k = forge.pki.decryptRsaPrivateKey(rec.keyData, pass);
+        if (!k) throw new Error("wrong passphrase");
+        resolve(binToBytes(forge.asn1.toDer(
+          forge.pki.wrapRsaPrivateKey(forge.pki.privateKeyToAsn1(k))).getBytes()));
+      } else {
+        resolve(p12Read(forge.util.decode64(rec.keyData), pass).keys[0]);
+      }
+    }).then(function (p8) {
+      return Promise.all([sealKey(p8, pass), signingKey(p8, view.info.kind)]).then(function (r) {
+        cryptoCert = { v: 2, type: rec.type, label: rec.label, certDer: view.info.der,
+                       chainDer: view.chain, sealed: r[0] };
+        cryptoStore.put(cryptoCert);
+        p8.fill(0);
+        return r[1];
+      });
+    });
+  }
 
   function cryptoBusy(on, key) {
     ["btnCryptoCreate", "btnCryptoImport", "btnCryptoGen", "btnCryptoImpGo",
@@ -3482,36 +4227,43 @@
     if (key) say("statusCrypto", key);
   }
 
+  function paintCertName() {
+    if (!cryptoCert) return;
+    var suffix = cryptoCert.type === "gen" ? " (" + t("cryptoSelf") + ")" : "";
+    el("cryptoCertName").textContent = t("cryptoCertOk", { name: cryptoCert.label }) + suffix;
+  }
+
   function cryptoPaint() {
     var has = !!cryptoCert;
     el("cryptoSetup").hidden = has;
     el("cryptoReady").hidden = !has;
-    if (!forgeOk) {
-      el("btnCryptoCreate").disabled = true;
-      el("btnCryptoImport").disabled = true;
-      say("statusCrypto", "cryptoUnavailable", null, "bad");
-      return;
-    }
     el("cryptoFormGen").hidden = true;
     el("cryptoFormImp").hidden = true;
-    if (has) {
-      var suffix = cryptoCert.type === "gen" ? " (" + t("cryptoSelf") + ")" : "";
-      el("cryptoCertName").textContent = t("cryptoCertOk", { name: cryptoCert.label }) + suffix;
-      el("cryptoLockRow").hidden = !!cryptoKey;
+    paintCertName();
+    var usable = cryptoOk && !!cryptoView;
+    el("cryptoSign").disabled = !usable;
+    if (!usable) el("cryptoSign").checked = false;
+    el("cryptoLockRow").hidden = !usable || !!cryptoKey;
+    if (!cryptoOk) {
+      el("btnCryptoCreate").disabled = true;
+      el("btnCryptoImport").disabled = true;
+      // forge comes from the CDN; WebCrypto only exists on secure pages
+      say("statusCrypto", forgeOk ? "cryptoInsecure" : "cryptoUnavailable", null, "bad");
+    } else if (has && !cryptoView) {
+      // A certificate that cannot be read — one issued before non-Latin
+      // names were encoded properly, say — can only be removed.
+      say("statusCrypto", "cryptoCertBroken", null, "bad");
     }
     refreshControls();
   }
 
-  function cryptoAdopt(cert, chainPems, label, type, keyData, key) {
-    cryptoCert = {
-      type: type, label: label,
-      certPem: forge.pki.certificateToPem(cert),
-      chain: chainPems, keyData: keyData
-    };
+  function cryptoAdopt(rec, key) {
+    cryptoCert = rec;
+    cryptoView = identityView(rec);
     cryptoKey = key;
-    cryptoStore.put(cryptoCert);
+    cryptoStore.put(rec);
     cryptoPaint();
-    say("statusCrypto", "cryptoCertOk", { name: label }, "good");
+    say("statusCrypto", "cryptoCertOk", { name: rec.label }, "good");
   }
 
   el("btnCryptoCreate").addEventListener("click", function () {
@@ -3531,101 +4283,66 @@
     var name = el("cryptoName").value.trim();
     var pass = el("cryptoPass").value;
     if (!name || !pass) { say("statusCrypto", "cryptoNeedBoth", null, "bad"); return; }
+    if (pass.length < PASS_MIN) { say("statusCrypto", "cryptoPassShort", { n: PASS_MIN }, "bad"); return; }
     cryptoBusy(true, "cryptoWorking");
-    // RSA-2048 keygen in pure JS blocks the thread for a moment — defer so
-    // the busy status can paint first.
-    setTimeout(function () {
-      try {
-        var keys = forge.pki.rsa.generateKeyPair(2048);
-        var cert = forge.pki.createCertificate();
-        cert.publicKey = keys.publicKey;
-        cert.serialNumber = forge.util.bytesToHex(forge.random.getBytesSync(16));
-        cert.validity.notBefore = new Date(Date.now() - 60000);
-        cert.validity.notAfter = new Date(Date.now() + 10 * 365.25 * 864e5);
-        var attrs = [{ name: "commonName", value: name }];
-        cert.setSubject(attrs);
-        cert.setIssuer(attrs);
-        cert.setExtensions([
-          { name: "basicConstraints", cA: false },
-          { name: "keyUsage", digitalSignature: true, nonRepudiation: true },
-          { name: "subjectKeyIdentifier" }
-        ]);
-        cert.sign(keys.privateKey, forge.md.sha256.create());
-        cryptoAdopt(cert, [], name, "gen",
-          forge.pki.encryptRsaPrivateKey(keys.privateKey, pass), keys.privateKey);
-      } catch (e) {
-        say("statusCrypto", "cryptoGenFail", null, "bad");
-      }
-      cryptoBusy(false);
-    }, 50);
+    createIdentity(name, pass).then(function (r) {
+      el("cryptoPass").value = "";   // no passphrase lingers in the page
+      cryptoAdopt(r.rec, r.key);
+    }).catch(function () {
+      say("statusCrypto", "cryptoGenFail", null, "bad");
+    }).then(function () { cryptoBusy(false); });
   });
-
-  // Reads a PKCS#12 blob, pairs the private key with its certificate and
-  // returns the rest of the bagged certificates as the chain.
-  function p12Unpack(bin, pass) {
-    var p12 = forge.pkcs12.pkcs12FromAsn1(forge.asn1.fromDer(bin), pass);
-    var oids = forge.pki.oids;
-    var keys = p12.getBags({ bagType: oids.pkcs8ShroudedKeyBag })[oids.pkcs8ShroudedKeyBag] || [];
-    if (!keys.length) keys = p12.getBags({ bagType: oids.keyBag })[oids.keyBag] || [];
-    var certs = p12.getBags({ bagType: oids.certBag })[oids.certBag] || [];
-    if (!keys.length || !certs.length) return null;
-    var key = keys[0].key;
-    var ci = 0;
-    for (var i = 0; i < certs.length; i++) {
-      var pk = certs[i].cert.publicKey;
-      if (pk && pk.n && key.n && pk.n.compareTo(key.n) === 0) { ci = i; break; }
-    }
-    return {
-      key: key,
-      cert: certs[ci].cert,
-      chain: certs.map(function (c, j) { return j === ci ? null : forge.pki.certificateToPem(c.cert); })
-                  .filter(Boolean)
-    };
-  }
 
   el("btnCryptoImpGo").addEventListener("click", function () {
     var f = el("cryptoFile").files[0];
     var pass = el("cryptoP12Pass").value;
     if (!f) { say("statusCrypto", "cryptoNeedFile", null, "bad"); return; }
     cryptoBusy(true);
+    var found = null;
     f.arrayBuffer().then(function (buf) {
-      try {
-        var b = new Uint8Array(buf), s = "";
-        for (var i = 0; i < b.length; i += 65536)
-          s += String.fromCharCode.apply(null, b.subarray(i, i + 65536));
-        var r = p12Unpack(s, pass);
-        if (!r) throw new Error("empty");
-        var cn = (r.cert.subject.getField("CN") || {}).value || f.name;
-        cryptoAdopt(r.cert, r.chain, cn, "p12", forge.util.encode64(s), r.key);
-      } catch (e) {
-        say("statusCrypto", "cryptoImportFail", null, "bad");
-      }
+      found = p12Read(bytesToBin(new Uint8Array(buf)), pass);
+      if (!found.keys.length || !found.certs.length) throw failure("cryptoImportFail");
+      return pairKey(found.keys[0], found.certs);
+    }).then(function (m) {
+      var cert = found.certs[m.index];
+      // Re-sealed under the file's own password: the stored copy is then at
+      // least as well protected as the .p12, and usually far better.
+      return sealKey(found.keys[0], pass).then(function (sealed) {
+        el("cryptoP12Pass").value = "";
+        cryptoAdopt({
+          v: 2, type: "p12",
+          label: certInfo(cert).name || f.name,
+          certDer: cert,
+          chainDer: found.certs.filter(function (c, i) { return i !== m.index; }),
+          sealed: sealed
+        }, m.key);
+      });
+    }).catch(function (e) {
+      say("statusCrypto", e && e.i18n ? e.i18n.key : "cryptoImportFail", null, "bad");
+    }).then(function () {
+      if (found) found.keys.forEach(function (k) { k.fill(0); });
       cryptoBusy(false);
     });
   });
 
-  function cryptoTryUnlock(pass) {
-    if (cryptoCert.type === "gen")
-      return forge.pki.decryptRsaPrivateKey(cryptoCert.keyData, pass);
-    var r = p12Unpack(forge.util.decode64(cryptoCert.keyData), pass);
-    return r && r.key;
-  }
-
   el("btnCryptoUnlock").addEventListener("click", function () {
-    try {
-      var key = cryptoTryUnlock(el("cryptoUnlockPass").value);
-      if (!key) throw new Error("bad");
+    var field = el("cryptoUnlockPass");
+    cryptoBusy(true);
+    unlockIdentity(field.value).then(function (key) {
       cryptoKey = key;
-      el("cryptoUnlockPass").value = "";
+      field.value = "";
       cryptoPaint();
       say("statusCrypto", "cryptoUnlocked", null, "good");
-    } catch (e) {
+    }).catch(function () {
       say("statusCrypto", "cryptoWrongPass", null, "bad");
-    }
+    }).then(function () { cryptoBusy(false); });
   });
 
   el("btnCryptoRemove").addEventListener("click", function () {
+    // The private key goes with it and there is no undo: ask first.
+    if (!window.confirm(t("cryptoRemoveConfirm"))) return;
     cryptoCert = null;
+    cryptoView = null;
     cryptoKey = null;
     cryptoStore.del();
     cryptoPaint();
@@ -3635,36 +4352,105 @@
   el("cryptoSign").addEventListener("change", refreshControls);
 
   function cryptoWantsSign() {
-    return !!(forgeOk && cryptoCert && el("cryptoSign").checked);
+    return !!(cryptoOk && cryptoView && el("cryptoSign").checked);
   }
 
   function pdfDateString(d) {
-    function p(n, l) { var s = String(n); while (s.length < l) s = "0" + s; return s; }
+    function p(n, l) { var s = String(n); while (s.length < (l || 2)) s = "0" + s; return s; }
     return "D:" + p(d.getUTCFullYear(), 4) + p(d.getUTCMonth() + 1) + p(d.getUTCDate()) +
            p(d.getUTCHours()) + p(d.getUTCMinutes()) + p(d.getUTCSeconds()) + "Z";
   }
 
-  // The CMS blob is nearly content-independent in size for a detached
-  // signature, so a dummy build measures the exact space /Contents reserves.
-  function buildCms(content, cert, chainPems) {
-    var p7 = forge.pkcs7.createSignedData();
-    p7.content = forge.util.createBuffer(content);
-    p7.addCertificate(cert);
-    chainPems.forEach(function (pem) { p7.addCertificate(forge.pki.certificateFromPem(pem)); });
-    p7.addSigner({
-      key: cryptoKey,
-      certificate: cert,
-      digestAlgorithm: forge.pki.oids.sha256,
-      authenticatedAttributes: [
-        { type: forge.pki.oids.contentType, value: forge.pki.oids.data },
-        { type: forge.pki.oids.messageDigest },
-        { type: forge.pki.oids.signingTime }
-      ]
-    });
-    p7.sign({ detached: true });
-    return forge.asn1.toDer(p7.toAsn1()).getBytes();
+  // --- CMS --------------------------------------------------------------------
+  // UTCTime up to 2049, GeneralizedTime from 2050 on (RFC 5280, 4.1.2.5.1).
+  function derTime(d) {
+    function p(n) { return (n < 10 ? "0" : "") + n; }
+    var y = d.getUTCFullYear();
+    var rest = p(d.getUTCMonth() + 1) + p(d.getUTCDate()) + p(d.getUTCHours()) +
+               p(d.getUTCMinutes()) + p(d.getUTCSeconds()) + "Z";
+    return y < 2050 ? der(0x17, ascii(String(y).slice(2) + rest)) : der(0x18, ascii(y + rest));
   }
 
+  // DER orders a SET OF by the encodings of its members.
+  function derOrder(a, b) {
+    for (var i = 0; i < a.length && i < b.length; i++) if (a[i] !== b[i]) return a[i] - b[i];
+    return a.length - b.length;
+  }
+
+  // Signed attributes: content type, signing time, the digest of the signed
+  // bytes, and ESS signing-certificate-v2, which binds the signature to
+  // exactly this certificate (by its SHA-256).
+  function cmsAttrs(digest, certHash, when) {
+    return [
+      der(0x30, derOid(OID.contentType), der(0x31, derOid(OID.data))),
+      der(0x30, derOid(OID.signingTime), der(0x31, derTime(when))),
+      der(0x30, derOid(OID.messageDigest), der(0x31, der(0x04, digest))),
+      der(0x30, derOid(OID.signingCertV2),
+          der(0x31, der(0x30, der(0x30, der(0x30, der(0x04, certHash))))))
+    ].sort(derOrder);
+  }
+
+  // SignedData without encapsulated content (a detached signature), carrying
+  // the signer's certificate and chain exactly as they were issued.
+  function cmsAssemble(view, attrs, signature) {
+    var s = view.sig, info = view.info;
+    var digestAlg = der(0x30, derOid(s.digest));
+    var signerInfo = der(0x30,
+      [0x02, 0x01, 0x01],                          // version 1: issuerAndSerialNumber
+      der(0x30, info.issuer, info.serial),
+      digestAlg,
+      der.apply(null, [0xA0].concat(attrs)),       // signedAttrs, [0] IMPLICIT
+      s.nullParams ? der(0x30, derOid(s.alg), [0x05, 0x00]) : der(0x30, derOid(s.alg)),
+      der(0x04, signature));
+    var signedData = der(0x30,
+      [0x02, 0x01, 0x01],
+      der(0x31, digestAlg),
+      der(0x30, derOid(OID.data)),
+      der.apply(null, [0xA0, info.der].concat(view.chain)),
+      der(0x31, signerInfo));
+    return der(0x30, derOid(OID.signedData), der(0xA0, signedData));
+  }
+
+  // How many bytes /Contents must reserve: the CMS with the longest signature
+  // the key can produce (an ECDSA signature's DER form varies by a byte or two).
+  function cmsSize(view) {
+    var s = view.sig, sigLen = view.info.rsaLen;
+    if (s.coord) {
+      var body = 2 * (s.coord + 3);
+      sigLen = body + (body < 128 ? 2 : 3);
+    }
+    var digestLen = { "SHA-256": 32, "SHA-384": 48, "SHA-512": 64 }[s.hash];
+    return cmsAssemble(view, cmsAttrs(new Uint8Array(digestLen), new Uint8Array(32), new Date()),
+                       new Uint8Array(sigLen)).length;
+  }
+
+  // Detached CMS SignedData over the signed byte ranges of the file.
+  function cmsSign(view, key, data) {
+    var s = view.sig;
+    return Promise.all([subtle.digest(s.hash, data), subtle.digest("SHA-256", view.info.der)])
+      .then(function (h) {
+        var attrs = cmsAttrs(new Uint8Array(h[0]), new Uint8Array(h[1]), new Date());
+        // The signature covers the attributes encoded as a SET (RFC 5652, 5.4)
+        return subtle.sign(s.sign, key, der.apply(null, [0x31].concat(attrs))).then(function (sig) {
+          sig = new Uint8Array(sig);
+          return cmsAssemble(view, attrs, s.coord ? ecdsaDer(sig) : sig);
+        });
+      });
+  }
+
+  // WebCrypto returns an ECDSA signature as r‖s; CMS wants SEQUENCE { r, s }.
+  function ecdsaDer(sig) {
+    function int(b) {
+      var i = 0;
+      while (i < b.length - 1 && b[i] === 0) i++;
+      b = b.subarray(i);
+      return b[0] & 0x80 ? der(0x02, [0], b) : der(0x02, b);
+    }
+    var half = sig.length / 2;
+    return der(0x30, int(sig.subarray(0, half)), int(sig.subarray(half)));
+  }
+
+  // --- the signature in the PDF -----------------------------------------------
   // Signature dictionary plus a merged, invisible widget field. ByteRange and
   // Contents hold fixed-width placeholders so real values patch in later
   // without shifting a single byte.
@@ -3680,157 +4466,325 @@
       M: PDFLib.PDFString.of(pdfDateString(new Date())),
       Name: PDFLib.PDFHexString.fromText(signerName)
     }));
+    var acro = doc.catalog.lookupMaybe(N.of("AcroForm"), PDFLib.PDFDict);
+    if (!acro) { acro = ctx.obj({}); doc.catalog.set(N.of("AcroForm"), acro); }
+    var fields = acro.lookupMaybe(N.of("Fields"), PDFLib.PDFArray);
+    if (!fields) { fields = ctx.obj([]); acro.set(N.of("Fields"), fields); }
+    // A counter-signature needs a name of its own: two fields called
+    // "Signature1" leave every validator guessing which one is meant.
+    var taken = fieldNames(ctx, fields), k = 1;
+    while (taken["Signature" + k]) k++;
     var page = doc.getPage(0);
     var widgetRef = ctx.register(ctx.obj({
       Type: N.of("Annot"), Subtype: N.of("Widget"),
-      FT: N.of("Sig"), T: PDFLib.PDFString.of("Signature1"),
+      FT: N.of("Sig"), T: PDFLib.PDFString.of("Signature" + k),
       Rect: [0, 0, 0, 0], F: 132, P: page.ref, V: sigRef
     }));
     var leaf = page.node;
     var annots = leaf.lookupMaybe(N.of("Annots"), PDFLib.PDFArray);
     if (!annots) { annots = ctx.obj([]); leaf.set(N.of("Annots"), annots); }
     annots.push(widgetRef);
-    var acro = doc.catalog.lookupMaybe(N.of("AcroForm"), PDFLib.PDFDict);
-    if (!acro) { acro = ctx.obj({}); doc.catalog.set(N.of("AcroForm"), acro); }
-    var fields = acro.lookupMaybe(N.of("Fields"), PDFLib.PDFArray);
-    if (!fields) { fields = ctx.obj([]); acro.set(N.of("Fields"), fields); }
     fields.push(widgetRef);
-    acro.set(N.of("SigFlags"), PDFLib.PDFNumber.of(3));
+    var flags = acro.lookupMaybe(N.of("SigFlags"), PDFLib.PDFNumber);
+    acro.set(N.of("SigFlags"), PDFLib.PDFNumber.of((flags ? flags.asNumber() : 0) | 3));
+    return sigRef;
   }
 
-  // Replaces the placeholders with the real byte ranges and the CMS blob.
-  // ByteRange covers everything except the /Contents value itself.
-  function injectSignature(pdfBytes) {
-    var CH = 65536, bin = "";
-    for (var i = 0; i < pdfBytes.length; i += CH)
-      bin += String.fromCharCode.apply(null, pdfBytes.subarray(i, Math.min(i + CH, pdfBytes.length)));
+  // Every partial field name in the form, nested ones included.
+  function fieldNames(ctx, fields) {
+    var names = {}, seen = [];
+    (function walk(arr) {
+      for (var i = 0; i < arr.size(); i++) {
+        var node = ctx.lookup(arr.get(i));
+        if (!(node instanceof PDFLib.PDFDict) || seen.indexOf(node) >= 0) continue;
+        seen.push(node);
+        var name = node.lookup(PDFLib.PDFName.of("T"));
+        if (name && name.decodeText) names[name.decodeText()] = true;
+        var kids = node.lookup(PDFLib.PDFName.of("Kids"));
+        if (kids instanceof PDFLib.PDFArray) walk(kids);
+      }
+    })(fields);
+    return names;
+  }
 
-    var sigPos = bin.indexOf("adbe.pkcs7.detached");
-    var brPos = bin.indexOf("/ByteRange", sigPos);
-    var lb = bin.indexOf("[", brPos);
-    var cPos = bin.indexOf("/Contents", lb);
-    var lt = bin.indexOf("<", cPos);
-    var gt = bin.indexOf(">", lt);
-    if (sigPos < 0 || brPos < 0 || lt < 0 || gt < 0)
-      throw new Error(t("cryptoSignFail", { msg: "layout" }));
-
-    var ranges = [0, lt, gt + 1, bin.length - (gt + 1)];
-    // ByteRange zuerst patchen: die echten Werte liegen INNERHALB des signierten
-    // Bereichs, also muss der Hash ueber die finalen Bytes laufen. Breite bleibt
-    // identisch (fuehrende Spaces), sonst verschieben sich alle Positionen.
-    var pos = lb;
+  // Fills in the reserved ByteRange and Contents of our signature dictionary.
+  // span is where the writer put that object — searching the whole file for
+  // the first signature dictionary would find an earlier signer's instead.
+  function injectSignature(bytes, span, sign) {
+    var br = indexOfBytes(bytes, "/ByteRange", span[0], span[1]);
+    var ct = indexOfBytes(bytes, "/Contents", span[0], span[1]);
+    var lt = ct < 0 ? -1 : indexOfBytes(bytes, "<", ct, span[1]);
+    var gt = lt < 0 ? -1 : indexOfBytes(bytes, ">", lt, span[1]);
+    if (br < 0 || gt < 0) throw new Error("signature placeholder not found");
+    var ranges = [0, lt, gt + 1, bytes.length - (gt + 1)];
+    // ByteRange lies inside the signed bytes, so its real values go in first,
+    // each padded with spaces to the placeholder's width so nothing moves.
+    var pos = br;
     ranges.forEach(function (n) {
-      var run = bin.indexOf("999999999", pos);
-      if (run < 0) throw new Error(t("cryptoSignFail", { msg: "bytrange" }));
+      var run = indexOfBytes(bytes, "999999999", pos, lt);
       var s = String(n);
-      if (s.length > 9) throw new Error(t("cryptoSignFail", { msg: "bytrange" }));
+      if (run < 0 || s.length > 9) throw new Error("byte range does not fit its placeholder");
       while (s.length < 9) s = " " + s;
-      bin = bin.slice(0, run) + s + bin.slice(run + 9);
+      bytes.set(ascii(s), run);
       pos = run + 9;
     });
-    var content = bin.slice(0, lt) + bin.slice(gt + 1);
-    var cert = forge.pki.certificateFromPem(cryptoCert.certPem);
-    var hex = forge.util.bytesToHex(buildCms(content, cert, cryptoCert.chain)).toUpperCase();
-    var space = gt - lt - 1;
-    if (hex.length > space) throw new Error(t("cryptoSignFail", { msg: "overflow" }));
-    hex += new Array(space - hex.length + 1).join("0");
-
-    var out = pdfBytes.slice();
-    for (var h = 0; h < bin.length; h++) out[h] = bin.charCodeAt(h);
-    for (var h = 0; h < space; h++) out[lt + 1 + h] = hex.charCodeAt(h);
-    return out;
+    var signed = new Uint8Array(lt + ranges[3]);
+    signed.set(bytes.subarray(0, lt), 0);
+    signed.set(bytes.subarray(gt + 1), lt);
+    return sign(signed).then(function (cms) {
+      var hex = toHex(cms).toUpperCase();
+      if (hex.length > gt - lt - 1) throw new Error("signature exceeds its reserved space");
+      bytes.set(ascii(hex), lt + 1);   // the rest of the placeholder stays zero padding
+      return bytes;
+    });
   }
 
-  cryptoStore.get().then(function (c) {
-    cryptoCert = c;
+  cryptoStore.get().then(function (rec) {
+    cryptoCert = rec;
+    cryptoView = null;
+    if (rec) {
+      try { cryptoView = identityView(rec); } catch (e) {}
+    }
     cryptoPaint();
   });
   cryptoPaint();
 
   // ===========================================================================
-  // Step 5: export
+  // Step 5: export — an incremental update on top of the untouched original
   // ===========================================================================
-  el("btnSave").addEventListener("click", function () {
-    var hasSig = !!(sigPng && placement);
-    var wantCrypto = cryptoWantsSign();
-    if (!originalBytes || (!hasSig && !texts.length && !wantCrypto)) return;
-    if (wantCrypto && !cryptoKey) {
-      try { cryptoKey = cryptoTryUnlock(el("cryptoUnlockPass").value); }
-      catch (e) { cryptoKey = null; }
-      if (!cryptoKey) {
-        say("statusSave", "cryptoNeedUnlock", null, "bad");
-        return;
-      }
-      cryptoPaint();
-    }
+  // What an object looks like right now, to tell later whether the marks
+  // changed it. Streams compare by dictionary plus the identity of their
+  // byte buffer, which pdf-lib replaces rather than edits.
+  function objectPrint(obj) {
+    return obj instanceof PDFLib.PDFStream
+      ? { text: obj.dict.toString(), data: obj.contents || obj }
+      : { text: obj.toString(), data: null };
+  }
 
-    // Missing glyphs would end up as silent blank spots — check before
-    // anything is written.
-    for (var i = 0; i < texts.length; i++) {
-      var miss = missingGlyphs(texts[i].fontKey, texts[i].text);
-      if (miss.length) {
-        say("statusSave", "fontNoGlyphs", { chars: miss.join(" ") }, "bad");
-        return;
-      }
-    }
-    say("statusSave", "writing");
+  function snapshotObjects(ctx) {
+    var snap = {};
+    ctx.enumerateIndirectObjects().forEach(function (pair) {
+      snap[pair[0].toString()] = objectPrint(pair[1]);
+    });
+    return snap;
+  }
 
-    var PDFDocument = PDFLib.PDFDocument;
+  // Where the file's newest cross-reference section starts and what its
+  // trailer declares (size, encryption), so an update can chain onto it.
+  // Null when the file offers no usable startxref — such damaged files are
+  // written out whole instead.
+  function lastXref(bytes) {
+    var tail = bytesToBin(bytes.subarray(Math.max(0, bytes.length - 4096)));
+    var at = tail.lastIndexOf("startxref");
+    var m = at < 0 ? null : /^startxref\s+(\d+)/.exec(tail.slice(at));
+    var offset = m ? parseInt(m[1], 10) : 0;
+    if (!(offset > 0 && offset < bytes.length)) return null;
+    var head = bytesToBin(bytes.subarray(offset, offset + 64));
+    var stream = /^\s*\d+\s+\d+\s+obj\b/.test(head);
+    if (!stream && !/^\s*xref\s/.test(head)) return null;
+    var dictAt = stream ? offset : indexOfBytes(bytes, "trailer", offset);
+    if (dictAt < 0) return null;
+    var dict = bytesToBin(bytes.subarray(dictAt, dictAt + 4096));
+    if (stream) {
+      var end = dict.indexOf("stream");
+      if (end >= 0) dict = dict.slice(0, end);
+      if (!/\/Type\s*\/XRef\b/.test(dict)) return null;
+    }
+    var size = /\/Size\s+(\d+)/.exec(dict);
+    if (!size) return null;
+    return { offset: offset, stream: stream, size: parseInt(size[1], 10), encrypted: /\/Encrypt\b/.test(dict) };
+  }
+
+  // The newest trailer dictionary, parsed — the authority for Root, Info and
+  // ID (ISO 32000-1, 7.5.6: the update repeats the previous trailer's
+  // entries). pdf-lib's own trailerInfo is no substitute: it takes whichever
+  // xref stream comes last in the file, which in a linearized file is not the
+  // newest one, and it merges classic trailers across revisions — so it can
+  // drop /Info as well as bring back one a later revision removed.
+  function newestTrailer(bytes, prev, ctx) {
+    var from = prev.stream ? prev.offset : indexOfBytes(bytes, "trailer", prev.offset);
+    var at = from < 0 ? -1 : indexOfBytes(bytes, "<<", from);
+    if (at < 0) return null;
+    var obj = null;
+    try { obj = PDFLib.PDFObjectParser.forBytes(bytes.subarray(at), ctx).parseObject(); }
+    catch (e) { return null; }   // unparseable: writeUpdate falls back to pdf-lib's view
+    if (obj instanceof PDFLib.PDFStream) obj = obj.dict;   // an xref stream's dictionary
+    return obj instanceof PDFLib.PDFDict ? obj : null;
+  }
+
+  // Appends every object the marks created or changed, then a cross-
+  // reference section that chains onto the original one through /Prev: an
+  // incremental update (ISO 32000-1, 7.5.6). The original bytes stay exactly
+  // as they were — existing signatures keep verifying, and everything the
+  // tool does not understand (bookmarks, forms, XMP, tags) survives unread.
+  function writeUpdate(doc, original, snap, prev, trailer) {
+    var ctx = doc.context, chunks = [original], pos = original.length, rows = [], spans = {};
+    function put(b) { chunks.push(b); pos += b.length; }
+    var lastByte = original[original.length - 1];
+    if (lastByte !== 0x0A && lastByte !== 0x0D) put(ascii("\n"));
+    ctx.enumerateIndirectObjects().forEach(function (pair) {
+      var ref = pair[0], obj = pair[1], was = snap[ref.toString()], now = objectPrint(obj);
+      if (was && was.text === now.text && was.data === now.data) return;
+      var body = new Uint8Array(obj.sizeInBytes());
+      obj.copyBytesInto(body, 0);
+      var start = pos;
+      put(ascii(ref.objectNumber + " " + ref.generationNumber + " obj\n"));
+      put(body);
+      put(ascii("\nendobj\n"));
+      spans[ref.toString()] = [start, pos];
+      rows.push({ n: ref.objectNumber, g: ref.generationNumber, at: start });
+    });
+    var size = Math.max(prev.size, ctx.largestObjectNumber + 1);
+    // Root, Info and ID as the newest trailer has them. Without a parseable
+    // trailer, pdf-lib's view is the fallback; an ID missing there too may
+    // still come from an older revision — the document keeps its identity.
+    var N = PDFLib.PDFName, info = ctx.trailerInfo;
+    var root = (trailer && trailer.get(N.of("Root"))) || info.Root;
+    var docInfo = trailer ? trailer.get(N.of("Info")) : info.Info;
+    var id = (trailer && trailer.get(N.of("ID"))) || info.ID;
+    var keys = "/Root " + root + (docInfo ? " /Info " + docInfo : "") +
+               " /ID " + trailerId(ctx, id) + " /Prev " + prev.offset;
+    if (prev.stream) {
+      // The original indexes itself with a cross-reference stream, so the
+      // update does too — a stream object of its own, listed in itself.
+      var xrefNum = size++, w = 1;
+      rows.push({ n: xrefNum, g: 0, at: pos });
+      while (Math.pow(256, w) <= pos) w++;
+      rows.sort(function (a, b) { return a.n - b.n; });
+      var data = new Uint8Array(rows.length * (w + 3));
+      rows.forEach(function (r, i) {
+        var o = i * (w + 3);
+        data[o] = 1;
+        for (var k = 0; k < w; k++) data[o + 1 + k] = Math.floor(r.at / Math.pow(256, w - 1 - k)) % 256;
+        data[o + w + 1] = r.g >> 8;
+        data[o + w + 2] = r.g & 0xFF;
+      });
+      var index = runs(rows).map(function (g) { return g[0].n + " " + g.length; }).join(" ");
+      var xrefAt = pos;
+      put(ascii(xrefNum + " 0 obj\n<< /Type /XRef /Size " + size + " /Index [" + index + "] /W [1 " + w +
+                " 2] " + keys + " /Length " + data.length + " >>\nstream\n"));
+      put(data);
+      put(ascii("\nendstream\nendobj\nstartxref\n" + xrefAt + "\n%%EOF\n"));
+    } else {
+      rows.sort(function (a, b) { return a.n - b.n; });
+      var table = "xref\n";
+      runs(rows).forEach(function (g) {
+        table += g[0].n + " " + g.length + "\n";
+        g.forEach(function (r) { table += zeroPad(r.at, 10) + " " + zeroPad(r.g, 5) + " n \n"; });
+      });
+      var tableAt = pos;
+      put(ascii(table + "trailer\n<< /Size " + size + " " + keys + " >>\nstartxref\n" + tableAt + "\n%%EOF\n"));
+    }
+    var out = new Uint8Array(pos), o = 0;
+    chunks.forEach(function (c) { out.set(c, o); o += c.length; });
+    return { bytes: out, spans: spans };
+  }
+
+  function zeroPad(n, len) {
+    var s = String(n);
+    while (s.length < len) s = "0" + s;
+    return s;
+  }
+
+  // Consecutive object numbers, grouped into xref subsections.
+  function runs(rows) {
+    var out = [];
+    rows.forEach(function (r) {
+      var g = out[out.length - 1];
+      if (g && r.n === g[g.length - 1].n + 1) g.push(r);
+      else out.push([r]);
+    });
+    return out;
+  }
+
+  // The first ID string names the document and stays; the second names the
+  // revision and changes (ISO 32000-1, 14.4).
+  function trailerId(ctx, id) {
+    var fresh = "<" + toHex(crypto.getRandomValues(new Uint8Array(16))) + ">";
+    var arr = id && ctx.lookup(id);
+    var first = arr instanceof PDFLib.PDFArray && arr.size() ? arr.get(0).toString() : fresh;
+    return "[" + first + " " + fresh + "]";
+  }
+
+  // Fallback for files whose cross-reference data cannot be chained onto:
+  // write the whole document anew. pdf-lib keeps the superseded generation of
+  // a reused object number next to the live one and lists both under one xref
+  // row, which corrupts the table — so the stale copies go first.
+  function writeWhole(doc) {
+    var ctx = doc.context, live = {}, all = ctx.enumerateIndirectObjects();
+    all.forEach(function (pair) {
+      var n = pair[0].objectNumber;
+      live[n] = Math.max(live[n] || 0, pair[0].generationNumber);
+    });
+    all.forEach(function (pair) {
+      if (pair[0].generationNumber < live[pair[0].objectNumber]) ctx.delete(pair[0]);
+    });
+    // Object streams only hold generation-0 objects, and form appearances
+    // are the document's own business: leave both alone.
+    return doc.save({ useObjectStreams: false, addDefaultPage: false, updateFieldAppearances: false });
+  }
+
+  // Byte span of an indirect object in a freshly written file.
+  function findObject(bytes, ref) {
+    var at = indexOfBytes(bytes, "\n" + ref.objectNumber + " " + ref.generationNumber + " obj");
+    var end = at < 0 ? -1 : indexOfBytes(bytes, "endobj", at);
+    if (end < 0) throw new Error("signature object not found");
+    return [at, end];
+  }
+
+  // Everything Save does, as a function of explicit inputs: the original
+  // bytes, the marks with the geometry of their pages, the document fonts
+  // and an optional signer. Resolves to the finished file.
+  function buildPdf(job) {
     var degrees = PDFLib.degrees;
+    // Encrypted files never get here — openPdf refuses them. This second
+    // check reads the trailer itself: pdf-lib cannot even parse a file whose
+    // object streams are encrypted, and its own error class does not survive
+    // its ES5 build (instanceof never matches).
+    var prev = lastXref(job.bytes);
+    if (prev && prev.encrypted) return Promise.reject(failure("pdfEncrypted"));
+    // updateMetadata: false keeps the document's own Producer, Creator, dates
+    // and every other Info entry.
+    return PDFLib.PDFDocument.load(job.bytes, { updateMetadata: false, ignoreEncryption: true }).then(function (doc) {
+      if (doc.isEncrypted) throw failure("pdfEncrypted");
+      var trailer = prev ? newestTrailer(job.bytes, prev, doc.context) : null;
+      // Draw into the catalog the newest trailer names — pdf-lib may have
+      // settled on another one (see newestTrailer).
+      var root = trailer && trailer.get(PDFLib.PDFName.of("Root"));
+      if (root instanceof PDFLib.PDFRef && root !== doc.context.trailerInfo.Root &&
+          doc.context.lookup(root) instanceof PDFLib.PDFCatalog) {
+        doc.context.trailerInfo.Root = root;
+        doc.catalog = doc.context.lookup(root);
+      }
+      var snap = snapshotObjects(doc.context);
+      // New objects must not take a number the file's own xref already hands
+      // out — pdf-lib never registers xref streams or freed entries.
+      if (prev) doc.context.largestObjectNumber = Math.max(doc.context.largestObjectNumber, prev.size - 1);
 
-    // Incrementally updated PDFs keep revived objects (generation > 0),
-    // and pdf-lib writes those back with corrupt xref entries — strict
-    // viewers reject the file outright. Rebuilding the pages into a fresh
-    // document renumbers every object cleanly; ordinary files skip the copy.
-    function prepDocForSave(src) {
-      var needsCopy = false;
-      src.context.enumerateIndirectObjects().forEach(function (pair) {
-        if (pair[0].generationNumber > 0) needsCopy = true;
-      });
-      if (!needsCopy) return Promise.resolve(src);
-      return PDFDocument.create().then(function (fresh) {
-        return fresh.copyPages(src, src.getPageIndices()).then(function (copied) {
-          copied.forEach(function (p) { fresh.addPage(p); });
-          // Carry the Info dict over wholesale so no synthetic field survives.
-          var srcInfo = src.context.lookup(src.context.trailerInfo.Info);
-          var dstInfo = fresh.context.lookup(fresh.context.trailerInfo.Info);
-          if (srcInfo && dstInfo && typeof srcInfo.entries === "function") {
-            dstInfo.entries().forEach(function (e) { dstInfo.delete(e[0]); });
-            srcInfo.entries().forEach(function (e) { dstInfo.set(e[0], e[1]); });
-          }
-          return fresh;
-        });
-      });
-    }
-
-    // ignoreEncryption covers PDFs that only set permissions.
-    // updateMetadata: false keeps the document's own Producer, Creator,
-    // dates and every other Info entry — nothing but the marks gets added.
-    PDFDocument.load(originalBytes, { ignoreEncryption: true, updateMetadata: false })
-      .then(prepDocForSave)
-      .then(function (doc) {
-      var needKit = texts.some(function (it) { return it.fontKey.indexOf("doc:") === 0; });
+      var needKit = job.texts.some(function (it) { return it.fontKey.indexOf("doc:") === 0; });
       if (needKit) {
-        if (typeof fontkit === "undefined") throw new Error(t("fontkitMissing"));
+        if (typeof fontkit === "undefined") throw failure("fontkitMissing");
         doc.registerFontkit(fontkit);
       }
 
       var jobs = [];
 
-      if (hasSig) {
-        jobs.push(doc.embedPng(sigPng).then(function (image) {
-          var page = doc.getPage(placement.page - 1);
-          var g = geometry[placement.page];
+      if (job.sig) {
+        jobs.push(doc.embedPng(job.sig.png).then(function (image) {
+          var pl = job.sig.placement;
+          var page = doc.getPage(pl.page - 1);
+          var g = job.geom[pl.page];
 
           // CropBox from pdf.js, the same source the preview was built from.
           var bx1 = g.view[0], by1 = g.view[1], bx2 = g.view[2], by2 = g.view[3];
           var boxW = bx2 - bx1;   // unrotated
           var boxH = by2 - by1;
           var r = g.rotation;
+          var u = g.unit || 1;    // /UserUnit: display points per page unit
 
           // Display space counts y downwards, PDF counts it upwards.
-          var X = placement.x;
-          var Y = g.dispH - (placement.y + placement.h);
+          var X = pl.x / u;
+          var Y = (g.dispH - (pl.y + pl.h)) / u;
 
           // Convert display space back into the unrotated page space.
           // Rotating the image cancels out the display rotation again.
@@ -3843,8 +4797,8 @@
           page.drawImage(image, {
             x: bx + bx1,          // account for the CropBox offset
             y: by + by1,
-            width: placement.w,
-            height: placement.h,
+            width: pl.w / u,
+            height: pl.h / u,
             rotate: degrees(r)
           });
         }));
@@ -3852,13 +4806,13 @@
 
       // Each distinct font is embedded once, then every text is drawn with it.
       var fontJobs = {};
-      texts.forEach(function (it) {
+      job.texts.forEach(function (it) {
         if (fontJobs[it.fontKey]) return;
         if (it.fontKey.indexOf("doc:") === 0) {
-          var f = docFonts[it.fontKey.slice(4)];
-          if (!f) throw new Error(t("fontEmbedFail", { msg: it.fontKey }));
+          var f = job.fonts[it.fontKey.slice(4)];
+          if (!f) throw failure("fontEmbedFail", { msg: it.fontKey });
           fontJobs[it.fontKey] = Promise.resolve(doc.embedFont(f.data, { subset: true })).catch(function (e) {
-            throw new Error(t("fontEmbedFail", { msg: e && e.message ? e.message : String(e) }));
+            throw failure("fontEmbedFail", { msg: errText(e) });
           });
         } else {
           fontJobs[it.fontKey] = Promise.resolve(doc.embedFont(PDFLib.StandardFonts[it.fontKey.slice(4)]));
@@ -3869,16 +4823,19 @@
       jobs.push(Promise.all(keys.map(function (k) { return fontJobs[k]; })).then(function (fonts) {
         var map = {};
         keys.forEach(function (k, i) { map[k] = fonts[i]; });
-        texts.forEach(function (it) {
-          var g = geometry[it.page];
-          if (!g) return;
+        job.texts.forEach(function (it) {
+          var g = job.geom[it.page];
+          // Never skip a text quietly: missing geometry is a bug, not a detail.
+          if (!g) throw new Error("no geometry for page " + it.page);
           var page = doc.getPage(it.page - 1);
           var bx1 = g.view[0], by1 = g.view[1], bx2 = g.view[2], by2 = g.view[3];
           var boxW = bx2 - bx1, boxH = by2 - by1, r = g.rotation;
 
-          // y is the first baseline — the same anchor the preview uses.
-          var X = it.x;
-          var Y = g.dispH - it.y;
+          // y is the first baseline — the same anchor the preview uses. Like
+          // the image, position and size shed the page's /UserUnit.
+          var u = g.unit || 1, size = it.size / u;
+          var X = it.x / u;
+          var Y = (g.dispH - it.y) / u;
           var bx, by;
           if (r === 90) { bx = boxW - Y; by = X; }
           else if (r === 180) { bx = boxW - X; by = boxH - Y; }
@@ -3896,34 +4853,34 @@
           // leave a notdef box. Space is only an advance anyway, so words
           // are drawn separately with a fixed gap pushed along the rotated
           // text direction.
-          var df = it.fontKey.indexOf("doc:") === 0 ? docFonts[it.fontKey.slice(4)] : null;
+          var df = it.fontKey.indexOf("doc:") === 0 ? job.fonts[it.fontKey.slice(4)] : null;
           var noSpace = df && df.kf && !df.kf.hasGlyphForCodePoint(0x20);
           if (!noSpace) {
             page.drawText(it.text, {
-              x: bx + bx1, y: by + by1, size: it.size, font: fnt,
-              color: col, rotate: degrees(r), lineHeight: it.size * 1.2
+              x: bx + bx1, y: by + by1, size: size, font: fnt,
+              color: col, rotate: degrees(r), lineHeight: size * 1.2
             });
           } else {
             var rad = r * Math.PI / 180;
             var ux = Math.cos(rad), uy = Math.sin(rad);      // word advance
             var vx = Math.sin(rad), vy = -Math.cos(rad);     // line advance
-            var lh = it.size * 1.2, gap = it.size * 0.25;
+            var lh = size * 1.2, gap = size * 0.25;
             var lines = it.text.split(/\r\n|\r|\n/);
             for (var li = 0; li < lines.length; li++) {
-              var segs = lines[li].split(/([ \t\u00A0]+)/);
+              var segs = lines[li].split(/([ \t ]+)/);
               var adv = 0;
               var lx = bx + bx1 + vx * li * lh, ly = by + by1 + vy * li * lh;
               for (var si = 0; si < segs.length; si++) {
                 var seg = segs[si];
                 if (!seg) continue;
-                if (/^[ \t\u00A0]+$/.test(seg)) {
+                if (/^[ \t ]+$/.test(seg)) {
                   adv += seg.length * gap;
                 } else {
                   page.drawText(seg, {
-                    x: lx + ux * adv, y: ly + uy * adv, size: it.size,
+                    x: lx + ux * adv, y: ly + uy * adv, size: size,
                     font: fnt, color: col, rotate: degrees(r)
                   });
-                  adv += fnt.widthOfTextAtSize(seg, it.size);
+                  adv += fnt.widthOfTextAtSize(seg, size);
                 }
               }
             }
@@ -3931,36 +4888,106 @@
         });
       }));
 
-      // Object streams break on incrementally updated PDFs: pdf-lib writes
-      // wrong generation info for revived objects (e.g. catalog 15 1 R),
-      // leaving a corrupt xref that strict viewers reject. The classic
-      // xref table is a few bytes larger but valid for every document.
       return Promise.all(jobs).then(function () {
-        // The digital signature wraps everything else — it has to be the
-        // last dictionary written, so the placeholder goes in right before
-        // save and the CMS blob patches the bytes afterwards.
-        if (wantCrypto) {
-          var cert = forge.pki.certificateFromPem(cryptoCert.certPem);
-          var hexLen = buildCms("x", cert, cryptoCert.chain).length * 2 + 64;
-          addSignaturePlaceholder(doc, hexLen, cryptoCert.label);
-        }
-        return doc.save({ useObjectStreams: false });
-      }).then(function (bytes) {
-        return wantCrypto ? injectSignature(bytes) : bytes;
+        // The digital signature wraps everything else, so its dictionary goes
+        // in last and the CMS blob patches the reserved bytes afterwards.
+        var sigRef = job.signer ? addSignaturePlaceholder(doc, job.signer.hexLen, job.signer.label) : null;
+        return doc.flush().then(function () {
+          if (prev) return writeUpdate(doc, job.bytes, snap, prev, trailer);
+          return writeWhole(doc).then(function (bytes) { return { bytes: bytes, spans: null }; });
+        }).then(function (out) {
+          if (!sigRef) return out.bytes;
+          return Promise.resolve().then(function () {
+            var span = out.spans ? out.spans[sigRef.toString()] : findObject(out.bytes, sigRef);
+            return injectSignature(out.bytes, span, job.signer.sign);
+          }).catch(function (err) {
+            throw failure("cryptoSignFail", { msg: errText(err) });
+          });
+        });
       });
+    });
+  }
+
+  // Unlocks on demand — the passphrase may still wait in the unlock field —
+  // and hands buildPdf what it needs to sign.
+  function readySigner() {
+    var ready = cryptoKey ? Promise.resolve(cryptoKey) :
+      unlockIdentity(el("cryptoUnlockPass").value).then(function (key) {
+        cryptoKey = key;
+        el("cryptoUnlockPass").value = "";
+        cryptoPaint();
+        return key;
+      }, function () {
+        throw failure("cryptoNeedUnlock");
+      });
+    return ready.then(function (key) {
+      var view = cryptoView;
+      return {
+        label: view.label,
+        hexLen: cmsSize(view) * 2 + 64,
+        sign: function (data) { return cmsSign(view, key, data); }
+      };
+    });
+  }
+
+  function copyOf(o) {
+    var c = {};
+    for (var k in o) c[k] = o[k];
+    return c;
+  }
+
+  var saving = false;
+  el("btnSave").addEventListener("click", function () {
+    var hasSig = !!(sigPng && placement);
+    var wantCrypto = cryptoWantsSign();
+    if (saving || !originalBytes || (!hasSig && !texts.length && !wantCrypto)) return;
+
+    // Missing glyphs would end up as silent blank spots — check before
+    // anything is written.
+    for (var i = 0; i < texts.length; i++) {
+      var miss = missingGlyphs(texts[i].fontKey, texts[i].text);
+      if (miss.length) {
+        say("statusSave", "fontNoGlyphs", { chars: miss.join(" ") }, "bad");
+        return;
+      }
+    }
+    saving = true;
+    say("statusSave", "writing");
+
+    // The marks as they are now: edits made while the file is being written
+    // must not leak into it halfway.
+    var job = {
+      bytes: originalBytes, fonts: docFonts, geom: {}, signer: null,
+      sig: hasSig ? { png: sigPng, placement: copyOf(placement) } : null,
+      texts: texts.map(copyOf)
+    };
+    var name = originalName, doc = pdfDoc, pages = {};
+    if (hasSig) pages[placement.page] = true;
+    job.texts.forEach(function (it) { pages[it.page] = true; });
+
+    (wantCrypto ? readySigner() : Promise.resolve(null)).then(function (signer) {
+      job.signer = signer;
+      return Promise.all(Object.keys(pages).map(function (n) {
+        return pageGeometry(+n, doc).then(function (g) { job.geom[n] = g; });
+      }));
+    }).then(function () {
+      return buildPdf(job);
     }).then(function (bytes) {
       var blob = new Blob([bytes], { type: "application/pdf" });
       var url = URL.createObjectURL(blob);
       var a = document.createElement("a");
       a.href = url;
-      a.download = originalName.replace(/\.pdf$/i, "") + "-signed.pdf";
+      a.download = name.replace(/\.pdf$/i, "") + "-signed.pdf";
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       setTimeout(function () { URL.revokeObjectURL(url); }, 10000);
       say("statusSave", "saved", { name: a.download }, "good");
     }).catch(function (err) {
-      say("statusSave", "saveFailed", { msg: err && err.message ? err.message : String(err) }, "bad");
+      if (err && err.i18n) say("statusSave", err.i18n.key, err.i18n.vars, "bad");
+      else say("statusSave", "saveFailed", { msg: errText(err) }, "bad");
+    }).then(function () {
+      saving = false;
     });
   });
 
@@ -3999,7 +5026,10 @@
     say("statusPdf", "loading");
     var bytes = s.pdf instanceof Uint8Array ? s.pdf : new Uint8Array(s.pdf);
     openPdf(bytes, s.name).then(function (ok) {
-      if (ok && !userPickedFile) restoreState(s);
+      // Restore onto exactly the document this load put on screen. A pick
+      // made meanwhile either replaced it (originalBytes is then another
+      // array) or failed — a dropped PNG, say — and must not cost the marks.
+      if (ok && originalBytes === bytes) restoreState(s);
     });
   });
 })();

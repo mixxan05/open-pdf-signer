@@ -11,32 +11,40 @@ Free, unlimited, and fully local: **your document is never uploaded anywhere.**
 
 ## Features
 
-- Load a PDF and page through it
-- Create a signature by drawing with mouse, pen or finger — or upload a transparent PNG
+- Load a PDF from the file picker or by dropping it onto the window, and page through it
+- Create a signature by drawing with mouse, pen or finger — or upload (or drop) a transparent PNG
 - Add text anywhere — in the **fonts already embedded in the document** where possible, plus the standard PDF fonts
 - Optionally add a **real cryptographic signature** (CMS/PKCS#7) on save — the
   document becomes tamper-evident. Generate a free self-signed certificate
-  locally or import your own `.p12`/`.pfx`; the private key stays encrypted
-  under your passphrase and is only decrypted in memory when you unlock it
-- Zoom in and out smoothly with +/− buttons or just the scroll wheel —
+  locally or import your own `.p12`/`.pfx` (RSA or ECDSA on P-256, P-384 or
+  P-521); the private key stays encrypted under your passphrase and is only
+  decrypted — into a non-extractable browser key — when you unlock it.
+  Counter-signing works: every earlier signature keeps verifying
+- Zoom in and out smoothly with +/− buttons or the mouse wheel —
   it zooms around the pointer like a map, with a live preview that swaps to a
   sharp re-render the moment you stop scrolling — no jumps, and placements
-  stay put
+  stay put. Ctrl/⌘ + wheel and trackpad pinch zoom as well; a two-finger
+  swipe on a trackpad and Shift + wheel scroll instead
 - Navigate the page by grabbing and dragging it with the mouse —
   signature and text boxes keep their own drags
 - Drag to position it, use the corner handle to scale proportionally
 - Live dimensions in PDF points while you drag, so you can see exactly where it will land
-- Export a real PDF: the original file stays the base, marks are added on top
+- Export as an **incremental update**: the original file stays in the output
+  byte for byte and your marks are appended after it
 - Keeps working where you left off: the session survives a page reload —
-  document, signature, texts, page and zoom are stored locally (IndexedDB)
-  and restored on the next visit. **New** wipes the slate clean
+  document, signature, texts (with the document fonts they use), page and
+  zoom are stored locally (IndexedDB) and restored on the next visit, marks
+  on pages you have not looked at since included. **New** wipes the slate clean
 - Available in 15 languages, picked up from your browser automatically
 
 Existing text stays selectable and the page count never changes. Pages are
 **not** flattened into images, which is what most "sign your PDF" tools do to
-your document. The document's own metadata — title, author, producer,
-creation and modification dates — is carried over **untouched**: the tool
-only ever adds content, it never rewrites the Info dictionary.
+your document. Because the original bytes are kept and only new objects are
+appended, everything the tool does not touch survives exactly as it was: the
+metadata (Info dictionary and XMP), bookmarks, form fields, page labels, the
+document language and tags. Existing digital signatures stay intact, too —
+viewers will report that the document was changed after signing, which is
+simply true, and the tool says so when you open a signed file.
 
 ## Usage
 
@@ -55,19 +63,30 @@ So your work survives a reload, the current session — the document itself,
 signature, texts, positions — is kept in the browser's local IndexedDB on
 your device. It never leaves the machine, and the **New** button deletes it.
 A signing certificate lives in its own small store so **New** clears your
-document but not your identity; the private key inside stays encrypted under
-your passphrase and is only decrypted in memory after you unlock it.
+document but not your identity. The private key inside is sealed with
+AES-256-GCM under a key derived from your passphrase (PBKDF2-SHA-256,
+600,000 rounds; a new passphrase needs at least 8 characters). It is only
+decrypted after you unlock it, and even then only into a non-extractable
+browser key: page code can sign with it, but cannot read it out. Removing the
+certificate asks first — the private key goes with it.
 
 One honest caveat: pdf.js, pdf-lib, fontkit and node-forge are pulled from a
 CDN the first time you open the page, so that initial load needs an internet
 connection. The library versions are pinned and verified with Subresource
-Integrity, so a tampered CDN response would be refused rather than run.
+Integrity, so a tampered CDN response is refused rather than run — including
+the pdf.js worker, which the page fetches and checks itself: if that check
+fails, the tool stops instead of falling back to unverified code.
 **After the page has loaded, no further network requests are made** — you
 can watch this yourself in the Network tab of your browser's developer
 tools while loading a PDF, signing it and exporting.
 
-Want it fully offline? Download the four library files, put them next to the
-HTML file, and point the four `<script>` tags at your local copies.
+Want it fully offline? Download the five library files (pdf.js and its
+worker, pdf-lib, fontkit, node-forge), put them next to the HTML file, point
+the three `<script>` tags and the `PDFJS_URL`/`WORKER_URL` constants at your
+local copies, and open the folder through a local web server (for example
+`python -m http.server`). The server is needed because pdf.js is an ES module
+the page fetches itself, and browsers refuse such fetches from `file://`.
+The integrity hashes stay valid as long as the files are the same.
 
 ## Accuracy
 
@@ -93,7 +112,10 @@ One caveat is inherent to how PDF works: most embedded fonts are **subsets**
 that contain only the glyphs the document itself uses. If your new text needs
 a character the subset lacks (say a Cyrillic letter in an all-Latin file), the
 tool tells you which characters are missing before writing anything, rather
-than silently producing blank spots — pick a standard font in that case.
+than silently producing blank spots — pick a standard font in that case. For
+the same reason a document font is only preselected when it covers the whole
+Latin alphabet and the digits; otherwise the picker starts on Helvetica and
+the document's fonts stay one click away.
 
 ## Legal scope
 
@@ -104,9 +126,11 @@ The tool offers two ways to sign:
   ESIGN/UETA (US) that is legally binding for most everyday contracts,
   since consent matters more than the technology used.
 - **Digital signature** — a real cryptographic CMS/PKCS#7 signature embedded
-  in the document, which makes the file tamper-evident: any later
-  modification invalidates the signature. With an imported CA-issued
-  certificate (`.p12`/`.pfx`) it also chains to that CA's trust.
+  in the document, which makes the file tamper-evident: changing a signed
+  byte breaks the signature, and changes appended afterwards (a
+  counter-signature, say) are reported by every validator as made after
+  signing. With an imported CA-issued certificate (`.p12`/`.pfx`) it also
+  chains to that CA's trust.
 
 Honest limits: a self-signed certificate proves integrity and key control,
 but viewers show "identity unknown" rather than a green checkmark — a
@@ -132,8 +156,12 @@ Pull requests welcome.
 ## Notes
 
 - Tested in Chrome. Any modern browser with Pointer Events support should work.
-- Password-protected PDFs are not supported.
-- One signature per document, placed on the page you put it on.
+  Digital signatures need a secure page (opened directly from disk, or over
+  https), because they rely on the browser's built-in cryptography.
+- Encrypted PDFs are refused on open — both those that need a password to
+  open and those that only restrict editing (common for bank statements).
+  The tool cannot decrypt them, and anything it added would be unreadable.
+- One signature image per save, placed on the page you put it on.
 - Text fields are unlimited; each lives on the page where it was added.
 
 ## Built with
