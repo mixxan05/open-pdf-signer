@@ -867,6 +867,9 @@
         </div>
 
         <img id="sigPreview" class="checker" alt="">
+        <div class="row" id="useStoredRow" style="margin-top:8px;display:none">
+          <button id="btnUseStored" class="btn-tint"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span data-i18n="useStored"></span></button>
+        </div>
         <div class="status" id="statusSignature"></div>
       </section>
 
@@ -1076,7 +1079,7 @@
       claim: "Runs entirely in your browser. Your file never leaves this computer.",
       stepDocument: "Document", choosePdf: "Choose a PDF", choosePdfHint: "or drop it here",
       stepSignature: "Signature", tabDraw: "Draw", tabUpload: "Upload PNG",
-      clear: "Clear", apply: "Apply",
+      clear: "Clear", apply: "Apply", useStored: "Use this signature",
       drawNote: "Sign with mouse, pen or finger. Applying trims to your strokes and keeps the background transparent.",
       choosePng: "Choose a PNG", choosePngHint: "with a transparent background",
       uploadNote: "PNG only. It is the one format that carries transparency into the PDF.",
@@ -1145,7 +1148,7 @@
       claim: "Läuft vollständig im Browser. Deine Datei verlässt diesen Rechner nicht.",
       stepDocument: "Dokument", choosePdf: "PDF auswählen", choosePdfHint: "oder hier ablegen",
       stepSignature: "Unterschrift", tabDraw: "Zeichnen", tabUpload: "PNG hochladen",
-      clear: "Leeren", apply: "Übernehmen",
+      clear: "Leeren", apply: "Übernehmen", useStored: "Diese Unterschrift verwenden",
       drawNote: "Mit Maus, Stift oder Finger unterschreiben. Beim Übernehmen wird auf die Striche zugeschnitten, der Hintergrund bleibt transparent.",
       choosePng: "PNG auswählen", choosePngHint: "mit transparentem Hintergrund",
       uploadNote: "Nur PNG. Es ist das einzige Format, das Transparenz ins PDF überträgt.",
@@ -1214,7 +1217,7 @@
       claim: "Funciona por completo en tu navegador. Tu archivo nunca sale de este ordenador.",
       stepDocument: "Documento", choosePdf: "Elegir un PDF", choosePdfHint: "o suéltalo aquí",
       stepSignature: "Firma", tabDraw: "Dibujar", tabUpload: "Subir PNG",
-      clear: "Borrar", apply: "Aplicar",
+      clear: "Borrar", apply: "Aplicar", useStored: "Usar esta firma",
       drawNote: "Firma con el ratón, el lápiz o el dedo. Al aplicar se recorta al trazo y el fondo queda transparente.",
       choosePng: "Elegir un PNG", choosePngHint: "con fondo transparente",
       uploadNote: "Solo PNG. Es el único formato que lleva la transparencia al PDF.",
@@ -1283,7 +1286,7 @@
       claim: "Fonctionne entièrement dans votre navigateur. Votre fichier ne quitte jamais cet ordinateur.",
       stepDocument: "Document", choosePdf: "Choisir un PDF", choosePdfHint: "ou déposez-le ici",
       stepSignature: "Signature", tabDraw: "Dessiner", tabUpload: "Importer un PNG",
-      clear: "Effacer", apply: "Appliquer",
+      clear: "Effacer", apply: "Appliquer", useStored: "Utiliser cette signature",
       drawNote: "Signez à la souris, au stylet ou au doigt. À l’application, le tracé est rogné et le fond reste transparent.",
       choosePng: "Choisir un PNG", choosePngHint: "à fond transparent",
       uploadNote: "PNG uniquement. C’est le seul format qui transmet la transparence au PDF.",
@@ -1352,7 +1355,7 @@
       claim: "Funziona interamente nel browser. Il tuo file non lascia mai questo computer.",
       stepDocument: "Documento", choosePdf: "Scegli un PDF", choosePdfHint: "o trascinalo qui",
       stepSignature: "Firma", tabDraw: "Disegna", tabUpload: "Carica PNG",
-      clear: "Cancella", apply: "Applica",
+      clear: "Cancella", apply: "Applica", useStored: "Usa questa firma",
       drawNote: "Firma con mouse, penna o dito. Applicando si ritaglia sui tratti e lo sfondo resta trasparente.",
       choosePng: "Scegli un PNG", choosePngHint: "con sfondo trasparente",
       uploadNote: "Solo PNG. È l’unico formato che porta la trasparenza nel PDF.",
@@ -1421,7 +1424,7 @@
       claim: "Funciona inteiramente no navegador. O seu ficheiro nunca sai deste computador.",
       stepDocument: "Documento", choosePdf: "Escolher um PDF", choosePdfHint: "ou largue aqui",
       stepSignature: "Assinatura", tabDraw: "Desenhar", tabUpload: "Carregar PNG",
-      clear: "Limpar", apply: "Aplicar",
+      clear: "Limpar", apply: "Aplicar", useStored: "Usar esta assinatura",
       drawNote: "Assine com o rato, caneta ou dedo. Ao aplicar recorta-se ao traço e o fundo fica transparente.",
       choosePng: "Escolher um PNG", choosePngHint: "com fundo transparente",
       uploadNote: "Apenas PNG. É o único formato que leva a transparência para o PDF.",
@@ -1490,7 +1493,7 @@
       claim: "Работает полностью в браузере. Файл никогда не покидает этот компьютер.",
       stepDocument: "Документ", choosePdf: "Выбрать PDF", choosePdfHint: "или перетащите сюда",
       stepSignature: "Подпись", tabDraw: "Нарисовать", tabUpload: "Загрузить PNG",
-      clear: "Очистить", apply: "Применить",
+      clear: "Очистить", apply: "Применить", useStored: "Использовать эту подпись",
       drawNote: "Подпишите мышью, стилусом или пальцем. При применении обрезается по штрихам, фон остаётся прозрачным.",
       choosePng: "Выбрать PNG", choosePngHint: "с прозрачным фоном",
       uploadNote: "Только PNG. Это единственный формат, переносящий прозрачность в PDF.",
@@ -1559,7 +1562,7 @@
       claim: "Tamamen tarayıcınızda çalışır. Dosyanız bu bilgisayardan hiç çıkmaz.",
       stepDocument: "Belge", choosePdf: "PDF seçin", choosePdfHint: "veya buraya bırakın",
       stepSignature: "İmza", tabDraw: "Çiz", tabUpload: "PNG yükle",
-      clear: "Temizle", apply: "Uygula",
+      clear: "Temizle", apply: "Uygula", useStored: "Bu imzayı kullan",
       drawNote: "Fare, kalem veya parmakla imzalayın. Uyguladığınızda çizgilere göre kırpılır, arka plan saydam kalır.",
       choosePng: "PNG seçin", choosePngHint: "saydam arka planlı",
       uploadNote: "Yalnızca PNG. Saydamlığı PDF’e taşıyan tek biçim budur.",
@@ -1628,7 +1631,7 @@
       claim: "Berjalan sepenuhnya di peramban Anda. Berkas Anda tidak pernah meninggalkan komputer ini.",
       stepDocument: "Dokumen", choosePdf: "Pilih PDF", choosePdfHint: "atau letakkan di sini",
       stepSignature: "Tanda tangan", tabDraw: "Gambar", tabUpload: "Unggah PNG",
-      clear: "Hapus", apply: "Terapkan",
+      clear: "Hapus", apply: "Terapkan", useStored: "Gunakan tanda tangan ini",
       drawNote: "Tanda tangani dengan tetikus, pena, atau jari. Saat diterapkan, gambar dipangkas mengikuti goresan dan latarnya tetap transparan.",
       choosePng: "Pilih PNG", choosePngHint: "dengan latar transparan",
       uploadNote: "Hanya PNG. Format inilah satu-satunya yang membawa transparansi ke dalam PDF.",
@@ -1697,7 +1700,7 @@
       claim: "Chạy hoàn toàn trong trình duyệt. Tệp của bạn không bao giờ rời máy này.",
       stepDocument: "Tài liệu", choosePdf: "Chọn tệp PDF", choosePdfHint: "hoặc thả vào đây",
       stepSignature: "Chữ ký", tabDraw: "Vẽ", tabUpload: "Tải PNG lên",
-      clear: "Xóa", apply: "Áp dụng",
+      clear: "Xóa", apply: "Áp dụng", useStored: "Dùng chữ ký này",
       drawNote: "Ký bằng chuột, bút hoặc ngón tay. Khi áp dụng, ảnh được cắt theo nét và nền vẫn trong suốt.",
       choosePng: "Chọn tệp PNG", choosePngHint: "có nền trong suốt",
       uploadNote: "Chỉ PNG. Đây là định dạng duy nhất mang được độ trong suốt vào PDF.",
@@ -1766,7 +1769,7 @@
       claim: "完全在你的浏览器中运行，文件不会离开这台电脑。",
       stepDocument: "文档", choosePdf: "选择 PDF", choosePdfHint: "或拖到这里",
       stepSignature: "签名", tabDraw: "手写", tabUpload: "上传 PNG",
-      clear: "清除", apply: "应用",
+      clear: "清除", apply: "应用", useStored: "使用此签名",
       drawNote: "用鼠标、手写笔或手指签名。应用时会按笔画裁切，背景保持透明。",
       choosePng: "选择 PNG", choosePngHint: "需为透明背景",
       uploadNote: "仅限 PNG。只有它能把透明度带入 PDF。",
@@ -1835,7 +1838,7 @@
       claim: "すべてブラウザ内で処理します。ファイルがこのパソコンから出ることはありません。",
       stepDocument: "文書", choosePdf: "PDF を選ぶ", choosePdfHint: "またはここにドロップ",
       stepSignature: "署名", tabDraw: "手書き", tabUpload: "PNG を読み込む",
-      clear: "消す", apply: "適用",
+      clear: "消す", apply: "適用", useStored: "この署名を使う",
       drawNote: "マウス・ペン・指で署名できます。適用すると筆跡に合わせて切り抜かれ、背景は透明のままです。",
       choosePng: "PNG を選ぶ", choosePngHint: "背景が透明なもの",
       uploadNote: "PNG のみ。透明度を PDF に持ち込める唯一の形式です。",
@@ -1904,7 +1907,7 @@
       claim: "모든 처리가 브라우저 안에서 이루어집니다. 파일은 이 컴퓨터를 벗어나지 않습니다.",
       stepDocument: "문서", choosePdf: "PDF 선택", choosePdfHint: "또는 여기에 놓기",
       stepSignature: "서명", tabDraw: "직접 쓰기", tabUpload: "PNG 업로드",
-      clear: "지우기", apply: "적용",
+      clear: "지우기", apply: "적용", useStored: "이 서명 사용",
       drawNote: "마우스, 펜, 손가락으로 서명하세요. 적용하면 필적에 맞춰 잘라내고 배경은 투명하게 유지됩니다.",
       choosePng: "PNG 선택", choosePngHint: "배경이 투명한 파일",
       uploadNote: "PNG만 가능합니다. 투명도를 PDF로 옮길 수 있는 유일한 형식입니다.",
@@ -1973,7 +1976,7 @@
       claim: "पूरी तरह आपके ब्राउज़र में चलता है। आपकी फ़ाइल इस कंप्यूटर से कभी बाहर नहीं जाती।",
       stepDocument: "दस्तावेज़", choosePdf: "PDF चुनें", choosePdfHint: "या यहाँ छोड़ें",
       stepSignature: "हस्ताक्षर", tabDraw: "बनाएँ", tabUpload: "PNG अपलोड करें",
-      clear: "मिटाएँ", apply: "लागू करें",
+      clear: "मिटाएँ", apply: "लागू करें", useStored: "इस हस्ताक्षर का उपयोग करें",
       drawNote: "माउस, पेन या उंगली से हस्ताक्षर करें। लागू करने पर लकीरों तक काटा जाता है और पृष्ठभूमि पारदर्शी रहती है।",
       choosePng: "PNG चुनें", choosePngHint: "पारदर्शी पृष्ठभूमि वाली",
       uploadNote: "केवल PNG। यही एक प्रारूप है जो पारदर्शिता PDF तक ले जाता है।",
@@ -2042,7 +2045,7 @@
       claim: "يعمل بالكامل داخل متصفحك. ملفك لا يغادر هذا الحاسوب أبداً.",
       stepDocument: "المستند", choosePdf: "اختر ملف PDF", choosePdfHint: "أو أفلته هنا",
       stepSignature: "التوقيع", tabDraw: "ارسم", tabUpload: "رفع PNG",
-      clear: "مسح", apply: "تطبيق",
+      clear: "مسح", apply: "تطبيق", useStored: "استخدام هذا التوقيع",
       drawNote: "وقّع بالفأرة أو القلم أو الإصبع. عند التطبيق يُقصّ التوقيع عند حدود الخطوط وتبقى الخلفية شفافة.",
       choosePng: "اختر ملف PNG", choosePngHint: "بخلفية شفافة",
       uploadNote: "PNG فقط. هو الصيغة الوحيدة التي تنقل الشفافية إلى ملف PDF.",
@@ -2176,11 +2179,25 @@
   var handle = el("handle");
   var pageSelect = el("pageSelect");
   var sigPreview = el("sigPreview");
+  var useStoredRow = el("useStoredRow");
   var textInput = el("textInput");
   var fontSel = el("textFont");
   var sizeInput = el("textSize");
   var colorInput = el("textColor");
   var textLayer = el("textLayer");
+
+  function paintSignaturePreview() {
+    var has = !!sigPng;
+    useStoredRow.style.display = has ? "" : "none";
+    sigPreview.style.display = has ? "block" : "";
+    if (has) {
+      sigImage.src = sigPng;
+      sigPreview.src = sigPng;
+    } else {
+      sigImage.removeAttribute("src");
+      sigPreview.removeAttribute("src");
+    }
+  }
 
   function say(id, key, vars, tone) {
     statusState[id] = key ? { key: key, vars: vars, tone: tone } : null;
@@ -2574,10 +2591,8 @@
     if (s.sigPng) {
       sigPng = s.sigPng;
       sigRatio = s.sigRatio || 1;
-      sigImage.src = sigPng;
-      sigPreview.src = sigPng;
-      sigPreview.style.display = "block";
     }
+    paintSignaturePreview();
     placement = s.placement || null;
     texts = Array.isArray(s.texts) ? s.texts : [];
     textSeq = s.textSeq || texts.length;
@@ -2642,9 +2657,7 @@
     fontAutoPicked = false;
     sigPng = null;
     sigRatio = 1;
-    sigImage.removeAttribute("src");
-    sigPreview.removeAttribute("src");
-    sigPreview.style.display = "";
+    paintSignaturePreview();
     zoom = 1;
     zoomLive = 1;
     pendingCenter = null;
@@ -3199,14 +3212,17 @@
   // ===========================================================================
   // Take the signature on and place it
   // ===========================================================================
+  el("btnUseStored").addEventListener("click", function () {
+    if (!sigPng) return;
+    useSignature(sigPng, "drawApplied");
+  });
+
   function useSignature(dataUrl, messageKey) {
     var img = new Image();
     img.onload = function () {
       sigPng = dataUrl;
       sigRatio = img.naturalWidth / img.naturalHeight;
-      sigImage.src = dataUrl;
-      sigPreview.src = dataUrl;
-      sigPreview.style.display = "block";
+      paintSignaturePreview();
       say("statusSignature", messageKey, null, "good");
 
       if (pdfDoc) {
@@ -5002,6 +5018,7 @@
     el("btnZoomIn").disabled = !hasPdf || zoom >= ZOOM_MAX;
     el("zoomLabel").disabled = !hasPdf;
     el("btnNew").disabled = !hasPdf && !sigPng && !texts.length;
+    el("btnUseStored").disabled = !hasPdf || !sigPng;
     el("btnPlace").disabled = !hasPdf || !sigPng;
     el("btnRemove").disabled = !placement;
     el("btnAddText").disabled = !hasPdf;
