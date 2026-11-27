@@ -866,10 +866,10 @@
           <p class="note" data-i18n="uploadNote"></p>
         </div>
 
-        <img id="sigPreview" class="checker" alt="">
         <div class="row" id="useStoredRow" style="margin-top:8px;display:none">
           <button id="btnUseStored" class="btn-tint"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span data-i18n="useStored"></span></button>
         </div>
+        <img id="sigPreview" class="checker" alt="">
         <div class="status" id="statusSignature"></div>
       </section>
 
@@ -3102,7 +3102,11 @@
   });
 
   el("btnApply").addEventListener("click", function () {
-    if (!hasStrokes) { say("statusSignature", "padEmpty", null, "bad"); return; }
+    if (!hasStrokes) {
+      if (sigPng) { useSignature(sigPng, "drawApplied"); return; }
+      say("statusSignature", "padEmpty", null, "bad");
+      return;
+    }
     var trimmed = trimToStrokes();
     if (!trimmed) { say("statusSignature", "noStrokes", null, "bad"); return; }
     useSignature(trimmed, "drawApplied");
